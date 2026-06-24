@@ -393,6 +393,7 @@
       <button class="active" data-apanel="bewerbungen">📋 Bewerbungen</button>
       <button data-apanel="schichten">⏰ Schichten</button>
       <button data-apanel="newsadmin">📰 News verwalten</button>
+      <button data-apanel="log" id="logTabBtn" style="display:none">📜 Log</button>
     </div>
 
     <!-- Admin: Bewerbungen -->
@@ -436,6 +437,16 @@
       <div class="sub-title" style="margin-top:1.5rem">Veröffentlichte News</div>
       <div class="news-list-admin" id="adminNewsList"></div>
     </div>
+
+    <!-- Admin: Log -->
+    <div class="admin-panel" id="apanel-log">
+      <div class="sub-title">Aktivitätslog <span style="font-weight:400;color:var(--g400);font-size:.78rem">(nur für berechtigte Admins)</span></div>
+      <div style="margin-bottom:.75rem;display:flex;gap:.5rem;flex-wrap:wrap">
+        <input type="text" id="logFilter" placeholder="Filtern..." style="padding:.45rem .8rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.82rem;font-family:inherit;flex:1;min-width:120px" oninput="renderLog()">
+        <button onclick="clearLog()" style="padding:.45rem 1rem;background:var(--g100);border:none;border-radius:var(--rs);font-weight:600;font-size:.8rem;cursor:pointer;font-family:inherit">🗑️ Log leeren</button>
+      </div>
+      <div id="logList"></div>
+    </div>
   </div>
 </section>
 
@@ -453,6 +464,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   const ADMINS = [
     { username: 'jggaming2518',    password: 'JLG161218MGB!' },
+    { username: 'leon',    password: '123#AG456789!' },
+    { username: 'felix',    password: '987#AG654321!' },
    
     // Hier beliebig viele weitere Admins hinzufügen
   ];
@@ -518,6 +531,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Hier weitere Stellen hinzufügen...
   ];
 
+  // ─── Admins mit Log-Zugriff ───
+  const LOG_ADMINS = ['jggaming2518', 'leitung']; // Nur diese Admins sehen den Log-Tab
+
   // ─── Discord Webhook (optional – für Benachrichtigungen bei Entscheidungen) ───
   const DISCORD_WEBHOOK_URL = ''; // Webhook-URL hier eintragen, z.B. 'https://discord.com/api/webhooks/...'
   // Bei Entscheidung wird der Nutzer per <@ID> erwähnt, wenn eine Discord-ID im Formular angegeben wurde.
@@ -558,6 +574,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   let shifts = []; try{const s=localStorage.getItem('dvn_shifts');if(s)shifts=JSON.parse(s)}catch(e){}
   let applications = []; try{const a=localStorage.getItem('dvn_applications');if(a)applications=JSON.parse(a)}catch(e){}
   let newsItems = []; try{const n=localStorage.getItem('dvn_news');if(n)newsItems=JSON.parse(n)}catch(e){}
+  let logs = []; try{const l=localStorage.getItem('dvn_logs');if(l)logs=JSON.parse(l)}catch(e){}
+
+  function addLogEntry(action, details){
+    const entry = { timestamp: new Date().toLocaleString('de-DE'), user: loggedInUser||'System', action, details: details||'' };
+    logs.push(entry);
+    try{localStorage.setItem('dvn_logs',JSON.stringify(logs))}catch(e){}
+  }
 
   document.getElementById('welcomeText').innerHTML = WELCOME_TEXT;
 
@@ -588,7 +611,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function doLogin() {
     const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('loginPass').value;
     const found=ADMINS.find(a=>a.username===u&&a.password===p);
-    if(found){ loggedIn=true; loggedInUser=u; closeLogin(); updateUI(); }
+    if(found){ loggedIn=true; loggedInUser=u; addLogEntry('Login', 'Benutzer '+u+' hat sich angemeldet'); closeLogin(); updateUI(); }
     else document.getElementById('loginError').style.display='block';
   }
   function toggleDropdown(e){
@@ -600,6 +623,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   });
 
   function logout(){
+    addLogEntry('Logout', 'Benutzer '+loggedInUser+' hat sich abgemeldet');
     loggedIn=false; loggedInUser=null;
     document.getElementById('userDropdown').classList.remove('open');
     document.querySelectorAll('nav button[data-page], .page').forEach(el => el.classList.remove('active'));
@@ -620,6 +644,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       userDisp.textContent=loggedInUser;
       const d2=document.getElementById('userNameDisplay2');
       if(d2) d2.textContent=loggedInUser;
+      const logTabBtn=document.getElementById('logTabBtn');
+      if(logTabBtn) logTabBtn.style.display=LOG_ADMINS.includes(loggedInUser)?'':'none';
     } else {
       if(adminBtn) adminBtn.style.display='none';
       userMenu.style.display='none';
@@ -641,7 +667,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       btn.classList.add('active');
       document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
       const panel=document.getElementById('apanel-'+btn.dataset.apanel);
-      if(panel){ panel.classList.add('active'); if(btn.dataset.apanel==='schichten') renderAdminShifts(); if(btn.dataset.apanel==='newsadmin') renderAdminNewsList(); }
+      if(panel){ panel.classList.add('active'); if(btn.dataset.apanel==='schichten') renderAdminShifts(); if(btn.dataset.apanel==='newsadmin') renderAdminNewsList(); if(btn.dataset.apanel==='log') renderLog(); }
     });
   });
 
@@ -759,6 +785,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function doAppAction(idx,action,note){
     const a=applications[idx]; if(!a) return;
     a.status=action; if(note){ a.adminNote=note; a.adminNoteBy=loggedInUser; }
+    const statusText=action==='accepted'?'angenommen':'abgelehnt';
+    addLogEntry('Bewerbung '+statusText, a.data.vorname+' '+a.data.nachname+' ('+(STELLEN.find(s=>s.id===a.stelleId)?.title||'?')+') wurde '+statusText+(note?' – Grund: '+note:''));
     try{localStorage.setItem('dvn_applications',JSON.stringify(applications))}catch(e){}
     renderAdminPanels();
 
@@ -782,6 +810,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
   function toggleStelle(i){
     STELLEN[i].open=!STELLEN[i].open;
+    const status=STELLEN[i].open?'geöffnet':'geschlossen';
+    addLogEntry('Stelle '+status, STELLEN[i].title+' wurde '+status);
     try { const map={}; STELLEN.forEach(s=>{ map[s.id]=s.open; }); localStorage.setItem('dvn_stellen_open',JSON.stringify(map)); } catch(e) {}
     renderStellen(); renderAdminPanels();
   }
@@ -818,6 +848,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!title||!time){ alert('Bitte Titel und Zeitraum angeben!'); return; }
     const addShiftWithImage=(imgDataUrl)=>{
       shifts.push({title,date,time,desc,image:imgDataUrl||''});
+      addLogEntry('Schicht erstellt', title+' ('+time+(date?' am '+date:'')+')');
       try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){}
       document.getElementById('sTitle').value=''; document.getElementById('sDate').value='';
       document.getElementById('sTime').value=''; document.getElementById('sDesc').value='';
@@ -847,14 +878,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     s.time=document.getElementById('seTime').value.trim();
     s.desc=document.getElementById('seDesc').value.trim();
     const fileInput=document.getElementById('seImage');
-    const save=()=>{ try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){} closeShiftEdit(); renderPublicShifts(); renderAdminShifts(); };
+    const save=()=>{ try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){} addLogEntry('Schicht bearbeitet', s.title+' ('+s.time+')'); closeShiftEdit(); renderPublicShifts(); renderAdminShifts(); };
     if(fileInput&&fileInput.files[0]){
       const reader=new FileReader();
       reader.onload=e=>{ s.image=e.target.result; save(); };
       reader.readAsDataURL(fileInput.files[0]);
     } else save();
   }
-  function delShift(i){ shifts.splice(i,1); try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){} renderPublicShifts(); renderAdminShifts(); }
+  function delShift(i){ const s=shifts[i]; addLogEntry('Schicht gelöscht', s.title+' ('+s.time+')'); shifts.splice(i,1); try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){} renderPublicShifts(); renderAdminShifts(); }
 
   // ─── News ───
   function renderNews(){
@@ -878,6 +909,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!title||!text){ alert('Bitte Titel und Text eingeben!'); return; }
     const publish=(imgDataUrl)=>{
       newsItems.push({title,text,image:imgDataUrl||'',date:new Date().toLocaleDateString('de-DE'),author:loggedInUser||'Admin'});
+      addLogEntry('News erstellt', title);
       try{localStorage.setItem('dvn_news',JSON.stringify(newsItems))}catch(e){}
       clearNewsForm(); renderNews(); renderAdminNewsList();
     };
@@ -897,7 +929,31 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       return `<div class="news-item-admin"><div><div class="nia-title">${n.title}</div><div class="nia-date">${n.date}</div></div><button class="nia-del" onclick="delNews(${realIdx})">🗑️</button></div>`;
     }).join('');
   }
-  function delNews(i){ newsItems.splice(i,1); try{localStorage.setItem('dvn_news',JSON.stringify(newsItems))}catch(e){} renderNews(); renderAdminNewsList(); }
+  function delNews(i){ const n=newsItems[i]; addLogEntry('News gelöscht', n.title); newsItems.splice(i,1); try{localStorage.setItem('dvn_news',JSON.stringify(newsItems))}catch(e){} renderNews(); renderAdminNewsList(); }
+
+  // ─── Log ───
+  function renderLog(){
+    const list=document.getElementById('logList');
+    if(!list) return;
+    const filter=document.getElementById('logFilter')?.value?.toLowerCase()||'';
+    const filtered=filter ? logs.filter(l=>l.action.toLowerCase().includes(filter)||l.details.toLowerCase().includes(filter)||l.user.toLowerCase().includes(filter)) : logs;
+    if(filtered.length===0){
+      list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">'+(filter?'Keine Einträge gefunden.':'Noch keine Log-Einträge vorhanden.')+'</div>';
+      return;
+    }
+    list.innerHTML='<div style="display:flex;flex-direction:column;gap:.35rem">'+[...filtered].reverse().map(l=>`
+      <div style="display:flex;gap:.75rem;align-items:center;padding:.5rem .75rem;background:var(--g50);border-radius:var(--rs);font-size:.82rem;border-left:3px solid var(--r300)">
+        <span style="color:var(--g400);font-size:.75rem;white-space:nowrap;min-width:130px">${l.timestamp}</span>
+        <span style="color:var(--r600);font-weight:600;white-space:nowrap">${l.user}</span>
+        <span style="color:var(--g500);font-weight:500;white-space:nowrap">${l.action}</span>
+        <span style="color:var(--g600);flex:1">${l.details}</span>
+      </div>`).join('')+'</div>';
+  }
+  function clearLog(){
+    if(!confirm('Wirklich den gesamten Log löschen?')) return;
+    logs=[]; try{localStorage.setItem('dvn_logs',JSON.stringify(logs))}catch(e){}
+    renderLog();
+  }
 
   // ─── Init ───
   updateUI();
