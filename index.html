@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DVN – Deutsches Verkehrsnetz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--r50:#fff5f7;--r100:#ffebee;--r200:#ffcdd2;--r300:#e57373;--r400:#ef5350;--r500:#c62828;--r600:#b71c1c;--r700:#8e0000;--w:#fff;--g50:#f8f9fc;--g100:#f1f3f8;--g200:#e8ecf4;--g300:#d0d5dd;--g400:#98a2b3;--g500:#667085;--g600:#475467;--g700:#344054;--g800:#1d2939;--sm:0 1px 3px rgba(0,0,0,.06);--md:0 4px 16px rgba(0,0,0,.08);--lg:0 12px 40px rgba(0,0,0,.10);--rs:8px;--rm:12px;--rl:16px}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--g50);color:var(--g800);min-height:100vh}
+
+  /* ─── HEADER ─── */
+  header{background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:68px;box-shadow:0 4px 20px rgba(198,40,40,.25);position:sticky;top:0;z-index:100}
+  .hl{display:flex;align-items:center;gap:.75rem;flex-shrink:0}
+  .hl .logo{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;border:1px solid rgba(255,255,255,.15)}
+  .hl .ht{font-size:1.05rem;font-weight:700;line-height:1.2}
+  .hl .ht small{display:block;font-size:.6rem;font-weight:400;opacity:.7;text-transform:uppercase;letter-spacing:1px}
+  nav{display:flex;align-items:stretch;gap:2px;flex-wrap:wrap}
+  nav button{background:transparent;color:var(--w);border:none;padding:0 .85rem;font-size:.8rem;cursor:pointer;transition:all .25s;font-weight:500;opacity:.7;display:flex;align-items:center;gap:4px;letter-spacing:.2px;font-family:inherit;position:relative;white-space:nowrap}
+  nav button::after{content:'';position:absolute;bottom:0;left:50%;right:50%;height:3px;background:var(--w);border-radius:3px 3px 0 0;transition:all .25s}
+  nav button:hover{opacity:.9;background:rgba(255,255,255,.08)}
+  nav button:hover::after{left:20%;right:20%}
+  nav button.active{opacity:1;background:rgba(255,255,255,.12)}
+  nav button.active::after{left:10%;right:10%}
+  nav button.ni{font-size:1rem}
+  .user-menu{position:relative;display:flex;align-items:center;margin-left:6px}
+  .user-menu>button{background:rgba(255,255,255,.12);border-radius:8px;border:1px solid rgba(255,255,255,.15);padding:0 1rem;height:36px;font-size:.8rem;gap:5px;opacity:1}
+  .user-menu>button:hover{background:rgba(255,255,255,.2)}
+  .user-menu>button::after{display:none}
+  .user-menu .dropdown{display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--w);border-radius:var(--rm);box-shadow:var(--lg);min-width:200px;overflow:hidden;z-index:200}
+  .user-menu .dropdown.open{display:block}
+  .user-menu .dropdown button{display:block;width:100%;padding:.7rem 1rem;border:none;background:transparent;color:var(--g700);font-size:.84rem;cursor:pointer;font-family:inherit;text-align:left;transition:background .15s}
+  .user-menu .dropdown button:hover{background:var(--r50);color:var(--r600)}
+  .user-menu .dropdown .dd-head{padding:.6rem 1rem;font-size:.72rem;color:var(--g400);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--g100)}
+
+  /* ─── PAGE ─── */
+  .page{display:none;padding:2rem 2rem 3rem;max-width:1200px;margin:0 auto;animation:pi .4s ease}
+  .page.active{display:block}
+  @keyframes pi{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .card{background:var(--w);border-radius:var(--rl);box-shadow:var(--sm);padding:1.8rem;margin-bottom:1.5rem;border:1px solid var(--g200);transition:box-shadow .3s}
+  .card:hover{box-shadow:var(--md)}
+  .ch{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:2px solid var(--r100)}
+  .ch .ci{width:34px;height:34px;background:linear-gradient(135deg,var(--r100),var(--r200));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+  .ch h2{font-size:1.15rem;font-weight:700}
+  .ch h2 span{color:var(--r500)}
+  .ch .badge{margin-left:auto;background:var(--r100);color:var(--r600);padding:.15rem .7rem;border-radius:20px;font-size:.72rem;font-weight:600;white-space:nowrap}
+  .sub-title{font-size:.85rem;color:var(--g500);margin-bottom:.75rem}
+
+  /* ─── LOGIN MODAL ─── */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);z-index:999;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--w);border-radius:var(--rl);padding:2rem;width:400px;max-width:92vw;box-shadow:var(--lg);animation:mi .3s ease}
+  @keyframes mi{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+  .modal h2{font-size:1.2rem;margin-bottom:.25rem}
+  .modal p{color:var(--g500);font-size:.85rem;margin-bottom:1.25rem}
+  .modal label{display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem;color:var(--g700)}
+  .modal input,.modal textarea,.modal select{width:100%;padding:.6rem 1rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit;margin-bottom:.85rem;transition:all .2s}
+  .modal input:focus,.modal textarea:focus,.modal select:focus{border-color:var(--r400);outline:none;box-shadow:0 0 0 4px rgba(198,40,40,.08)}
+  .modal .btn-row{display:flex;gap:.75rem;margin-top:.5rem}
+  .modal .btn-row button{flex:1;padding:.65rem;border:none;border-radius:var(--rs);font-weight:600;font-size:.88rem;cursor:pointer;font-family:inherit;transition:all .2s}
+  .modal .btn-primary{background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);box-shadow:0 4px 12px rgba(198,40,40,.25)}
+  .modal .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(198,40,40,.35)}
+  .modal .btn-secondary{background:var(--g100);color:var(--g700)}
+  .modal .btn-secondary:hover{background:var(--g200)}
+  .modal .error{color:var(--r500);font-size:.82rem;margin-bottom:.75rem;display:none}
+
+  /* ─── WILLKOMMEN ─── */
+  .wh{background:linear-gradient(135deg,var(--r500),var(--r700));border-radius:var(--rl);padding:2.5rem 3rem;margin-bottom:1.5rem;color:var(--w);position:relative;overflow:hidden}
+  .wh::before{content:'';position:absolute;top:-50%;right:-20%;width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,.06),transparent 70%);border-radius:50%}
+  .wh h2{font-size:1.6rem;font-weight:700;position:relative;z-index:1}
+  .wh p{font-size:.92rem;opacity:.8;position:relative;z-index:1;margin-top:.3rem}
+  .wt{font-size:.98rem;line-height:1.8;color:var(--g700);white-space:pre-wrap;padding:.5rem 0}
+  .gg{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+  .gi{border-radius:var(--rm);overflow:hidden;position:relative;aspect-ratio:16/10;background:var(--g100);border:1px solid var(--g200);transition:all .3s;cursor:pointer}
+  .gi:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.12);border-color:var(--r300)}
+  .gi img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s}
+  .gi:hover img{transform:scale(1.06)}
+  .gi .ov{position:absolute;bottom:0;left:0;right:0;padding:1rem;background:linear-gradient(transparent,rgba(0,0,0,.6));opacity:0;transition:opacity .3s}
+  .gi:hover .ov{opacity:1}
+  .gi .ov span{color:var(--w);font-size:.78rem;font-weight:500}
+
+  /* ─── NETZPLAN ─── */
+  .nw{background:var(--w);border-radius:var(--rl);border:1px solid var(--g200);overflow:hidden}
+  .nh{text-align:center;padding:1.5rem 1.5rem 0}
+  .nh h2{font-size:1.4rem;font-weight:800;color:var(--r600)}
+  .nh p{color:var(--g500);font-size:.85rem;margin-top:.2rem}
+  .niw{position:relative;padding:1.5rem}
+  .niw img{width:100%;height:auto;display:block;border-radius:var(--rm);border:1px solid var(--g200)}
+  .dvn-stamp{position:absolute;top:2rem;right:2.5rem;background:var(--r500);color:var(--w);padding:.35rem 1.2rem;border-radius:6px;font-weight:800;font-size:.85rem;letter-spacing:1px;box-shadow:0 4px 16px rgba(198,40,40,.35);border:2px solid rgba(255,255,255,.3);z-index:2}
+  .nwm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:4.5rem;font-weight:900;color:rgba(198,40,40,.1);pointer-events:none;white-space:nowrap;letter-spacing:10px;text-transform:uppercase;user-select:none}
+  .nl{display:flex;gap:2rem;padding:.75rem 2rem 1.5rem;flex-wrap:wrap;border-top:1px solid var(--g100);margin:0 1.5rem}
+  .nl-item{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--g600)}
+  .nl-item .sw{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+  .nl-item .sw.r{background:var(--r500)}
+  .nl-item .sw.g{background:var(--g400)}
+
+  /* ─── STELLENANZEIGEN ─── */
+  .sa-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .sa-card{background:var(--w);border-radius:var(--rm);border:1px solid var(--g200);padding:1.5rem;transition:all .25s}
+  .sa-card:hover{box-shadow:var(--md);border-color:var(--r200)}
+  .sa-card .sa-title{font-size:1.1rem;font-weight:700;color:var(--g800)}
+  .sa-card .sa-title span{color:var(--r500);display:block;font-size:.82rem;font-weight:400;margin-top:.15rem}
+  .sa-card .sa-meta{display:flex;gap:.5rem;margin:.5rem 0 .75rem;flex-wrap:wrap}
+  .sa-card .sa-tag{font-size:.7rem;padding:.15rem .6rem;border-radius:6px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+  .sa-card .sa-tag.open{background:#d1fae5;color:#065f46}
+  .sa-card .sa-tag.closed{background:var(--g100);color:var(--g500)}
+  .sa-card .sa-desc{font-size:.85rem;color:var(--g500);line-height:1.6;margin-bottom:.75rem}
+  .sa-card .sa-req{font-size:.82rem;color:var(--g600);margin-bottom:1rem}
+  .sa-card .sa-req li{margin-left:1.2rem;margin-bottom:.2rem}
+  .sa-card .sa-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+  .sa-card .sa-actions button{padding:.5rem 1.2rem;border:none;border-radius:var(--rs);font-weight:600;font-size:.82rem;cursor:pointer;font-family:inherit;transition:all .2s}
+  .btn-apply{background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);box-shadow:0 3px 10px rgba(198,40,40,.2)}
+  .btn-apply:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(198,40,40,.3)}
+  .btn-apply:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+  /* ─── ADMIN TABS ─── */
+  .admin-nav{display:flex;gap:4px;margin-bottom:1.25rem;border-bottom:2px solid var(--g200);padding-bottom:0;flex-wrap:wrap}
+  .admin-nav button{padding:.6rem 1.4rem;border:none;background:transparent;font-size:.85rem;font-weight:600;color:var(--g500);cursor:pointer;font-family:inherit;transition:all .2s;border-radius:var(--rs) var(--rs) 0 0;position:relative;margin-bottom:-2px}
+  .admin-nav button::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:transparent;border-radius:2px 2px 0 0;transition:all .2s}
+  .admin-nav button:hover{color:var(--r500);background:var(--r50)}
+  .admin-nav button.active{color:var(--r600);background:var(--r100)}
+  .admin-nav button.active::after{background:var(--r500)}
+  .admin-panel{display:none}
+  .admin-panel.active{display:block}
+
+  .btn-toggle{background:var(--g100);color:var(--g700);padding:.45rem 1.1rem;border:none;border-radius:var(--rs);font-weight:600;font-size:.8rem;cursor:pointer;font-family:inherit;transition:all .2s}
+  .btn-toggle:hover{background:var(--g200)}
+  .btn-toggle.open{background:#d1fae5;color:#065f46}
+  .btn-toggle.open:hover{background:#a7f3d0}
+
+  /* ─── BEWERBUNGEN LISTE (Admin) ─── */
+  .ab-list{display:flex;flex-direction:column;gap:.5rem}
+  .ab-item{background:var(--w);border:1px solid var(--g200);border-radius:var(--rm);padding:1rem 1.25rem;transition:all .2s}
+  .ab-item:hover{border-color:var(--r200);box-shadow:var(--sm)}
+  .ab-item .ab-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
+  .ab-item .ab-name{font-weight:600;font-size:.95rem}
+  .ab-item .ab-date{font-size:.78rem;color:var(--g400)}
+  .ab-item .ab-data{display:grid;grid-template-columns:1fr 1fr;gap:.3rem .75rem;margin:.5rem 0;font-size:.82rem}
+  .ab-item .ab-data .k{color:var(--g500);font-weight:500}
+  .ab-item .ab-data .v{color:var(--g700)}
+  .ab-item .ab-actions{display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap}
+  .ab-item .ab-actions button{padding:.4rem 1rem;border:none;border-radius:6px;font-weight:600;font-size:.78rem;cursor:pointer;font-family:inherit;transition:all .2s}
+  .ab-item .ab-actions .accept{background:#d1fae5;color:#065f46}
+  .ab-item .ab-actions .accept:hover{background:#a7f3d0}
+  .ab-item .ab-actions .reject{background:#ffe4e6;color:#be123c}
+  .ab-item .ab-actions .reject:hover{background:#fecdd3}
+  .ab-item .ab-note-input{margin-top:.5rem;display:none;gap:.5rem;flex-wrap:wrap}
+  .ab-item .ab-note-input input{flex:1;padding:.4rem .8rem;border:2px solid var(--g200);border-radius:6px;font-size:.8rem;font-family:inherit;min-width:120px}
+  .ab-item .ab-note-input input:focus{border-color:var(--r400);outline:none}
+  .ab-item .ab-note-input button{padding:.4rem 1rem;background:var(--g100);border:none;border-radius:6px;font-weight:600;font-size:.78rem;cursor:pointer;font-family:inherit}
+  .ab-item .ab-note-input button:hover{background:var(--g200)}
+  .ab-status{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding:.15rem .6rem;border-radius:6px}
+  .ab-status.pending{background:var(--g100);color:var(--g600)}
+  .ab-status.accepted{background:#d1fae5;color:#065f46}
+  .ab-status.rejected{background:#ffe4e6;color:#be123c}
+
+  /* ─── SHIFTS ─── */
+  .shift-add{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.25rem;padding:1.25rem;background:var(--g50);border-radius:var(--rm);border:1px dashed var(--g300)}
+  .shift-add input{padding:.6rem 1rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit;transition:all .2s;flex:1;min-width:120px;background:var(--w);color:var(--g800)}
+  .shift-add input::placeholder{color:var(--g400)}
+  .shift-add input:focus{border-color:var(--r400);outline:none;box-shadow:0 0 0 4px rgba(198,40,40,.08)}
+  .shift-add input[type="file"]{padding:.4rem;flex:unset;min-width:unset}
+  .shift-add input[type="file"]::file-selector-button{background:var(--g100);border:1px solid var(--g200);border-radius:6px;padding:.3rem .8rem;cursor:pointer;font-family:inherit;font-weight:500}
+  .shift-add button{padding:.6rem 1.4rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;transition:all .2s;white-space:nowrap;font-family:inherit;box-shadow:0 3px 10px rgba(198,40,40,.2);display:flex;align-items:center;gap:5px}
+  .shift-add button:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(198,40,40,.3)}
+  .sl{display:flex;flex-direction:column;gap:.6rem}
+  .sc{background:var(--w);border-radius:var(--rm);box-shadow:var(--sm);padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;border:1px solid var(--g200);transition:all .25s}
+  .sc:hover{border-color:var(--r200);box-shadow:var(--md)}
+  .sc .stb{background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border-radius:var(--rs);padding:.5rem .9rem;min-width:100px;text-align:center;flex-shrink:0}
+  .sc .stb .l1{font-weight:700;font-size:.82rem}
+  .sc .stb .l2{font-size:.62rem;opacity:.7;font-weight:400}
+  .sc .si{flex:1;min-width:0}
+  .sc .si h3{font-size:.95rem;font-weight:600;color:var(--g800)}
+  .sc .si p{font-size:.8rem;color:var(--g500);line-height:1.4}
+  .sc .si .shift-img{max-width:80px;max-height:50px;border-radius:6px;margin-top:.3rem;object-fit:cover;border:1px solid var(--g200)}
+  .sc .sa{display:flex;gap:.35rem;flex-shrink:0}
+  .sc .sa button{width:32px;height:32px;border:2px solid var(--g200);border-radius:var(--rs);background:transparent;color:var(--g400);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .2s;font-family:inherit}
+  .sc .sa button:hover{background:var(--r500);color:var(--w);border-color:var(--r500)}
+
+  /* ─── NEWS ─── */
+  .news-grid{display:flex;flex-direction:column;gap:1.25rem}
+  .news-card{background:var(--w);border-radius:var(--rl);border:1px solid var(--g200);overflow:hidden;transition:all .3s;display:flex;flex-direction:column}
+  .news-card:hover{box-shadow:var(--md);border-color:var(--r200)}
+  .news-card .nc-img{width:100%;height:220px;object-fit:cover;display:block;background:var(--g100)}
+  .news-card .nc-body{padding:1.5rem}
+  .news-card .nc-body .nc-date{font-size:.75rem;color:var(--g400);font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+  .news-card .nc-body .nc-title{font-size:1.2rem;font-weight:700;color:var(--g800);margin:.3rem 0 .5rem}
+  .news-card .nc-body .nc-text{font-size:.9rem;color:var(--g500);line-height:1.7}
+  .news-card .nc-body .nc-author{font-size:.8rem;color:var(--g400);margin-top:.75rem;font-style:italic}
+  .news-empty{text-align:center;padding:3rem;color:var(--g400)}
+  .news-empty .big{font-size:2.5rem;margin-bottom:.5rem;opacity:.4}
+
+  /* ─── NEWS ADMIN FORM ─── */
+  .news-admin-form{display:flex;flex-direction:column;gap:.85rem}
+  .news-admin-form label{font-size:.82rem;font-weight:600;color:var(--g700)}
+  .news-admin-form input,.news-admin-form textarea{padding:.6rem 1rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit;transition:all .2s}
+  .news-admin-form input:focus,.news-admin-form textarea:focus{border-color:var(--r400);outline:none;box-shadow:0 0 0 4px rgba(198,40,40,.08)}
+  .news-admin-form textarea{min-height:120px;resize:vertical}
+  .news-admin-form input[type="file"]{padding:.4rem}
+  .news-admin-form input[type="file"]::file-selector-button{background:var(--g100);border:1px solid var(--g200);border-radius:6px;padding:.3rem .8rem;cursor:pointer;font-family:inherit;font-weight:500}
+  .news-admin-form .btn-row{display:flex;gap:.75rem}
+  .news-admin-form .btn-row button{padding:.6rem 1.5rem;border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit;transition:all .2s}
+  .news-list-admin{display:flex;flex-direction:column;gap:.5rem;margin-top:1rem}
+  .news-item-admin{display:flex;align-items:center;gap:1rem;padding:.75rem 1rem;border:1px solid var(--g200);border-radius:var(--rm);justify-content:space-between}
+  .news-item-admin .nia-title{font-weight:600;font-size:.9rem}
+  .news-item-admin .nia-date{font-size:.78rem;color:var(--g400)}
+  .news-item-admin .nia-del{background:transparent;border:2px solid var(--g200);color:var(--g400);width:32px;height:32px;border-radius:var(--rs);cursor:pointer;font-size:.85rem;transition:all .2s}
+  .news-item-admin .nia-del:hover{background:var(--r500);color:var(--w);border-color:var(--r500)}
+
+  /* ─── RESPONSIVE ─── */
+  @media(max-width:1000px){
+    header{padding:0 .75rem;height:auto;flex-direction:column}
+    .hl{padding:.5rem 0}
+    nav{width:100%;height:auto;padding-bottom:.5rem}
+    nav button{padding:.6rem .6rem;font-size:.72rem}
+    nav button.ni{display:none}
+    nav button::after{display:none}
+    .user-menu{margin-left:2px}
+    .user-menu>button{font-size:.72rem;padding:0 .6rem;height:30px}
+  }
+  @media(max-width:768px){
+    .page{padding:1rem}
+    .gg{grid-template-columns:repeat(2,1fr)}
+    .wh{padding:1.5rem}
+    .wh h2{font-size:1.2rem}
+    .sa-grid{grid-template-columns:1fr}
+    .card{padding:1.25rem}
+    .nwm{font-size:2.5rem;letter-spacing:5px}
+    .dvn-stamp{font-size:.7rem;padding:.25rem .8rem;top:1rem;right:1.5rem}
+    .news-card .nc-img{height:160px}
+  }
+  @media(max-width:500px){
+    .gg{grid-template-columns:1fr}
+    .sc{flex-direction:column;align-items:stretch;text-align:center}
+    .sc .stb{min-width:unset}
+    .sc .sa{align-self:center}
+    .ab-item .ab-data{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hl">
+    <div class="logo">DVN</div>
+    <div class="ht">Deutsches Verkehrsnetz<small>Externe Plattform</small></div>
+  </div>
+  <nav>
+    <button class="active" data-page="willkommen"><span class="ni">🏠</span> Willkommen</button>
+    <button data-page="netzplan"><span class="ni">🗺️</span> Netzplan</button>
+    <button data-page="stellen"><span class="ni">📋</span> Stellen</button>
+    <button data-page="shifts"><span class="ni">⏰</span> Shifts</button>
+    <button data-page="news"><span class="ni">📰</span> News</button>
+    <button data-page="admin" id="adminNavBtn" style="display:none"><span class="ni">⚙️</span> Admin</button>
+    <button id="loginNavBtn" onclick="openLogin()"><span class="ni">🔐</span> Login</button>
+    <div class="user-menu" id="userMenu" style="display:none">
+      <button id="userMenuBtn" onclick="toggleDropdown(event)">👤 <span id="userNameDisplay"></span> ▾</button>
+      <div class="dropdown" id="userDropdown">
+        <div class="dd-head">Angemeldet als</div>
+        <div style="padding:0 1rem .5rem;font-size:.8rem;color:var(--g600);font-weight:600"><span id="userNameDisplay2"></span></div>
+        <button onclick="logout()" style="border-top:1px solid var(--g100);color:var(--r500);font-weight:600">🚪 Abmelden</button>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<!-- ═══════ LOGIN MODAL ═══════ -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <h2>🔐 Admin-Login</h2>
+    <p>Bitte melden Sie sich mit Ihren Administrator-Zugangsdaten an.</p>
+    <div class="error" id="loginError">Falscher Benutzername oder Passwort.</div>
+    <label>Benutzername</label>
+    <input type="text" id="loginUser" placeholder="admin" autocomplete="off">
+    <label>Passwort</label>
+    <input type="password" id="loginPass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeLogin()">Abbrechen</button>
+      <button class="btn-primary" onclick="doLogin()">Anmelden</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ BEWERBUNGS-FORMULAR MODAL ═══════ -->
+<div class="modal-overlay" id="bewerbModal">
+  <div class="modal form-modal" id="bewerbFormContainer" style="max-width:560px;max-height:85vh;overflow-y:auto">
+    <h2 id="bewerbModalTitle">Bewerbung</h2>
+    <p id="bewerbModalSub" style="margin-bottom:1.25rem">Formular ausfüllen.</p>
+    <div id="bewerbFormFields"></div>
+    <div class="btn-row" style="margin-top:1.25rem">
+      <button class="btn-secondary" onclick="closeBewerb()">Abbrechen</button>
+      <button class="btn-primary" onclick="submitBewerb()">📩 Bewerbung einreichen</button>
+    </div>
+    <div class="error" id="bewerbError" style="margin-top:.75rem">Bitte alle Pflichtfelder ausfüllen.</div>
+  </div>
+</div>
+
+<!-- ═══════ SHIFT EDIT MODAL ═══════ -->
+<div class="modal-overlay" id="shiftEditModal">
+  <div class="modal">
+    <h2>✏️ Schicht bearbeiten</h2>
+    <p>Ändern Sie die Schichtdetails.</p>
+    <label>Titel</label>
+    <input type="text" id="seTitle">
+    <label>Datum</label>
+    <input type="date" id="seDate">
+    <label>Zeitraum</label>
+    <input type="text" id="seTime" placeholder="z.B. 06:00–14:00">
+    <label>Beschreibung</label>
+    <input type="text" id="seDesc" placeholder="optional">
+    <label>Bild (optional)</label>
+    <input type="file" id="seImage" accept="image/*">
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeShiftEdit()">Abbrechen</button>
+      <button class="btn-primary" onclick="saveShiftEdit()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ WILLKOMMEN ═══════════ -->
+<section id="willkommen" class="page active">
+  <div class="wh">
+    <h2>🚄 Willkommen bei der DVN</h2>
+    <p> Plattform für Netzpläne, Stellenanzeigen, News &amp; Schichtplanung</p>
+  </div>
+  <div class="card">
+    <div class="ch"><div class="ci">✏️</div><h2>Willkommenstext</h2><span class="badge">DVN</span></div>
+    <div class="wt" id="welcomeText"></div>
+  </div>
+  <div class="card">
+    <div class="ch"><div class="ci">📸</div><h2>Impressionen</h2><span class="badge">6 Bilder</span></div>
+    <div class="gg" id="imageGallery">
+      <div class="gi"><img src="images/434145.png" alt="" loading="lazy"><div class="ov"><span>DVN Impression 1</span></div></div>
+      <div class="gi"><img src="images/1242.png" alt="" loading="lazy"><div class="ov"><span>DVN Impression 2</span></div></div>
+      <div class="gi"><img src="images/12432.png" alt="" loading="lazy"><div class="ov"><span>DVN Impression 3</span></div></div>
+      <div class="gi"><img src="images/123412.png" alt="" loading="lazy"><div class="ov"><span>DVN Impression 4</span></div></div>
+      <div class="gi"><img src="images/2134.png" alt="" loading="lazy"><div class="ov"><span>DVN Impression 5</span></div></div>
+      <div class="gi"><img src="images/123.png" alt="" loading="lazy"><div class="ov"><span>DVN Impression 6</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ NETZPLAN ═══════════ -->
+<section id="netzplan" class="page">
+  <div class="nw">
+    <div class="nh"><h2>🗺️ DVN-Netzplan</h2><p>Gesamtnetz – Stand Juni 2026</p></div>
+    <div class="niw">
+      <div class="dvn-stamp">DVN</div>
+      <div class="nwm">DVN NETZ</div>
+      <img src="images/3454325345.png" alt="DVN-Netzplan" loading="lazy">
+    </div>
+    <div class="nl">
+      <div class="nl-item"><span class="sw r"></span> DVN-Stationen</div>
+      <div class="nl-item"><span class="sw g"></span> Anschlussbahnhöfe</div>
+      <div class="nl-item" style="margin-left:auto;font-size:.7rem;color:var(--g400)">ⓘ DVN – Änderungen vorbehalten</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ STELLENANZEIGEN ═══════════ -->
+<section id="stellen" class="page">
+  <div class="card">
+    <div class="ch"><div class="ci">📋</div><h2>Stellen<span>anzeigen</span></h2><span class="badge" id="stellenBadge"></span></div>
+    <div class="sa-grid" id="saGrid"></div>
+  </div>
+</section>
+
+<!-- ═══════════ SHIFTS ═══════════ -->
+<section id="shifts" class="page">
+  <div class="card">
+    <div class="ch"><div class="ci">⏰</div><h2>Schicht<span>plan</span></h2><span class="badge" id="shiftCountBadge">0</span></div>
+    <div class="sl" id="shiftsListPublic"></div>
+  </div>
+</section>
+
+<!-- ═══════════ NEWS ═══════════ -->
+<section id="news" class="page">
+  <div class="card">
+    <div class="ch"><div class="ci">📰</div><h2>Aktuelle <span>News</span></h2><span class="badge" id="newsBadge">0</span></div>
+    <div class="news-grid" id="newsGrid"></div>
+  </div>
+</section>
+
+<!-- ═══════════ ADMIN ═══════════ -->
+<section id="admin" class="page">
+  <div class="card">
+    <div class="ch"><div class="ci">⚙️</div><h2>Admin-<span>Bereich</span></h2><span class="badge" id="adminBadge"></span></div>
+
+    <div class="admin-nav">
+      <button class="active" data-apanel="bewerbungen">📋 Bewerbungen</button>
+      <button data-apanel="schichten">⏰ Schichten</button>
+      <button data-apanel="newsadmin">📰 News verwalten</button>
+    </div>
+
+    <!-- Admin: Bewerbungen -->
+    <div class="admin-panel active" id="apanel-bewerbungen">
+      <div class="sub-title">Stellen verwalten</div>
+      <div class="sa-grid" id="adminStellenGrid"></div>
+      <div class="sub-title" style="margin-top:1rem">Eingegangene Bewerbungen</div>
+      <div id="adminBewList"></div>
+    </div>
+
+    <!-- Admin: Schichten -->
+    <div class="admin-panel" id="apanel-schichten">
+      <div class="sub-title">Neue Schicht anlegen</div>
+      <div class="shift-add">
+        <input type="text" id="sTitle" placeholder="Titel">
+        <input type="date" id="sDate">
+        <input type="text" id="sTime" placeholder="Zeitraum (06:00–14:00)">
+        <input type="text" id="sDesc" placeholder="Beschreibung">
+        <input type="file" id="sImage" accept="image/*">
+        <button onclick="addShift()">➕ Schicht anlegen</button>
+      </div>
+      <div class="sub-title">Alle Schichten</div>
+      <div class="sl" id="adminShiftsList"></div>
+    </div>
+
+    <!-- Admin: News -->
+    <div class="admin-panel" id="apanel-newsadmin">
+      <div class="sub-title">Neuen News-Beitrag erstellen</div>
+      <div class="news-admin-form" id="newsAdminForm">
+        <label>Titel</label>
+        <input type="text" id="newsTitle" placeholder="News-Titel">
+        <label>Text</label>
+        <textarea id="newsText" placeholder="News-Inhalt..."></textarea>
+        <label>Bild (optional)</label>
+        <input type="file" id="newsImage" accept="image/*">
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="clearNewsForm()">Zurücksetzen</button>
+          <button style="background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);box-shadow:0 3px 10px rgba(198,40,40,.2)" onclick="addNews()">📰 News veröffentlichen</button>
+        </div>
+      </div>
+      <div class="sub-title" style="margin-top:1.5rem">Veröffentlichte News</div>
+      <div class="news-list-admin" id="adminNewsList"></div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // ═════════════════════════════════════════════════════════════════════
+  //  KONFIGURATION
+  // ═════════════════════════════════════════════════════════════════════
+
+  const WELCOME_TEXT = `Willkommen beim Deutsches Verkehrsnetz (DVN)!
+
+Wir freuen uns, Sie auf unserer Website begrüßen zu dürfen. Hier finden Sie alle wichtigen Informationen zu Netzplänen, offenen Stellenanzeigen, aktuellen News und später auch die Schichtplanung.
+
+Bei Fragen wenden Sie sich bitte per Ticket auf unserem Discord Server an uns!.
+Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn</a>`;
+
+  const ADMINS = [
+    { username: 'jggaming2518',    password: 'JLG161218MGB!' },
+   
+    // Hier beliebig viele weitere Admins hinzufügen
+  ];
+
+  const STELLEN = [
+    {
+      id: 'tf',
+      title: 'EiB L/T -> Triebfahrzeugführer',
+      description: 'Sie übernehmen die Verantwortung für die sichere und pünktliche Führung unserer Züge im DVN-Netz. Wir bieten eine moderne Fahrzeugflotte und geregelte Arbeitszeiten.',
+      requirements: [
+        ' - Sie sollten 14+ Jahre alt  sein',
+         ' - gute Grammatik',
+         ' - Geduld',
+         ' - ein Funktionierendes Mikrofon',
+      ],
+      open: true,
+      fields: [
+        { type:'text',     label:'Vorname',              name:'vorname',       required:true },
+        { type:'text',     label:'Nachname',             name:'nachname',      required:true },
+        { type:'email',    label:'E-Mail',                name:'email',         required:true },
+        { type:'text',     label:'Discord-Name',          name:'discord',       required:false, placeholder:'z.B. user#1234' },
+        { type:'text',     label:'Discord-ID (zum Anpingen)', name:'discord_id', required:false, placeholder:'Rechtsklick > ID kopieren' },
+        { type:'tel',      label:'Telefon',               name:'telefon',       required:false },
+        { type:'date',     label:'Geburtsdatum',          name:'geburtsdatum',  required:true },
+        { type:'text',     label:'Wohnort',               name:'wohnort',       required:true },
+        { type:'select',   label:'Führerschein Klasse B', name:'fuehrerschein_b', options:['Ja','Nein'], required:true },
+        { type:'checkbox', label:'Ich besitze bereits einen gültigen TF-Führerschein', name:'tf_schein', required:false },
+        { type:'checkbox', label:'Ich bin bereit zur Umschulung', name:'umschulung', required:false },
+        { type:'text',     label:'Derzeitiger Arbeitgeber', name:'arbeitgeber', required:false },
+        { type:'textarea', label:'Motivationsschreiben',  name:'motivation',   required:true },
+        { type:'file',     label:'Lebenslauf (PDF)',      name:'lebenslauf',   required:false },
+      ]
+    },
+    {
+      id: 'fdl',
+      title: 'EiB ZVS -> Fahrdienstleiter',
+      description: 'Als Fahrdienstleiter steuern Sie den Zugverkehr auf unseren Strecken und sorgen für einen reibungslosen und sicheren Betriebsablauf.',
+      requirements: [
+        '- Sie sollten 14+ Jahre alt sein ',
+        '- gute Konzentration',
+        '- Geduld',
+        '- ein Funktionierendes Mikrofon',
+        '- eine gute Aufmerksamkeit'
+      ],
+      open: true,
+      fields: [
+        { type:'text',     label:'Vorname',                name:'vorname',      required:true },
+        { type:'text',     label:'Nachname',               name:'nachname',     required:true },
+        { type:'email',    label:'E-Mail',                  name:'email',        required:true },
+        { type:'text',     label:'Discord-Name',            name:'discord',      required:false, placeholder:'z.B. user#1234' },
+        { type:'text',     label:'Discord-ID (zum Anpingen)', name:'discord_id', required:false, placeholder:'Rechtsklick > ID kopieren' },
+        { type:'tel',      label:'Telefon',                 name:'telefon',      required:false },
+        { type:'date',     label:'Geburtsdatum',            name:'geburtsdatum', required:true },
+        { type:'text',     label:'Wohnort',                 name:'wohnort',      required:true },
+        { type:'select',   label:'FDL-Ausbildung',          name:'fdl_abschluss', options:['Ja','Nein','In Ausbildung'], required:true },
+        { type:'checkbox', label:'Ich besitze eine ZVS-Zulassung', name:'zvs_zulassung', required:false },
+        { type:'checkbox', label:'Schichtbereitschaft',     name:'schichtbereit', required:false },
+        { type:'textarea', label:'Berufserfahrung',         name:'erfahrung',    required:false },
+        { type:'textarea', label:'Motivationsschreiben',    name:'motivation',   required:true },
+        { type:'file',     label:'Lebenslauf (PDF)',        name:'lebenslauf',  required:false },
+      ]
+    },
+    // Hier weitere Stellen hinzufügen...
+  ];
+
+  // ─── Discord Webhook (optional – für Benachrichtigungen bei Entscheidungen) ───
+  const DISCORD_WEBHOOK_URL = ''; // Webhook-URL hier eintragen, z.B. 'https://discord.com/api/webhooks/...'
+  // Bei Entscheidung wird der Nutzer per <@ID> erwähnt, wenn eine Discord-ID im Formular angegeben wurde.
+  // Hinweis: Der User muss dafür "Entwicklermodus" in Discord aktivieren und seine ID per Rechtsklick kopieren.
+
+  async function sendDiscordNotification(title, description, color, fields) {
+    if (!DISCORD_WEBHOOK_URL) return;
+    try {
+      await fetch(DISCORD_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          embeds: [{
+            title,
+            description,
+            color: color || 0xc62828,
+            fields: fields || [],
+            timestamp: new Date().toISOString(),
+            footer: { text: 'DVN Bewerbungssystem' }
+          }]
+        })
+      });
+    } catch(e) { console.warn('Discord-Webhook fehlgeschlagen:', e); }
+  }
+
+  // ═════════════════════════════════════════════════════════════════════
+
+  // ─── Gespeicherten Status laden (Stellen offen/geschlossen) ───
+  try {
+    const savedOpen = localStorage.getItem('dvn_stellen_open');
+    if (savedOpen) {
+      const openMap = JSON.parse(savedOpen);
+      STELLEN.forEach(s => { if (openMap[s.id] !== undefined) s.open = openMap[s.id]; });
+    }
+  } catch(e) {}
+
+  let loggedIn = false, loggedInUser = null;
+  let shifts = []; try{const s=localStorage.getItem('dvn_shifts');if(s)shifts=JSON.parse(s)}catch(e){}
+  let applications = []; try{const a=localStorage.getItem('dvn_applications');if(a)applications=JSON.parse(a)}catch(e){}
+  let newsItems = []; try{const n=localStorage.getItem('dvn_news');if(n)newsItems=JSON.parse(n)}catch(e){}
+
+  document.getElementById('welcomeText').innerHTML = WELCOME_TEXT;
+
+  // ─── Navigation ───
+  document.querySelectorAll('nav button[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.page === 'admin' && !loggedIn) return;
+      document.querySelectorAll('nav button[data-page], .page').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.page).classList.add('active');
+      if (btn.dataset.page === 'admin') {
+        document.querySelectorAll('[data-apanel]').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+        const firstPanel = document.querySelector('[data-apanel]');
+        if (firstPanel) { firstPanel.classList.add('active'); document.getElementById('apanel-'+firstPanel.dataset.apanel)?.classList.add('active'); }
+        renderAdminPanels();
+        renderAdminShifts();
+        renderAdminNewsList();
+      }
+      if (btn.dataset.page === 'news') renderNews();
+      if (btn.dataset.page === 'shifts') renderPublicShifts();
+    });
+  });
+
+  // ─── Login ───
+  function openLogin() { document.getElementById('loginModal').classList.add('open'); document.getElementById('loginError').style.display='none'; document.getElementById('loginUser').value=''; document.getElementById('loginPass').value=''; setTimeout(()=>document.getElementById('loginUser').focus(),100); }
+  function closeLogin() { document.getElementById('loginModal').classList.remove('open'); }
+  function doLogin() {
+    const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('loginPass').value;
+    const found=ADMINS.find(a=>a.username===u&&a.password===p);
+    if(found){ loggedIn=true; loggedInUser=u; closeLogin(); updateUI(); }
+    else document.getElementById('loginError').style.display='block';
+  }
+  function toggleDropdown(e){
+    e.stopPropagation();
+    document.getElementById('userDropdown').classList.toggle('open');
+  }
+  document.addEventListener('click', () => {
+    const d=document.getElementById('userDropdown'); if(d) d.classList.remove('open');
+  });
+
+  function logout(){
+    loggedIn=false; loggedInUser=null;
+    document.getElementById('userDropdown').classList.remove('open');
+    document.querySelectorAll('nav button[data-page], .page').forEach(el => el.classList.remove('active'));
+    document.querySelector('nav button[data-page="willkommen"]').classList.add('active');
+    document.getElementById('willkommen').classList.add('active');
+    updateUI();
+  }
+
+  function updateUI() {
+    const adminBtn=document.getElementById('adminNavBtn');
+    const userMenu=document.getElementById('userMenu');
+    const loginBtn=document.getElementById('loginNavBtn');
+    const userDisp=document.getElementById('userNameDisplay');
+    if(loggedIn){
+      if(adminBtn) adminBtn.style.display='flex';
+      userMenu.style.display='flex';
+      loginBtn.style.display='none';
+      userDisp.textContent=loggedInUser;
+      const d2=document.getElementById('userNameDisplay2');
+      if(d2) d2.textContent=loggedInUser;
+    } else {
+      if(adminBtn) adminBtn.style.display='none';
+      userMenu.style.display='none';
+      loginBtn.style.display='flex';
+      if(document.getElementById('admin').classList.contains('active')){
+        document.querySelector('nav button[data-page="willkommen"]').click();
+      }
+    }
+    renderStellen();
+    renderPublicShifts();
+    renderAdminPanels();
+    renderNews();
+  }
+
+  // ─── Admin Sub-Navigation ───
+  document.querySelectorAll('[data-apanel]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-apanel]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+      const panel=document.getElementById('apanel-'+btn.dataset.apanel);
+      if(panel){ panel.classList.add('active'); if(btn.dataset.apanel==='schichten') renderAdminShifts(); if(btn.dataset.apanel==='newsadmin') renderAdminNewsList(); }
+    });
+  });
+
+  // ─── Stellenanzeigen ───
+  function renderStellen() {
+    const grid=document.getElementById('saGrid');
+    grid.innerHTML=STELLEN.map(s=>`
+      <div class="sa-card">
+        <div class="sa-title">${s.title}<span>${s.open?'– Bewerbungen offen':'– Derzeit geschlossen'}</span></div>
+        <div class="sa-meta"><span class="sa-tag ${s.open?'open':'closed'}">${s.open?'● Offen':'▼ Geschlossen'}</span></div>
+        <div class="sa-desc">${s.description}</div>
+        <div class="sa-req"><strong>Anforderungen:</strong><ul>${s.requirements.map(r=>`<li>${r}</li>`).join('')}</ul></div>
+        <div class="sa-actions">
+          <button class="btn-apply" ${s.open?'':'disabled'} onclick="${s.open?`openBewerb('${s.id}')`:''}">
+            ${s.open?'📝 Jetzt bewerben':'🔒 Derzeit geschlossen'}
+          </button>
+        </div>
+      </div>`).join('');
+    document.getElementById('stellenBadge').textContent=STELLEN.filter(s=>s.open).length+' offen / '+STELLEN.length;
+  }
+
+  // ─── Bewerbungsformular ───
+  let currentStelle=null;
+  function openBewerb(id) {
+    const st=STELLEN.find(s=>s.id===id); if(!st||!st.open) return;
+    currentStelle=st;
+    document.getElementById('bewerbModalTitle').textContent='📝 Bewerbung: '+st.title;
+    document.getElementById('bewerbError').style.display='none';
+    const c=document.getElementById('bewerbFormFields');
+    c.innerHTML=st.fields.map(f=>{
+      const req=f.required?' <span class="req" style="color:var(--r500)">*</span>':'';
+      const fid='bf_'+f.name;
+      if(f.type==='checkbox') return `<div class="ff checkbox" style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem"><input type="checkbox" id="${fid}" name="${f.name}" style="width:18px;height:18px;accent-color:var(--r500)"><label for="${fid}" style="margin:0;cursor:pointer;font-size:.85rem">${f.label}${req}</label></div>`;
+      if(f.type==='select') return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><select id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit">${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
+      if(f.type==='textarea') return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><textarea id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit;min-height:80px;resize:vertical"></textarea></div>`;
+      if(f.type==='file') return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><input type="file" id="${fid}" name="${f.name}" accept=".pdf,.doc,.docx" style="width:100%;padding:.4rem"></div>`;
+      const placeholder=f.placeholder?' placeholder="'+f.placeholder+'"':'';
+      return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><input type="${f.type}" id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit" ${f.type==='tel'?'pattern="[0-9\\s\\+\\-]+"':''}${placeholder}></div>`;
+    }).join('');
+    document.getElementById('bewerbModal').classList.add('open');
+  }
+  function closeBewerb(){ document.getElementById('bewerbModal').classList.remove('open'); currentStelle=null; }
+  function submitBewerb(){
+    if(!currentStelle) return;
+    const data={}; let valid=true;
+    currentStelle.fields.forEach(f=>{
+      const el=document.getElementById('bf_'+f.name); if(!el) return;
+      if(f.type==='checkbox'){ data[f.name]=el.checked; return; }
+      if(f.type==='file'){ data[f.name]=el.files[0]?el.files[0].name:''; return; }
+      data[f.name]=el.value.trim();
+      if(f.required&&!data[f.name]){ valid=false; el.style.borderColor='var(--r400)'; }
+      else el.style.borderColor='';
+    });
+    if(!valid){ document.getElementById('bewerbError').style.display='block'; return; }
+    document.getElementById('bewerbError').style.display='none';
+    applications.push({ id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), stelleId:currentStelle.id, data, datum:new Date().toLocaleDateString('de-DE'), status:'pending', adminNote:'', adminNoteBy:'' });
+    try{localStorage.setItem('dvn_applications',JSON.stringify(applications))}catch(e){}
+    closeBewerb();
+    alert('✅ Bewerbung erfolgreich eingereicht!');
+    if(loggedIn) renderAdminPanels();
+  }
+
+  // ─── Admin Panels ───
+  function renderAdminPanels() {
+    if(!loggedIn) return;
+    // Stellen Grid im Admin
+    const sg=document.getElementById('adminStellenGrid');
+    if(sg) sg.innerHTML=STELLEN.map((s,i)=>`
+      <div class="sa-card" style="border-left:4px solid ${s.open?'#065f46':'var(--g300)'}">
+        <div class="sa-title" style="font-size:.95rem">${s.title}</div>
+        <div class="sa-meta"><span class="sa-tag ${s.open?'open':'closed'}">${s.open?'● Offen':'▼ Geschlossen'}</span></div>
+        <div style="font-size:.8rem;color:var(--g500);margin:.5rem 0">Bewerbungen: ${applications.filter(a=>a.stelleId===s.id).length} · Angenommen: ${applications.filter(a=>a.stelleId===s.id&&a.status==='accepted').length}</div>
+        <button class="btn-toggle ${s.open?'open':''}" onclick="toggleStelle(${i})">${s.open?'🔒 Schließen':'🔓 Öffnen'}</button>
+      </div>`).join('');
+
+    // Bewerbungsliste
+    const bl=document.getElementById('adminBewList');
+    if(!bl) return;
+    if(applications.length===0) bl.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Noch keine Bewerbungen eingegangen.</div>';
+    else bl.innerHTML='<div class="ab-list">'+applications.map((a,i)=>{
+      const st=STELLEN.find(s=>s.id===a.stelleId);
+      const dataHtml=Object.entries(a.data).filter(([k])=>!['lebenslauf'].includes(k)).map(([k,v])=>`<span class="k">${k}:</span><span class="v">${v}</span>`).join('');
+      return `<div class="ab-item">
+        <div class="ab-head">
+          <span class="ab-name">${a.data.vorname||'?'} ${a.data.nachname||'?'}</span>
+          <span class="ab-date">${a.datum} · ${st?st.title:'?'}</span>
+          <span class="ab-status ${a.status}">${a.status==='pending'?'Ausstehend':a.status==='accepted'?'Angenommen':'Abgelehnt'}</span>
+        </div>
+        <div class="ab-data">${dataHtml}</div>
+        ${a.adminNote?'<div style="font-size:.8rem;color:var(--g500);margin-top:.3rem">📝 '+(a.adminNoteBy?a.adminNoteBy+': ':'')+a.adminNote+'</div>':''}
+        ${a.status==='pending'?`
+        <div class="ab-actions">
+          <button class="accept" onclick="appAction(${i},'accepted')">✓ Annehmen</button>
+          <button class="reject" onclick="appAction(${i},'rejected')">✗ Ablehnen</button>
+        </div>
+        <div class="ab-note-input" id="noteArea${i}">
+          <input type="text" id="noteInput${i}" placeholder="Begründung (optional)">
+          <button onclick="submitNote(${i})">Bestätigen</button>
+        </div>`:''}
+      </div>`;
+    }).join('')+'</div>';
+    document.getElementById('adminBadge').textContent='Angemeldet als '+loggedInUser;
+  }
+
+  let pendingAction=null;
+  function appAction(idx,action){
+    const area=document.getElementById('noteArea'+idx);
+    if(area){ area.style.display=area.style.display==='none'?'flex':'none'; pendingAction={idx,action}; }
+    else doAppAction(idx,action,'');
+  }
+  function submitNote(idx){
+    const note=document.getElementById('noteInput'+idx).value.trim();
+    if(pendingAction&&pendingAction.idx===idx){ doAppAction(idx,pendingAction.action,note); pendingAction=null; }
+  }
+  function doAppAction(idx,action,note){
+    const a=applications[idx]; if(!a) return;
+    a.status=action; if(note){ a.adminNote=note; a.adminNoteBy=loggedInUser; }
+    try{localStorage.setItem('dvn_applications',JSON.stringify(applications))}catch(e){}
+    renderAdminPanels();
+
+    // Discord-Benachrichtigung mit Erwähnung
+    const st=STELLEN.find(s=>s.id===a.stelleId);
+    const statusText=action==='accepted'?'✅ Angenommen':'❌ Abgelehnt';
+    const color=action==='accepted'?0x22c55e:0xef4444;
+    const mention=a.data.discord_id ? '<@'+a.data.discord_id+'>' : '';
+    const desc=mention
+      ? mention+' – Die Bewerbung von **'+a.data.vorname+' '+a.data.nachname+'** wurde **'+statusText.toLowerCase()+'**.'
+      : 'Die Bewerbung von **'+a.data.vorname+' '+a.data.nachname+'** wurde **'+statusText.toLowerCase()+'**.';
+    const fields=[
+      {name:'Bewerber', value:a.data.vorname+' '+a.data.nachname, inline:true},
+      {name:'Position', value:st?st.title:'?', inline:true},
+      {name:'E-Mail', value:a.data.email||'—', inline:true},
+      {name:'Datum', value:a.datum, inline:true},
+    ];
+    if(a.data.discord) fields.push({name:'Discord', value:a.data.discord, inline:true});
+    if(note) fields.push({name:'Begründung', value:note});
+    sendDiscordNotification('Bewerbung '+statusText, desc, color, fields);
+  }
+  function toggleStelle(i){
+    STELLEN[i].open=!STELLEN[i].open;
+    try { const map={}; STELLEN.forEach(s=>{ map[s.id]=s.open; }); localStorage.setItem('dvn_stellen_open',JSON.stringify(map)); } catch(e) {}
+    renderStellen(); renderAdminPanels();
+  }
+
+  // ─── Shifts ───
+  function renderPublicShifts(){
+    const list=document.getElementById('shiftsListPublic');
+    list.innerHTML=''; document.getElementById('shiftCountBadge').textContent=shifts.length+' Schichten';
+    if(shifts.length===0){ list.innerHTML='<div style="text-align:center;padding:2.5rem;color:var(--g400)">📅 Keine Schichten eingetragen.</div>'; return; }
+    shifts.forEach(s=>{
+      const d=document.createElement('div'); d.className='sc';
+      d.innerHTML=`<div class="stb"><div class="l1">${s.time}</div><div class="l2">${s.date||''}</div></div>
+        <div class="si"><h3>${s.title}</h3>${s.desc?'<p>'+s.desc+'</p>':''}${s.image?'<br><img src="'+s.image+'" class="shift-img" alt="">':''}</div>`;
+      list.appendChild(d);
+    });
+  }
+  function renderAdminShifts(){
+    const list=document.getElementById('adminShiftsList');
+    if(!list) return;
+    list.innerHTML='';
+    if(shifts.length===0){ list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Keine Schichten vorhanden.</div>'; return; }
+    shifts.forEach((s,i)=>{
+      const d=document.createElement('div'); d.className='sc';
+      d.innerHTML=`<div class="stb"><div class="l1">${s.time}</div><div class="l2">${s.date||''}</div></div>
+        <div class="si"><h3>${s.title}</h3>${s.desc?'<p>'+s.desc+'</p>':''}${s.image?'<br><img src="'+s.image+'" class="shift-img" alt="">':''}</div>
+        <div class="sa"><button onclick="editShift(${i})" title="Bearbeiten">✏️</button><button onclick="delShift(${i})" title="Löschen">🗑️</button></div>`;
+      list.appendChild(d);
+    });
+  }
+  function addShift(){
+    const title=document.getElementById('sTitle').value.trim(), date=document.getElementById('sDate').value;
+    const time=document.getElementById('sTime').value.trim(), desc=document.getElementById('sDesc').value.trim();
+    const fileInput=document.getElementById('sImage');
+    if(!title||!time){ alert('Bitte Titel und Zeitraum angeben!'); return; }
+    const addShiftWithImage=(imgDataUrl)=>{
+      shifts.push({title,date,time,desc,image:imgDataUrl||''});
+      try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){}
+      document.getElementById('sTitle').value=''; document.getElementById('sDate').value='';
+      document.getElementById('sTime').value=''; document.getElementById('sDesc').value='';
+      document.getElementById('sImage').value='';
+      renderPublicShifts(); renderAdminShifts();
+    };
+    if(fileInput&&fileInput.files[0]){
+      const reader=new FileReader();
+      reader.onload=e=>addShiftWithImage(e.target.result);
+      reader.readAsDataURL(fileInput.files[0]);
+    } else addShiftWithImage(null);
+  }
+  let editingShiftIdx=null;
+  function editShift(i){
+    editingShiftIdx=i; const s=shifts[i];
+    document.getElementById('seTitle').value=s.title; document.getElementById('seDate').value=s.date||'';
+    document.getElementById('seTime').value=s.time; document.getElementById('seDesc').value=s.desc||'';
+    document.getElementById('seImage').value='';
+    document.getElementById('shiftEditModal').classList.add('open');
+  }
+  function closeShiftEdit(){ document.getElementById('shiftEditModal').classList.remove('open'); editingShiftIdx=null; }
+  function saveShiftEdit(){
+    if(editingShiftIdx===null) return;
+    const s=shifts[editingShiftIdx];
+    s.title=document.getElementById('seTitle').value.trim();
+    s.date=document.getElementById('seDate').value;
+    s.time=document.getElementById('seTime').value.trim();
+    s.desc=document.getElementById('seDesc').value.trim();
+    const fileInput=document.getElementById('seImage');
+    const save=()=>{ try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){} closeShiftEdit(); renderPublicShifts(); renderAdminShifts(); };
+    if(fileInput&&fileInput.files[0]){
+      const reader=new FileReader();
+      reader.onload=e=>{ s.image=e.target.result; save(); };
+      reader.readAsDataURL(fileInput.files[0]);
+    } else save();
+  }
+  function delShift(i){ shifts.splice(i,1); try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){} renderPublicShifts(); renderAdminShifts(); }
+
+  // ─── News ───
+  function renderNews(){
+    const grid=document.getElementById('newsGrid');
+    document.getElementById('newsBadge').textContent=newsItems.length+' Beiträge';
+    if(newsItems.length===0){ grid.innerHTML='<div class="news-empty"><div class="big">📰</div>Noch keine News vorhanden.</div>'; return; }
+    grid.innerHTML=[...newsItems].reverse().map(n=>`
+      <div class="news-card">
+        ${n.image?`<img class="nc-img" src="${n.image}" alt="${n.title}" loading="lazy">`:''}
+        <div class="nc-body">
+          <div class="nc-date">${n.date} · ${n.author||'DVN'}</div>
+          <div class="nc-title">${n.title}</div>
+          <div class="nc-text" style="white-space:pre-wrap">${n.text}</div>
+        </div>
+      </div>`).join('');
+  }
+  function addNews(){
+    const title=document.getElementById('newsTitle').value.trim();
+    const text=document.getElementById('newsText').value.trim();
+    const fileInput=document.getElementById('newsImage');
+    if(!title||!text){ alert('Bitte Titel und Text eingeben!'); return; }
+    const publish=(imgDataUrl)=>{
+      newsItems.push({title,text,image:imgDataUrl||'',date:new Date().toLocaleDateString('de-DE'),author:loggedInUser||'Admin'});
+      try{localStorage.setItem('dvn_news',JSON.stringify(newsItems))}catch(e){}
+      clearNewsForm(); renderNews(); renderAdminNewsList();
+    };
+    if(fileInput&&fileInput.files[0]){
+      const reader=new FileReader();
+      reader.onload=e=>publish(e.target.result);
+      reader.readAsDataURL(fileInput.files[0]);
+    } else publish(null);
+  }
+  function clearNewsForm(){ document.getElementById('newsTitle').value=''; document.getElementById('newsText').value=''; document.getElementById('newsImage').value=''; }
+  function renderAdminNewsList(){
+    const list=document.getElementById('adminNewsList');
+    if(!list) return;
+    if(newsItems.length===0){ list.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Noch keine News veröffentlicht.</div>'; return; }
+    list.innerHTML=[...newsItems].reverse().map((n,i)=>{
+      const realIdx=newsItems.length-1-i;
+      return `<div class="news-item-admin"><div><div class="nia-title">${n.title}</div><div class="nia-date">${n.date}</div></div><button class="nia-del" onclick="delNews(${realIdx})">🗑️</button></div>`;
+    }).join('');
+  }
+  function delNews(i){ newsItems.splice(i,1); try{localStorage.setItem('dvn_news',JSON.stringify(newsItems))}catch(e){} renderNews(); renderAdminNewsList(); }
+
+  // ─── Init ───
+  updateUI();
+</script>
+</body>
+</html>
