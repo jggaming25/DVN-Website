@@ -785,8 +785,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function doAppAction(idx,action,note){
     const a=applications[idx]; if(!a) return;
     a.status=action; if(note){ a.adminNote=note; a.adminNoteBy=loggedInUser; }
-    const statusText=action==='accepted'?'angenommen':'abgelehnt';
-    addLogEntry('Bewerbung '+statusText, a.data.vorname+' '+a.data.nachname+' ('+(STELLEN.find(s=>s.id===a.stelleId)?.title||'?')+') wurde '+statusText+(note?' – Grund: '+note:''));
+    const logStatus=action==='accepted'?'angenommen':'abgelehnt';
+    addLogEntry('Bewerbung '+logStatus, a.data.vorname+' '+a.data.nachname+' ('+(STELLEN.find(s=>s.id===a.stelleId)?.title||'?')+') wurde '+logStatus+(note?' – Grund: '+note:''));
     try{localStorage.setItem('dvn_applications',JSON.stringify(applications))}catch(e){}
     renderAdminPanels();
 
