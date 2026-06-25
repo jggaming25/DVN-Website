@@ -547,16 +547,16 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   const ACCOUNTS = [
     { username: 'jggaming2518', password: 'JLG161218MGB!', logs: true,  bewerbungen: true,  rang: 'Admin' },
-    { username: 'leon',         password: '123#AG456789!',  logs: true,  bewerbungen: true,  rang: 'FDL'   },
-    { username: 'felix',        password: '987#AG654321!',  logs: false, bewerbungen: false, rang: 'TF'    },
+    { username: 'leon',         password: '123#AG456789!', logs: true,  bewerbungen: true,  rang: 'Admin' },
+    { username: 'felix',        password: '987#AG654321!', logs: true,  bewerbungen: true,  rang: 'Admin' },
     // Hier weitere Accounts hinzufügen (rang: 'Admin'|'FDL'|'TF', logs, bewerbungen: true/false)
   ];
 
   // ─── Intern: Dokumente (Links organisiert nach Rang) ───
   const INTERN_DOKUMENTE = {
     fdl: [
-      { text: 'FDL-Dienstvorschrift', url: '#' },
-      { text: 'Betriebsanleitung FDL', url: '#' },
+      { text: 'FDL Signalling Guide', url: 'https://docs.google.com/document/d/10caAH-iSulutWpY4eK5f0TIkgfDngV19f30LtIjVRf0/edit?tab=t.0' },
+     
       // Weitere Links hier
     ],
     tf: [
@@ -615,22 +615,64 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       ],
       open: true,
       fields: [
-        { type:'text',     label:'Vorname',                name:'vorname',      required:true },
-        { type:'text',     label:'Nachname',               name:'nachname',     required:true },
-        { type:'email',    label:'E-Mail',                  name:'email',        required:true },
-        { type:'text',     label:'Discord-Name',            name:'discord',      required:false, placeholder:'z.B. user#1234' },
-        { type:'text',     label:'Discord-ID (zum Anpingen)', name:'discord_id', required:false, placeholder:'Rechtsklick > ID kopieren' },
-        { type:'tel',      label:'Telefon',                 name:'telefon',      required:false },
-        { type:'date',     label:'Geburtsdatum',            name:'geburtsdatum', required:true },
-        { type:'text',     label:'Wohnort',                 name:'wohnort',      required:true },
-        { type:'select',   label:'FDL-Ausbildung',          name:'fdl_abschluss', options:['Ja','Nein','In Ausbildung'], required:true },
-        { type:'checkbox', label:'Ich besitze eine ZVS-Zulassung', name:'zvs_zulassung', required:false },
-        { type:'checkbox', label:'Schichtbereitschaft',     name:'schichtbereit', required:false },
-        { type:'textarea', label:'Berufserfahrung',         name:'erfahrung',    required:false },
-        { type:'textarea', label:'Motivationsschreiben',    name:'motivation',   required:true },
-        { type:'file',     label:'Lebenslauf (PDF)',        name:'lebenslauf',  required:false, accept:'.pdf,.doc,.docx' },
-        { type:'file',     label:'Zertifikate / Nachweise (Bild)', name:'zertifikate', required:false, accept:'image/*' },
-        { type:'file',     label:'Weitere Anhänge (Bild)',  name:'anhang_bild', required:false, accept:'image/*' },
+        // ─── Persönliche Daten ───
+        { type:'text',     label:'Roblox Name',                         name:'roblox_name',   required:true },
+        { type:'text',     label:'Discord Name',                        name:'discord',       required:true, placeholder:'z.B. user#1234' },
+        { type:'select',   label:'Wie alt sind Sie?',                   name:'alter',         options:['Unter 14','14 oder älter'], required:true },
+
+        // ─── Signalkunde (Bild 1) ───
+        { type:'select',   label:'Frage 1: Was bedeutet das Signal? (Das nächste Signal zeigt …)', name:'frage1', options:[
+          'HP1 -> Freie Fahrt, sie können fahren!',
+          'HP2 -> Langsamfahrt!',
+          'HP0 -> Sie müssen anhalten!',
+          'HP0 -> Freie Fahrt, sie können fahren!'
+        ], required:true },
+
+        // ─── Signalkunde (Bild 2) ───
+        { type:'select',   label:'Frage 2: Was bedeutet dieses Signal?', name:'frage2', options:[
+          'Sh2 -> Schutzhalt',
+          'Sh0 -> Halt',
+          'Hp0 -> Halt',
+          'Hp1 -> Fahrt'
+        ], required:true },
+
+        // ─── Signalkunde (Bild 3) ───
+        { type:'select',   label:'Frage 3: Was bedeutet dieses Signal?', name:'frage3', options:[
+          'Hp1 -> Halt',
+          'Hp1 -> Fahrt',
+          'Hp0 -> Halt',
+          'Hp2 -> Halt',
+          'Hp0 -> Fahrt'
+        ], required:true },
+
+        // ─── Signalkunde (Bild 4) ───
+        { type:'select',   label:'Frage 4: Was bedeutet dieses Signal?', name:'frage4', options:[
+          'Hp2 -> Fahrt',
+          'Hp1 -> Halt',
+          'Hp3 -> Fahrt',
+          'Hp1 -> Fahrt',
+          'Hp0 -> Fahrt'
+        ], required:true },
+
+        // ─── Signalkunde (Bild 5 – Multiple Choice, 2 Antworten) ───
+        { type:'text',     label:'Frage 5: Was bedeutet das Signal? (2 Antworten, durch Komma trennen)', name:'frage5', required:true, placeholder:'z.B. HP2 -> Langsamfahrt, Ich muss vor dem Signal anhalten' },
+        { type:'checkbox', label:'Frage 5a: Hp0 -> Fahrt',              name:'f5_hp0',        required:false },
+        { type:'checkbox', label:'Frage 5b: Hp2 -> Langsamfahrt',       name:'f5_hp2',        required:false },
+        { type:'checkbox', label:'Frage 5c: Hp1 -> Halt',               name:'f5_hp1',        required:false },
+        { type:'checkbox', label:'Frage 5d: Ich darf mit maximal 40 km/h fahren', name:'f5_40', required:false },
+        { type:'checkbox', label:'Frage 5e: Ich muss vor dem Signal anhalten',    name:'f5_halt', required:false },
+
+        // ─── Fachfragen (Eingabe) ───
+        { type:'textarea', label:'Wann wird VR0 gestellt?',             name:'vr0',           required:true },
+        { type:'textarea', label:'Was ist die Reihenfolge zum Stellen der Bahnanlagen für eine Fahrstraße?', name:'reihenfolge', required:true },
+        { type:'textarea', label:'Welche Prioritäten haben die Zuggattungen? Bitte zählen Sie von der höchsten bis zur niedrigsten auf.', name:'prioritaeten', required:true },
+        { type:'textarea', label:'Was ist die Aufgabe vom Flankenschutz?', name:'flankenschutz', required:true },
+
+        // ─── Allgemeine Fragen ───
+        { type:'textarea', label:'Warum wollen Sie sich als EiB ZVS bewerben?', name:'motivation', required:true },
+        { type:'textarea', label:'Was sind Ihre Stärken und Schwächen? Bitte in vollen Sätzen.', name:'staerken_schwaechen', required:true },
+        { type:'textarea', label:'Warum sollen wir Sie eher als andere Bewerber nehmen?', name:'warum_sie', required:true },
+        { type:'textarea', label:'Sie haben es geschafft! Haben Sie noch Fragen?', name:'fragen', required:false },
       ]
     },
     // Hier weitere Stellen hinzufügen...
