@@ -503,7 +503,7 @@
     <div class="admin-nav" id="internSubNav">
       <button class="active" data-intern="dokumente">📄 Dokumente</button>
       <button data-intern="staffnews">📰 Staff News</button>
-      <button data-intern="shiftplan">📋 Shift Plan</button>
+      <button data-intern="shiftplanview">📋 Shift Plan</button>
       <button data-intern="strafen">⚠️ Strafen</button>
     </div>
 
@@ -520,37 +520,13 @@
       <div class="staff-news-list" id="staffNewsList"></div>
     </div>
 
-    <!-- Intern: Shift Plan -->
-    <div class="admin-panel" id="ipanel-shiftplan">
-      <div class="shiftplan-toolbar" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
-        <select id="spShiftSelect" style="padding:.5rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit;flex:1;min-width:180px">
-          <option value="">— Schicht auswählen —</option>
-        </select>
-        <button id="spNewBtn" onclick="spNew()" style="display:none;padding:.5rem 1.2rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">➕ Neuen Plan erstellen</button>
-        <button id="spSaveBtn" onclick="spSave()" style="display:none;padding:.5rem 1.2rem;background:#065f46;color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">💾 Speichern</button>
-      </div>
-
-      <div id="spPlansList" style="margin-bottom:1rem"></div>
-
-      <div id="spEditor" style="display:none">
-        <div class="sub-title">Schichtplan · <span id="spEditorTitle"></span></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-          <div class="sp-stwl" data-stwl="AK"><div class="sp-stwl-title">STWL AK</div><div class="sp-entries" id="sp_AK"></div><button class="sp-add-entry" onclick="spAddEntry('AK')">+ Eintrag</button></div>
-          <div class="sp-stwl" data-stwl="BHBF"><div class="sp-stwl-title">STWL BHBF</div><div class="sp-entries" id="sp_BHBF"></div><button class="sp-add-entry" onclick="spAddEntry('BHBF')">+ Eintrag</button></div>
-          <div class="sp-stwl" data-stwl="NS"><div class="sp-stwl-title">STWL NS</div><div class="sp-entries" id="sp_NS"></div><button class="sp-add-entry" onclick="spAddEntry('NS')">+ Eintrag</button></div>
-          <div class="sp-stwl" data-stwl="STB"><div class="sp-stwl-title">STWL STB</div><div class="sp-entries" id="sp_STB"></div><button class="sp-add-entry" onclick="spAddEntry('STB')">+ Eintrag</button></div>
-        </div>
-        <div class="sp-tf" style="margin-top:1rem">
-          <div class="sp-stwl-title" style="margin-bottom:.5rem">🚆 Triebfahrzeugführer (TF)</div>
-          <div class="sp-entries" id="sp_TF"></div>
-          <button class="sp-add-entry" onclick="spAddEntry('TF')">+ Eintrag</button>
-        </div>
-
-        <details id="spDutyRef" open style="margin-top:1.25rem;background:var(--g50);border-radius:var(--rs);padding:.75rem 1rem;cursor:pointer">
-          <summary style="font-weight:600;font-size:.85rem;color:var(--g600);cursor:pointer">📋 Dutys aus Organisationsplan</summary>
-          <div id="spDutyRefContent" style="margin-top:.75rem;font-size:.82rem;cursor:auto"></div>
-        </details>
-        <div id="spSignins" style="margin-top:1rem"></div>
+    <!-- Intern: Shift Plan (Read-Only) -->
+    <div class="admin-panel" id="ipanel-shiftplanview">
+      <div class="sub-title">📋 Shift Plan Übersicht</div>
+      <div id="spvPlansList"></div>
+      <div id="spvDetail" style="display:none;margin-top:1rem">
+        <button onclick="spvClose()" style="padding:.35rem .8rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.82rem;margin-bottom:.75rem">← Zurück</button>
+        <div id="spvContent"></div>
       </div>
     </div>
 
@@ -586,6 +562,8 @@
       <button class="active" data-apanel="bewerbungen" id="bewerbungenTabBtn">📋 Bewerbungen</button>
       <button data-apanel="schichten">⏰ Schichten</button>
       <button data-apanel="newsadmin">📰 News verwalten</button>
+      <button data-apanel="shiftplan" id="spAdminTabBtn" style="display:none">📋 Shift Plan</button>
+      <button data-apanel="accounts" id="accountsTabBtn" style="display:none">👥 Accounts</button>
       <button data-apanel="log" id="logTabBtn" style="display:none">📜 Log</button>
     </div>
 
@@ -648,6 +626,58 @@
         <button onclick="clearLog()" style="padding:.45rem 1rem;background:var(--g100);border:none;border-radius:var(--rs);font-weight:600;font-size:.8rem;cursor:pointer;font-family:inherit">🗑️ Log leeren</button>
       </div>
       <div id="logList"></div>
+    </div>
+
+    <!-- Admin: Shift Plan Editor -->
+    <div class="admin-panel" id="apanel-shiftplan">
+      <div class="shiftplan-toolbar" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
+        <select id="spShiftSelect" style="padding:.5rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit;flex:1;min-width:180px">
+          <option value="">— Schicht auswählen —</option>
+        </select>
+        <button id="spNewBtn" onclick="spNew()" style="display:none;padding:.5rem 1.2rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">➕ Neuen Plan erstellen</button>
+        <button id="spSaveBtn" onclick="spSave()" style="display:none;padding:.5rem 1.2rem;background:#065f46;color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">💾 Speichern</button>
+      </div>
+      <div id="spPlansList" style="margin-bottom:1rem"></div>
+      <div id="spEditor" style="display:none">
+        <div class="sub-title">Schichtplan · <span id="spEditorTitle"></span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+          <div class="sp-stwl" data-stwl="AK"><div class="sp-stwl-title">STWL AK</div><div class="sp-entries" id="sp_AK"></div><button class="sp-add-entry" onclick="spAddEntry('AK')">+ Eintrag</button></div>
+          <div class="sp-stwl" data-stwl="BHBF"><div class="sp-stwl-title">STWL BHBF</div><div class="sp-entries" id="sp_BHBF"></div><button class="sp-add-entry" onclick="spAddEntry('BHBF')">+ Eintrag</button></div>
+          <div class="sp-stwl" data-stwl="NS"><div class="sp-stwl-title">STWL NS</div><div class="sp-entries" id="sp_NS"></div><button class="sp-add-entry" onclick="spAddEntry('NS')">+ Eintrag</button></div>
+          <div class="sp-stwl" data-stwl="STB"><div class="sp-stwl-title">STWL STB</div><div class="sp-entries" id="sp_STB"></div><button class="sp-add-entry" onclick="spAddEntry('STB')">+ Eintrag</button></div>
+        </div>
+        <div class="sp-tf" style="margin-top:1rem">
+          <div class="sp-stwl-title" style="margin-bottom:.5rem">🚆 Triebfahrzeugführer (TF)</div>
+          <div class="sp-entries" id="sp_TF"></div>
+          <button class="sp-add-entry" onclick="spAddEntry('TF')">+ Eintrag</button>
+        </div>
+        <details id="spDutyRef" open style="margin-top:1.25rem;background:var(--g50);border-radius:var(--rs);padding:.75rem 1rem;cursor:pointer">
+          <summary style="font-weight:600;font-size:.85rem;color:var(--g600);cursor:pointer">📋 Dutys aus Organisationsplan</summary>
+          <div id="spDutyRefContent" style="margin-top:.75rem;font-size:.82rem;cursor:auto"></div>
+        </details>
+        <div id="spSignins" style="margin-top:1rem"></div>
+      </div>
+    </div>
+
+    <!-- Admin: Account-Verwaltung -->
+    <div class="admin-panel" id="apanel-accounts">
+      <div class="sub-title">Account-Verwaltung</div>
+      <div id="accManageEntry" style="display:none;margin-bottom:1.5rem;padding:1rem;background:var(--g50);border-radius:var(--rs)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+          <input type="text" id="accNewUser" placeholder="Benutzername">
+          <input type="text" id="accNewPass" placeholder="Passwort">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:.5rem">
+          <select id="accNewRang" style="padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-family:inherit">
+            <option value="">— Rang —</option>
+            <option value="Admin">Admin</option>
+            <option value="FDL">FDL</option>
+            <option value="TF">TF</option>
+          </select>
+          <button onclick="accManageAdd()" style="padding:.5rem 1.2rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">➕ Account anlegen</button>
+        </div>
+      </div>
+      <div id="accManageList"></div>
     </div>
   </div>
 </section>
@@ -922,7 +952,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         staffNewsItems = data; renderStaffNews(); break;
       case 'shiftplans':
         shiftPlans = data;
-        if(document.querySelector('#ipanel-shiftplan.active')) spRenderPlans(); break;
+        if(document.querySelector('#apanel-shiftplan.active')) spRenderPlans();
+        if(document.querySelector('#ipanel-shiftplanview.active')) spvInit(); break;
       case 'stellen_open':
         try{ Object.keys(data).forEach(id=>{ const s=STELLEN.find(x=>x.id===id); if(s) s.open=data[id]; }); }catch(e){}
         renderStellen(); if(loggedIn) renderAdminPanels(); break;
@@ -934,7 +965,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         if(loggedIn && document.querySelector('#ipanel-strafen.active')) renderStrafen(); break;
       case 'signins':
         signins = data;
-        if(loggedIn && document.querySelector('#ipanel-shiftplan.active')){
+        if(loggedIn && document.querySelector('#apanel-shiftplan.active')){
           const plan=shiftPlans.find(p=>p.id===editingSpId);
           if(plan) renderSignins(plan);
         } break;
@@ -1024,8 +1055,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const logTabBtn=document.getElementById('logTabBtn');
       if(logTabBtn) logTabBtn.style.display=loggedInAccount&&loggedInAccount.logs?'':'none';
       if(internBtn) internBtn.style.display='flex';
-      const spTab=document.getElementById('shiftplanTabBtn');
-      // Shift Plan tab now always visible for all staff
+      const spAdminTab=document.getElementById('spAdminTabBtn');
+      if(spAdminTab) spAdminTab.style.display=getShiftplanOverride()?'':'none';
+      const accountsTab=document.getElementById('accountsTabBtn');
+      if(accountsTab) accountsTab.style.display=loggedInAccount&&loggedInAccount.rang==='Admin'?'':'none';
       const bell=document.getElementById('notifBell'); if(bell) bell.style.display='flex';
       const rangEl=document.getElementById('accountRang');
       if(rangEl) rangEl.textContent=loggedInAccount?loggedInAccount.rang:'';
@@ -1058,7 +1091,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       btn.classList.add('active');
       document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
       const panel=document.getElementById('apanel-'+btn.dataset.apanel);
-      if(panel){ panel.classList.add('active'); if(btn.dataset.apanel==='schichten') renderAdminShifts(); if(btn.dataset.apanel==='newsadmin') renderAdminNewsList(); if(btn.dataset.apanel==='log') renderLog(); }
+      if(panel){ panel.classList.add('active'); if(btn.dataset.apanel==='schichten') renderAdminShifts(); if(btn.dataset.apanel==='newsadmin') renderAdminNewsList(); if(btn.dataset.apanel==='log') renderLog(); if(btn.dataset.apanel==='shiftplan') spInit(); if(btn.dataset.apanel==='accounts') accManageRender(); }
     });
   });
 
@@ -1397,7 +1430,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       btn.classList.add('active');
       document.querySelectorAll('#intern .admin-panel').forEach(p=>p.classList.remove('active'));
       const panel=document.getElementById('ipanel-'+btn.dataset.intern);
-      if(panel){ panel.classList.add('active'); if(btn.dataset.intern==='dokumente') renderDokumente(); if(btn.dataset.intern==='staffnews') renderStaffNews(); if(btn.dataset.intern==='shiftplan') spInit(); if(btn.dataset.intern==='strafen') renderStrafen(); }
+      if(panel){ panel.classList.add('active'); if(btn.dataset.intern==='dokumente') renderDokumente(); if(btn.dataset.intern==='staffnews') renderStaffNews(); if(btn.dataset.intern==='shiftplanview') spvInit(); if(btn.dataset.intern==='strafen') renderStrafen(); }
     });
   });
 
@@ -1459,10 +1492,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const list=document.getElementById('spPlansList');
     if(!list) return;
     if(shiftPlans.length===0){ list.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Noch keine Shift-Pläne erstellt.</div>'; return; }
+    const canEdit=getShiftplanOverride();
     list.innerHTML=shiftPlans.map((p,i)=>`
       <div class="sp-plan-card">
         <div><div class="sp-pc-title">${p.shiftTitle||'Unbenannt'}</div><div class="sp-pc-date">${p.date||''} · ${Object.values(p.entries||{}).reduce((s,e)=>s+e.length,0)} Einträge</div></div>
-        <button onclick="spEdit(${i})">✏️ Bearbeiten</button>
+        <div style="display:flex;gap:.35rem">
+          <button onclick="spEdit(${i})">✏️ Bearbeiten</button>
+          ${canEdit?`<button onclick="spDelete(${i})" style="background:#fef2f2;color:var(--r600);border-color:var(--r200)">🗑️</button>`:''}
+        </div>
       </div>`).join('');
   }
 
@@ -1664,6 +1701,124 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     addLogEntry('Shift-Plan gespeichert', plan.shiftTitle);
     showNotification('✅ Shift-Plan gespeichert','success');
     spRenderPlans();
+  }
+
+  function spDelete(idx){
+    if(!confirm('Shift-Plan wirklich löschen?')) return;
+    const plan=shiftPlans[idx];
+    if(!plan) return;
+    addLogEntry('Shift-Plan gelöscht', plan.shiftTitle);
+    shiftPlans.splice(idx,1);
+    try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
+    syncBroadcast('shiftplans');
+    document.getElementById('spEditor').style.display='none';
+    document.getElementById('spSaveBtn').style.display='none';
+    editingSpId=null;
+    spRenderPlans();
+  }
+
+  // ─── Account Management ───
+  function getCustomAccounts(){
+    try{const d=localStorage.getItem('dvn_custom_accounts');return d?JSON.parse(d):[]}catch(e){return []}
+  }
+  function saveCustomAccounts(list){
+    try{localStorage.setItem('dvn_custom_accounts',JSON.stringify(list))}catch(e){}
+  }
+  function accManageAdd(){
+    const user=document.getElementById('accNewUser').value.trim();
+    const pass=document.getElementById('accNewPass').value.trim();
+    const rang=document.getElementById('accNewRang').value;
+    if(!user||!pass||!rang){ showNotification('Bitte alle Felder ausfüllen.','error'); return; }
+    const list=getCustomAccounts();
+    if(list.some(a=>a.username===user)||ACCOUNTS.some(a=>a.username===user)){ showNotification('Account existiert bereits.','error'); return; }
+    list.push({username:user,password:pass,logs:false,bewerbungen:false,shiftplan:false,strafen:false,rang});
+    saveCustomAccounts(list);
+    document.getElementById('accNewUser').value=''; document.getElementById('accNewPass').value=''; document.getElementById('accNewRang').value='';
+    showNotification('✅ Account angelegt: '+user,'success');
+    accManageRender();
+  }
+  function accManageToggle(username,key){
+    const list=getCustomAccounts();
+    const acct=list.find(a=>a.username===username);
+    if(!acct) return;
+    acct[key]=!acct[key];
+    saveCustomAccounts(list);
+    accManageRender();
+  }
+  function accManageDelete(username){
+    if(!confirm('Account "'+username+'" wirklich löschen?')) return;
+    const list=getCustomAccounts().filter(a=>a.username!==username);
+    saveCustomAccounts(list);
+    accManageRender();
+  }
+  function accManageRender(){
+    const el=document.getElementById('accManageList');
+    if(!el) return;
+    const canManage=loggedInAccount&&loggedInAccount.rang==='Admin';
+    document.getElementById('accManageEntry').style.display=canManage?'block':'none';
+    if(!canManage){ el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine Berechtigung.</div>'; return; }
+    const custom=getCustomAccounts();
+    const allAccounts=[...ACCOUNTS,...custom];
+    el.innerHTML=`<div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">${allAccounts.length} Accounts · ${custom.length} benutzerdefiniert</div>
+      ${allAccounts.map(a=>{
+        const isCustom=custom.some(c=>c.username===a.username);
+        return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem">
+          <div style="font-weight:600;font-size:.85rem;min-width:120px">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(${a.rang}${isCustom?' · benutzerdefiniert':''})</span></div>
+          <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">
+            ${['logs','bewerbungen','shiftplan','strafen'].map(k=>`
+              <label style="display:flex;align-items:center;gap:.25rem;font-size:.72rem;cursor:pointer;padding:.15rem .35rem;background:${a[k]?'#bbf7d0':'var(--g50)'};border-radius:4px">
+                <input type="checkbox" ${a[k]?'checked':''} onchange="accManageToggle('${a.username}','${k}')" style="width:14px;height:14px;accent-color:var(--r500)"> ${k}
+              </label>`).join('')}
+            ${isCustom?`<button onclick="accManageDelete('${a.username}')" style="padding:.2rem .5rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">✕</button>`:''}
+          </div>
+        </div>`;
+      }).join('')}`;
+  }
+
+  // ─── Shift Plan Viewer (Intern Read-Only) ───
+  function spvInit(){
+    const el=document.getElementById('spvPlansList');
+    if(!el) return;
+    document.getElementById('spvDetail').style.display='none';
+    if(shiftPlans.length===0){ el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine Shift-Pläne vorhanden.</div>'; return; }
+    el.innerHTML=shiftPlans.map((p,i)=>`
+      <div class="sp-plan-card" style="cursor:pointer" onclick="spvShow(${i})">
+        <div><div class="sp-pc-title">${p.shiftTitle||'Unbenannt'}</div><div class="sp-pc-date">${p.date||''} · ${Object.values(p.entries||{}).reduce((s,e)=>s+e.length,0)} Einträge</div></div>
+        <span style="font-size:.72rem;color:var(--r500);font-weight:600">Ansehen →</span>
+      </div>`).join('');
+  }
+  function spvShow(idx){
+    const plan=shiftPlans[idx];
+    if(!plan) return;
+    document.getElementById('spvPlansList').style.display='none';
+    const detail=document.getElementById('spvDetail');
+    detail.style.display='block';
+    // Collect all entries
+    const stwlEntries=Object.entries(plan.entries||{}).filter(([k])=>k!=='TF');
+    const tfEntries=(plan.entries.TF||[]);
+    const planSignins=signins.filter(s=>s.shiftPlanId===plan.id);
+    document.getElementById('spvContent').innerHTML=`
+      <div class="sub-title">${plan.shiftTitle} · ${plan.date||''}</div>
+      ${stwlEntries.length?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem">
+        ${stwlEntries.map(([stwl,entries])=>`
+          <div style="background:var(--g50);border-radius:var(--rs);padding:.5rem .7rem">
+            <div style="font-weight:600;font-size:.82rem;margin-bottom:.25rem">STWL ${stwl}</div>
+            ${entries.length?entries.map(e=>`<div style="font-size:.78rem;padding:.1rem 0">${e.name||'?'} · ${e.time||''}</div>`).join(''):'<div style="font-size:.75rem;color:var(--g400)">Keine Einträge</div>'}
+          </div>`).join('')}
+      </div>`:''}
+      ${tfEntries.length?`<div style="margin-bottom:.75rem">
+        <div style="font-weight:600;font-size:.82rem;margin-bottom:.25rem">🚆 Triebfahrzeugführer</div>
+        ${tfEntries.map(e=>`<div style="font-size:.78rem;padding:.15rem 0;background:var(--g50);border-radius:var(--rs);padding:.3rem .6rem;margin-bottom:.2rem"><strong>${e.name||'?'}</strong> · ${e.duty||'—'}${e.note?' <span style="color:var(--g400)">('+e.note+')</span>':''}</div>`).join('')}
+      </div>`:''}
+      ${planSignins.length?`<div style="margin-bottom:.5rem">
+        <div style="font-weight:600;font-size:.82rem;margin-bottom:.25rem">📋 Anmeldungen</div>
+        ${planSignins.map(si=>`<div style="font-size:.78rem;padding:.15rem 0">${si.username} · ${si.role}${si.duty?' · '+si.duty:''} · ${si.timeFrom||'?'}–${si.timeTo||'?'}</div>`).join('')}
+      </div>`:''}
+      <div style="font-size:.72rem;color:var(--g400)">Plan-ID: ${plan.id} · Erstellt für Schicht #${plan.shiftIdx!==undefined?plan.shiftIdx:'?'}</div>`;
+  }
+  function spvClose(){
+    document.getElementById('spvDetail').style.display='none';
+    document.getElementById('spvPlansList').style.display='block';
   }
 
   // ─── Sign-In System ───
