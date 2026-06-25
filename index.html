@@ -214,6 +214,8 @@
   .sp-plan-card .sp-pc-date{font-size:.75rem;color:var(--g400)}
   .sp-plan-card button{background:transparent;border:2px solid var(--g200);border-radius:6px;padding:.3rem .7rem;font-size:.75rem;cursor:pointer;font-family:inherit;color:var(--g500);transition:all .15s}
   .sp-plan-card button:hover{background:var(--r500);color:var(--w);border-color:var(--r500)}
+  .signin-role-btn{padding:.5rem 1rem;background:var(--g50);border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;color:var(--g700);transition:all .15s;flex:1}
+  .signin-role-btn:hover{background:var(--r50);border-color:var(--r300);color:var(--r600)}
   .staff-news-card .sn-date{font-size:.72rem;color:var(--g400);font-weight:500}
   .staff-news-card .sn-title{font-size:.95rem;font-weight:700;color:var(--g800);margin:.15rem 0 .3rem}
   .staff-news-card .sn-text{font-size:.84rem;color:var(--g500);line-height:1.6;white-space:pre-wrap}
@@ -341,10 +343,52 @@
   <div class="modal" style="max-width:450px">
     <h2>👤 Account-Einstellungen</h2>
     <p style="margin-bottom:.75rem">Benutzer: <strong id="accModalUser"></strong> · Rang: <strong id="accModalRang"></strong></p>
+    <div id="accPermSettings" style="margin-bottom:.75rem"></div>
     <div class="sub-title">Benachrichtigungen</div>
     <div id="accNotifySettings"></div>
     <div class="btn-row" style="margin-top:1rem">
       <button class="btn-secondary" onclick="closeAccountSettings()">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SIGN-IN MODAL ═══════ -->
+<div class="modal-overlay" id="signinModal">
+  <div class="modal" style="max-width:500px">
+    <h2>📋 Anmeldung · <span id="signinShiftTitle"></span></h2>
+    <p>Melde dich für diese Schicht an.</p>
+    <div style="margin:.75rem 0;display:flex;gap:.5rem;flex-wrap:wrap">
+      <button class="signin-role-btn" data-role="TF" onclick="signinSelectRole('TF')">🚆 Triebfahrzeugführer</button>
+      <button class="signin-role-btn" data-role="FDL" onclick="signinSelectRole('FDL')">🚦 Fahrdienstleiter</button>
+      <button class="signin-role-btn" data-role="Notfallmanager" onclick="signinSelectRole('Notfallmanager')">🆘 Notfallmanager</button>
+      <button class="signin-role-btn" data-role="Schrankenwärter" onclick="signinSelectRole('Schrankenwärter')">🚧 Schrankenwärter</button>
+    </div>
+    <div id="signinFields" style="display:none">
+      <div id="signinDutyField" style="display:none;margin-bottom:.5rem">
+        <label>Duty</label>
+        <select id="signinDuty" style="width:100%;padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-family:inherit">
+          <option value="">— Duty wählen —</option>
+        </select>
+      </div>
+      <div id="signinStellwerkeField" style="display:none;margin-bottom:.5rem">
+        <label>Stellwerk(e)</label>
+        <div id="signinStellwerkeOptions" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.25rem"></div>
+      </div>
+      <div id="signinLocationField" style="display:none;margin-bottom:.5rem">
+        <label>Ort</label>
+        <input type="text" id="signinLocation" placeholder="Ort" style="width:100%;padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-family:inherit">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+        <div><label>Von</label><input type="time" id="signinTimeFrom" style="width:100%;padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-family:inherit"></div>
+        <div><label>Bis</label><input type="time" id="signinTimeTo" style="width:100%;padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-family:inherit"></div>
+      </div>
+      <div style="margin-bottom:.5rem">
+        <label>Zusatzinfos</label>
+        <textarea id="signinNotes" placeholder="Zusatzinfos..." style="width:100%;padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-family:inherit;resize:vertical;min-height:50px"></textarea>
+      </div>
+      <div id="signinPenaltyWarning" style="display:none;background:#fef2f2;border:1px solid var(--r300);border-radius:var(--rs);padding:.6rem;font-size:.82rem;color:var(--r700);margin-bottom:.5rem">⚠️ Du hast <span id="signinPenaltyHours">0</span> Strafstunden – nur Schrankenwärter möglich.</div>
+      <button onclick="signinSubmit()" style="padding:.6rem 1.5rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">✅ Anmelden</button>
+      <button class="btn-secondary" onclick="closeSigninModal()" style="margin-left:.5rem">Abbrechen</button>
     </div>
   </div>
 </div>
@@ -456,7 +500,8 @@
     <div class="admin-nav" id="internSubNav">
       <button class="active" data-intern="dokumente">📄 Dokumente</button>
       <button data-intern="staffnews">📰 Staff News</button>
-      <button data-intern="shiftplan" id="shiftplanTabBtn" style="display:none">📋 Shift Plan</button>
+      <button data-intern="shiftplan">📋 Shift Plan</button>
+      <button data-intern="strafen">⚠️ Strafen</button>
     </div>
 
     <!-- Intern: Dokumente -->
@@ -498,11 +543,31 @@
           <button class="sp-add-entry" onclick="spAddEntry('TF')">+ Eintrag</button>
         </div>
 
-        <details id="spDutyRef" ontoggle="if(this.open)spRenderDutyRef()" style="margin-top:1.25rem;background:var(--g50);border-radius:var(--rs);padding:.75rem 1rem;cursor:pointer">
-          <summary style="font-weight:600;font-size:.85rem;color:var(--g600);cursor:pointer">📋 Dutys aus Organisationsplan anzeigen</summary>
+        <details id="spDutyRef" open style="margin-top:1.25rem;background:var(--g50);border-radius:var(--rs);padding:.75rem 1rem;cursor:pointer">
+          <summary style="font-weight:600;font-size:.85rem;color:var(--g600);cursor:pointer">📋 Dutys aus Organisationsplan</summary>
           <div id="spDutyRefContent" style="margin-top:.75rem;font-size:.82rem;cursor:auto"></div>
         </details>
+        <div id="spSignins" style="margin-top:1rem"></div>
       </div>
+    </div>
+
+    <!-- Intern: Strafen -->
+    <div class="admin-panel" id="ipanel-strafen">
+      <div class="sub-title">⚠️ Strafen verwalten</div>
+      <div id="strafenEntry" style="display:none;margin-bottom:1.5rem;padding:1rem;background:var(--g50);border-radius:var(--rs)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+          <input type="text" id="strafenDiscordName" placeholder="Discord Name">
+          <input type="number" id="strafenHours" placeholder="Stunden" min="0" step="0.5">
+        </div>
+        <textarea id="strafenReason" placeholder="Grund" style="width:100%;margin-top:.5rem;padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-family:inherit;resize:vertical;min-height:60px"></textarea>
+        <div style="display:flex;gap:.5rem;margin-top:.5rem;align-items:center">
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer">
+            <input type="checkbox" id="strafenCompleted" style="width:17px;height:17px;accent-color:var(--r500)"> Abgearbeitet
+          </label>
+          <button onclick="strafenAdd()" style="padding:.5rem 1.2rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">➕ Strafe eintragen</button>
+        </div>
+      </div>
+      <div id="strafenList"></div>
     </div>
   </div>
 </section>
@@ -595,10 +660,10 @@ Bei Fragen wenden Sie sich bitte per Ticket auf unserem Discord Server an uns!.
 Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn</a>`;
 
   const ACCOUNTS = [
-    { username: 'jggaming2518', password: 'JLG161218MGB!', logs: true,  bewerbungen: true,  shiftplan: true,  rang: 'Admin' },
-    { username: 'leon',         password: '123#AG456789!', logs: true,  bewerbungen: true,  shiftplan: true,  rang: 'Admin' },
-    { username: 'felix',        password: '987#AG654321!', logs: true,  bewerbungen: true,  shiftplan: false, rang: 'Admin' },
-    // Hier weitere Accounts hinzufügen (rang: 'Admin'|'FDL'|'TF', logs, bewerbungen, shiftplan: true/false)
+    { username: 'jggaming2518', password: 'JLG161218MGB!', logs: true,  bewerbungen: true,  shiftplan: true,  strafen: true,  rang: 'Admin' },
+    { username: 'leon',         password: '123#AG456789!', logs: true,  bewerbungen: true,  shiftplan: true,  strafen: true,  rang: 'Admin' },
+    { username: 'felix',        password: '987#AG654321!', logs: true,  bewerbungen: true,  shiftplan: false, strafen: false, rang: 'Admin' },
+    // Hier weitere Accounts hinzufügen (rang: 'Admin'|'FDL'|'TF', logs, bewerbungen, shiftplan, strafen: true/false)
   ];
 
   // ─── Intern: Dokumente (Links organisiert nach Rang) ───
@@ -829,6 +894,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         case 'stellen_open': data = JSON.parse(localStorage.getItem('dvn_stellen_open')); break;
         case 'logs':         data = JSON.parse(localStorage.getItem('dvn_logs')); break;
         case 'shiftplans':   data = JSON.parse(localStorage.getItem('dvn_shiftplans')); break;
+        case 'strafen':      data = JSON.parse(localStorage.getItem('dvn_strafen')); break;
+        case 'signins':      data = JSON.parse(localStorage.getItem('dvn_signins')); break;
       }
     } catch(e){}
     syncCh.postMessage({ type, data });
@@ -857,6 +924,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       case 'logs':
         logs = data;
         if(loggedIn && document.querySelector('#apanel-log.active')) renderLog(); break;
+      case 'strafen':
+        strafenList = data;
+        if(loggedIn && document.querySelector('#ipanel-strafen.active')) renderStrafen(); break;
+      case 'signins':
+        signins = data;
+        if(loggedIn && document.querySelector('#ipanel-shiftplan.active')){
+          const plan=shiftPlans.find(p=>p.id===editingSpId);
+          if(plan) renderSignins(plan);
+        } break;
     }
   };
 
@@ -937,7 +1013,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       if(logTabBtn) logTabBtn.style.display=loggedInAccount&&loggedInAccount.logs?'':'none';
       if(internBtn) internBtn.style.display='flex';
       const spTab=document.getElementById('shiftplanTabBtn');
-      if(spTab) spTab.style.display=getShiftplanOverride()?'':'none';
+      // Shift Plan tab now always visible for all staff
       const bell=document.getElementById('notifBell'); if(bell) bell.style.display='flex';
       const rangEl=document.getElementById('accountRang');
       if(rangEl) rangEl.textContent=loggedInAccount?loggedInAccount.rang:'';
@@ -1281,7 +1357,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       btn.classList.add('active');
       document.querySelectorAll('#intern .admin-panel').forEach(p=>p.classList.remove('active'));
       const panel=document.getElementById('ipanel-'+btn.dataset.intern);
-      if(panel){ panel.classList.add('active'); if(btn.dataset.intern==='dokumente') renderDokumente(); if(btn.dataset.intern==='staffnews') renderStaffNews(); if(btn.dataset.intern==='shiftplan') spInit(); }
+      if(panel){ panel.classList.add('active'); if(btn.dataset.intern==='dokumente') renderDokumente(); if(btn.dataset.intern==='staffnews') renderStaffNews(); if(btn.dataset.intern==='shiftplan') spInit(); if(btn.dataset.intern==='strafen') renderStrafen(); }
     });
   });
 
@@ -1372,36 +1448,47 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function spRenderDutyRef(){
     const container=document.getElementById('spDutyRefContent');
-    if(!container||container.dataset.rendered) return;
-    container.dataset.rendered='1';
+    if(!container) return;
     const tfDuties=DUTIES.filter(d=>d.type==='tf');
     const stwlDuties=DUTIES.filter(d=>d.type==='stwl');
+    const canEdit=getShiftplanOverride();
     container.innerHTML=`
       <div style="font-weight:600;margin-bottom:.5rem;color:var(--r700)">🚆 TF-Dutys</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.5rem;margin-bottom:1rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.5rem;margin-bottom:1rem">
         ${tfDuties.map(d=>`
-          <div style="background:var(--w);border:1px solid var(--g200);border-radius:var(--rs);padding:.4rem .6rem">
+          <div style="background:var(--w);border:1px solid var(--g200);border-radius:var(--rs);padding:.4rem .6rem;position:relative">
             <div style="font-weight:600">${d.duty}</div>
-            <div style="color:var(--g500);font-size:.78rem">${d.dur} · ${d.veh}</div>
-            <div style="font-size:.78rem">${d.start} → ${d.end}</div>
+            <div style="color:var(--g500);font-size:.78rem">Dauer: ${d.dur} · Fahrzeuge: ${d.veh}</div>
+            <div style="font-size:.78rem">Start: ${d.start}</div>
+            <div style="font-size:.78rem">Ende: ${d.end}</div>
+            ${canEdit?`<button onclick="spAssignDuty('${d.duty}')" style="position:absolute;top:.4rem;right:.4rem;padding:.15rem .5rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">+</button>`:''}
           </div>`).join('')}
       </div>
       <div style="font-weight:600;margin-bottom:.5rem;color:var(--r700)">🎫 STWL-Dutys</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.5rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.5rem">
         ${stwlDuties.map(d=>`
           <div style="background:var(--w);border:1px solid var(--g200);border-radius:var(--rs);padding:.4rem .6rem">
             <div style="font-weight:600">${d.duty}</div>
-            <div style="color:var(--g500);font-size:.78rem">${d.dur} · ${d.veh}</div>
-            <div style="font-size:.78rem">${d.start} → ${d.end}</div>
+            <div style="color:var(--g500);font-size:.78rem">Dauer: ${d.dur} · Fahrzeuge: ${d.veh}</div>
+            <div style="font-size:.78rem">Start: ${d.start}</div>
+            <div style="font-size:.78rem">Ende: ${d.end}</div>
           </div>`).join('')}
       </div>`;
+  }
+
+  function spAssignDuty(dutyName){
+    const plan=shiftPlans.find(p=>p.id===editingSpId);
+    if(!plan) return;
+    if(!plan.entries.TF) plan.entries.TF=[];
+    plan.entries.TF.push({name:'',duty:dutyName,note:''});
+    spRenderEditor(plan);
   }
 
   function spRenderEditor(plan){
     document.getElementById('spEditor').style.display='block';
     document.getElementById('spEditorTitle').textContent=plan.shiftTitle+(plan.date?' ('+plan.date+')':'');
     document.getElementById('spSaveBtn').style.display=getShiftplanOverride()?'':'none';
-    ['AK','BHBF','NS','STB','TF'].forEach(stwl=>{
+    ['AK','BHBF','NS','STB'].forEach(stwl=>{
       const container=document.getElementById('sp_'+stwl);
       if(!container) return;
       const entries=plan.entries[stwl]||[];
@@ -1412,17 +1499,37 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           <button class="sp-del" onclick="spDelEntry('${stwl}',${i})">✕</button>
         </div>`).join('');
     });
-    const details=document.getElementById('spDutyRef');
-    if(details) details.open=false;
-    const container=document.getElementById('spDutyRefContent');
-    if(container) delete container.dataset.rendered;
+    const tfContainer=document.getElementById('sp_TF');
+    if(tfContainer){
+      const tfEntries=plan.entries.TF||[];
+      const tfDuties=DUTIES.filter(d=>d.type==='tf');
+      tfContainer.innerHTML=tfEntries.map((e,i)=>`
+        <div class="sp-entry" style="flex-wrap:wrap;gap:.35rem">
+          <select class="sp-duty-select" onchange="spUpdateTFDuty(${i},this.value)" style="padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;flex:1 1 120px;min-width:0">
+            <option value="">— Duty —</option>
+            ${tfDuties.map(d=>`<option value="${d.duty}" ${e.duty===d.duty?'selected':''}>${d.duty} (${d.start}→${d.end})</option>`).join('')}
+          </select>
+          <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
+          <input type="text" class="sp-note" value="${e.note||''}" placeholder="Anmerkung" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
+          <button class="sp-del" onclick="spDelEntry('TF',${i})" style="flex-shrink:0">✕</button>
+        </div>`).join('');
+    }
+    spRenderDutyRef();
+    renderSignins(plan);
+  }
+
+  function spUpdateTFDuty(idx,val){
+    const plan=shiftPlans.find(p=>p.id===editingSpId);
+    if(!plan||!plan.entries.TF||!plan.entries.TF[idx]) return;
+    plan.entries.TF[idx].duty=val;
   }
 
   function spAddEntry(stwl){
     const plan=shiftPlans.find(p=>p.id===editingSpId);
     if(!plan) return;
     if(!plan.entries[stwl]) plan.entries[stwl]=[];
-    plan.entries[stwl].push({name:'',time:''});
+    if(stwl==='TF'){ plan.entries[stwl].push({name:'',duty:'',note:''}); }
+    else { plan.entries[stwl].push({name:'',time:''}); }
     spRenderEditor(plan);
   }
 
@@ -1436,7 +1543,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function spSave(){
     const plan=shiftPlans.find(p=>p.id===editingSpId);
     if(!plan) return;
-    ['AK','BHBF','NS','STB','TF'].forEach(stwl=>{
+    ['AK','BHBF','NS','STB'].forEach(stwl=>{
       const container=document.getElementById('sp_'+stwl);
       if(!container) return;
       const entries=[];
@@ -1447,11 +1554,128 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       });
       plan.entries[stwl]=entries;
     });
+    const tfContainer=document.getElementById('sp_TF');
+    if(tfContainer){
+      const tfEntries=[];
+      tfContainer.querySelectorAll('.sp-entry').forEach(el=>{
+        const name=el.querySelector('.sp-name')?.value?.trim()||'';
+        const duty=el.querySelector('.sp-duty-select')?.value||'';
+        const note=el.querySelector('.sp-note')?.value?.trim()||'';
+        if(name||duty) tfEntries.push({name,duty,note});
+      });
+      plan.entries.TF=tfEntries;
+    }
     try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
     syncBroadcast('shiftplans');
     addLogEntry('Shift-Plan gespeichert', plan.shiftTitle);
     showNotification('✅ Shift-Plan gespeichert','success');
     spRenderPlans();
+  }
+
+  // ─── Sign-In System ───
+  let signins = []; try{const s=localStorage.getItem('dvn_signins');if(s)signins=JSON.parse(s)}catch(e){}
+
+  function renderSignins(plan){
+    const el=document.getElementById('spSignins');
+    if(!el||!plan) return;
+    const planSignins=signins.filter(s=>s.shiftPlanId===plan.id);
+    const mySignin=planSignins.find(s=>s.username===loggedInAccount?.username);
+    const userTotalPenaltyHours=getStrafenHoursSum(loggedInAccount?.username||'');
+    el.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+        <div style="font-size:.85rem;font-weight:600;color:var(--g600)">📋 Anmeldungen (${planSignins.length})</div>
+        ${!mySignin?`<button onclick="openSigninModal('${plan.id}')" style="padding:.4rem 1rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.8rem;cursor:pointer;font-family:inherit">➕ Anmelden</button>`:`<span style="font-size:.8rem;color:var(--g500)">✅ Du bist angemeldet</span>`}
+      </div>
+      ${planSignins.length===0?'<div style="font-size:.82rem;color:var(--g400);padding:.25rem 0">Keine Anmeldungen.</div>':
+        planSignins.map(si=>{
+          const roleName=si.role==='TF'?'🚆 TF':si.role==='FDL'?'🚦 FDL':si.role==='Notfallmanager'?'🆘 Notfallmanager':'🚧 Schrankenwärter';
+          return `<div class="sp-plan-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.3rem;padding:.5rem .7rem">
+            <div><strong>${si.username}</strong> · ${roleName}${si.duty?' · '+si.duty:''} · ${si.timeFrom||'?'}–${si.timeTo||'?'}</div>
+            <div style="font-size:.75rem;color:var(--g400)">${si.notes||''} ${si.location?'('+si.location+')':''}</div>
+          </div>`;
+        }).join('')}
+      ${userTotalPenaltyHours>=4?`<div style="margin-top:.5rem;font-size:.78rem;color:var(--r600);background:#fef2f2;padding:.4rem .7rem;border-radius:var(--rs)">⚠️ Du hast ${userTotalPenaltyHours}h Strafstunden – nur Schrankenwärter möglich.</div>`:''}`;
+  }
+
+  let signinModalPlanId=null, signinModalRole=null;
+
+  function openSigninModal(planId){
+    if(!loggedInAccount){ showNotification('Bitte einloggen.','error'); return; }
+    signinModalPlanId=planId;
+    signinModalRole=null;
+    const plan=shiftPlans.find(p=>p.id===planId);
+    document.getElementById('signinShiftTitle').textContent=plan?plan.shiftTitle:'';
+    document.getElementById('signinFields').style.display='none';
+    document.getElementById('signinPenaltyWarning').style.display='none';
+    // Populate duty dropdown
+    const dutySel=document.getElementById('signinDuty');
+    if(dutySel){
+      dutySel.innerHTML='<option value="">— Duty wählen —</option>'+
+        DUTIES.filter(d=>d.type==='tf').map(d=>`<option value="${d.duty}">${d.duty} (${d.start}→${d.end})</option>`).join('');
+    }
+    // Populate stellwerke
+    const stellwerkeContainer=document.getElementById('signinStellwerkeOptions');
+    if(stellwerkeContainer){
+      stellwerkeContainer.innerHTML=['AK','BHBF','NS','STB'].map(st=>
+        `<label style="display:flex;align-items:center;gap:.3rem;font-size:.82rem;cursor:pointer">
+          <input type="checkbox" class="stellwerk-cb" value="${st}" style="width:16px;height:16px;accent-color:var(--r500)"> ${st}
+        </label>`).join('');
+    }
+    document.getElementById('signinTimeFrom').value='';
+    document.getElementById('signinTimeTo').value='';
+    document.getElementById('signinNotes').value='';
+    document.getElementById('signinLocation').value='';
+    // Check penalty hours
+    const penaltyHours=getStrafenHoursSum(loggedInAccount.username);
+    if(penaltyHours>=4){
+      document.getElementById('signinPenaltyWarning').style.display='block';
+      document.getElementById('signinPenaltyHours').textContent=penaltyHours;
+    }
+    document.getElementById('signinModal').classList.add('open');
+  }
+
+  function closeSigninModal(){ document.getElementById('signinModal').classList.remove('open'); signinModalPlanId=null; signinModalRole=null; }
+
+  function signinSelectRole(role){
+    signinModalRole=role;
+    const penaltyHours=getStrafenHoursSum(loggedInAccount?.username||'');
+    const canSignin=penaltyHours<4;
+    // If 4+ penalty hours, only Schrankenwärter is allowed
+    if(penaltyHours>=4 && role!=='Schrankenwärter'){
+      showNotification('⚠️ Zu viele Strafstunden – nur Schrankenwärter möglich.','error');
+      return;
+    }
+    document.getElementById('signinFields').style.display='block';
+    document.getElementById('signinDutyField').style.display=role==='TF'?'block':'none';
+    document.getElementById('signinStellwerkeField').style.display=role==='FDL'?'block':'none';
+    document.getElementById('signinLocationField').style.display=role==='Schrankenwärter'?'block':'none';
+    // Highlight selected role button
+    document.querySelectorAll('.signin-role-btn').forEach(b=>b.style.outline='none');
+    document.querySelector(`.signin-role-btn[data-role="${role}"]`).style.outline='3px solid var(--r500)';
+  }
+
+  function signinSubmit(){
+    if(!signinModalPlanId||!signinModalRole||!loggedInAccount){ showNotification('Fehler: fehlende Daten.','error'); return; }
+    const timeFrom=document.getElementById('signinTimeFrom').value;
+    const timeTo=document.getElementById('signinTimeTo').value;
+    const notes=document.getElementById('signinNotes').value.trim();
+    const location=document.getElementById('signinLocation').value.trim();
+    let duty='', stellwerke=[];
+    if(signinModalRole==='TF') duty=document.getElementById('signinDuty').value;
+    if(signinModalRole==='FDL'){
+      document.querySelectorAll('.stellwerk-cb:checked').forEach(cb=>stellwerke.push(cb.value));
+      if(stellwerke.length===0){ showNotification('Bitte mindestens ein Stellwerk wählen.','error'); return; }
+    }
+    if(signinModalRole==='Schrankenwärter'&&!location){ showNotification('Bitte Ort eingeben.','error'); return; }
+    if(!timeFrom||!timeTo){ showNotification('Bitte Zeitraum angeben.','error'); return; }
+    signins.push({ id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), shiftPlanId:signinModalPlanId, username:loggedInAccount.username, role:signinModalRole, duty, stellwerke, timeFrom, timeTo, notes, location, timestamp:new Date().toLocaleString('de-DE') });
+    try{localStorage.setItem('dvn_signins',JSON.stringify(signins))}catch(e){}
+    syncBroadcast('signins');
+    addLogEntry('Anmeldung', loggedInAccount.username+' als '+signinModalRole+(duty?' ['+duty+']':''));
+    showNotification('✅ Angemeldet als '+signinModalRole,'success');
+    closeSigninModal();
+    const plan=shiftPlans.find(p=>p.id===signinModalPlanId);
+    if(plan) renderSignins(plan);
   }
 
   // ─── Notification System ───
@@ -1519,9 +1743,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     ];
     const canBewOverride = getBewerbungenOverride();
     const canSpOverride = getShiftplanOverride();
-    c.innerHTML=`
-      <div style="margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--g100)">
-        <div style="font-size:.78rem;font-weight:600;color:var(--g500);margin-bottom:.35rem">🔧 Berechtigungen</div>
+    const canStrafenOverride = getStrafenOverride();
+    const accPerm=document.getElementById('accPermSettings');
+    if(accPerm){
+      accPerm.innerHTML=`
+      <div class="sub-title">Berechtigungen</div>
+      <div style="margin-bottom:.5rem">
         <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
           <input type="checkbox" ${canBewOverride?'checked':''} onchange="toggleBewerbungenAccess()" style="width:17px;height:17px;accent-color:var(--r500)">
           📋 Bewerbungen verwalten (Admin-Tab)
@@ -1530,7 +1757,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           <input type="checkbox" ${canSpOverride?'checked':''} onchange="toggleShiftplanAccess()" style="width:17px;height:17px;accent-color:var(--r500)">
           📋 Shift Plan schreiben (Intern-Tab)
         </label>
-      </div>
+        <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
+          <input type="checkbox" ${canStrafenOverride?'checked':''} onchange="toggleStrafenAccess()" style="width:17px;height:17px;accent-color:var(--r500)">
+          ⚠️ Strafen verwalten (Intern-Tab)
+        </label>
+      </div>`;
+    }
+    c.innerHTML=`
       <div style="font-size:.78rem;font-weight:600;color:var(--g500);margin-bottom:.35rem">🔔 Benachrichtigungen</div>
       ${items.map(i=>`
         <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
@@ -1569,6 +1802,96 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     try{localStorage.setItem('dvn_sp_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
     renderNotifications();
     updateUI();
+  }
+
+  function getStrafenOverride(){
+    if(!loggedInAccount) return false;
+    try{
+      const v = localStorage.getItem('dvn_strafen_'+loggedInAccount.username);
+      if(v!==null) return JSON.parse(v);
+    }catch(e){}
+    return loggedInAccount.strafen || false;
+  }
+  function toggleStrafenAccess(){
+    if(!loggedInAccount) return;
+    const current = getStrafenOverride();
+    try{localStorage.setItem('dvn_strafen_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
+    renderNotifications();
+  }
+
+  // ─── Strafen ───
+  let strafenList = []; try{const s=localStorage.getItem('dvn_strafen');if(s)strafenList=JSON.parse(s)}catch(e){}
+
+  function getStrafenHoursSum(username){
+    return strafenList.filter(s=>s.discordName.toLowerCase()===username.toLowerCase()&&!s.completed).reduce((sum,s)=>sum+Number(s.hours),0);
+  }
+
+  function strafenAdd(){
+    const name=document.getElementById('strafenDiscordName').value.trim();
+    const hours=parseFloat(document.getElementById('strafenHours').value);
+    const reason=document.getElementById('strafenReason').value.trim();
+    const completed=document.getElementById('strafenCompleted').checked;
+    if(!name||!hours||!reason){ showNotification('Bitte alle Pflichtfelder ausfüllen.','error'); return; }
+    strafenList.push({ id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), discordName:name, hours, reason, completed, enteredBy:loggedInAccount?.username||'?', timestamp:new Date().toLocaleString('de-DE') });
+    try{localStorage.setItem('dvn_strafen',JSON.stringify(strafenList))}catch(e){}
+    syncBroadcast('strafen');
+    showNotification('✅ Strafe eingetragen','success');
+    addLogEntry('Strafe eingetragen', name+' ('+hours+'h)');
+    document.getElementById('strafenDiscordName').value='';
+    document.getElementById('strafenHours').value='';
+    document.getElementById('strafenReason').value='';
+    document.getElementById('strafenCompleted').checked=false;
+    renderStrafen();
+  }
+
+  function strafenToggleComplete(id){
+    const s=strafenList.find(x=>x.id===id);
+    if(!s) return;
+    s.completed=!s.completed;
+    try{localStorage.setItem('dvn_strafen',JSON.stringify(strafenList))}catch(e){}
+    syncBroadcast('strafen');
+    renderStrafen();
+  }
+
+  function strafenDelete(id){
+    if(!confirm('Strafe wirklich löschen?')) return;
+    strafenList=strafenList.filter(x=>x.id!==id);
+    try{localStorage.setItem('dvn_strafen',JSON.stringify(strafenList))}catch(e){}
+    syncBroadcast('strafen');
+    renderStrafen();
+  }
+
+  function renderStrafen(){
+    const el=document.getElementById('strafenList');
+    if(!el) return;
+    const canEdit=getStrafenOverride();
+    const entryForm=document.getElementById('strafenEntry');
+    if(entryForm) entryForm.style.display=canEdit?'block':'none';
+    if(!loggedInAccount){ el.innerHTML=''; return; }
+    const isAdmin=canEdit;
+    const myName=loggedInAccount.username;
+    // Admins see all, users see only their own
+    const filtered=isAdmin?strafenList:strafenList.filter(s=>s.discordName.toLowerCase()===myName.toLowerCase());
+    if(filtered.length===0){
+      el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400);font-size:.85rem">Keine Einträge.</div>';
+      return;
+    }
+    const totalHours=filtered.filter(s=>!s.completed).reduce((sum,s)=>sum+Number(s.hours),0);
+    el.innerHTML=`
+      <div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">${filtered.length} Einträge · Offene Strafstunden: <strong style="color:${totalHours>=4?'var(--r600)':'var(--g700)'}">${totalHours.toFixed(1)}h</strong></div>
+      ${filtered.map(s=>`
+        <div class="sp-plan-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;${s.completed?'opacity:.55':''}">
+          <div>
+            <div style="font-weight:600;font-size:.9rem">${s.discordName} · ${s.hours}h</div>
+            <div style="font-size:.78rem;color:var(--g500)">${s.reason}</div>
+            <div style="font-size:.72rem;color:var(--g400)">${s.timestamp} · von ${s.enteredBy}</div>
+          </div>
+          <div style="display:flex;gap:.4rem;align-items:center">
+            <span style="font-size:.78rem;padding:.25rem .6rem;border-radius:var(--rs);background:${s.completed?'var(--g100)':'#bbf7d0'};color:${s.completed?'var(--g500)':'#166534'}">${s.completed?'✅ Erledigt':'⏳ Offen'}</span>
+            ${isAdmin?`<button onclick="strafenToggleComplete('${s.id}')" style="padding:.3rem .6rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem">Umschalten</button>`:''}
+            ${isAdmin?`<button onclick="strafenDelete('${s.id}')" style="padding:.3rem .6rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem">✕</button>`:''}
+          </div>
+        </div>`).join('')}`;
   }
 
   function toggleNotify(key){
