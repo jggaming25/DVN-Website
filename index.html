@@ -40,6 +40,7 @@
   .page{display:none;padding:2rem 2rem 3rem;max-width:1200px;margin:0 auto;animation:pi .4s ease}
   .page.active{display:block}
   @keyframes pi{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes ni{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
   .card{background:var(--w);border-radius:var(--rl);box-shadow:var(--sm);padding:1.8rem;margin-bottom:1.5rem;border:1px solid var(--g200);transition:box-shadow .3s}
   .card:hover{box-shadow:var(--md)}
   .ch{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:2px solid var(--r100)}
@@ -190,6 +191,15 @@
   .news-card .nc-body .nc-title{font-size:1.2rem;font-weight:700;color:var(--g800);margin:.3rem 0 .5rem}
   .news-card .nc-body .nc-text{font-size:.9rem;color:var(--g500);line-height:1.7}
   .news-card .nc-body .nc-author{font-size:.8rem;color:var(--g400);margin-top:.75rem;font-style:italic}
+  .intern-links{display:flex;flex-direction:column;gap:.4rem}
+  .intern-links a{display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;background:var(--g50);border-radius:var(--rs);color:var(--g700);text-decoration:none;font-size:.85rem;font-weight:500;transition:all .2s;border:1px solid var(--g200)}
+  .intern-links a:hover{background:var(--r50);border-color:var(--r200);color:var(--r600)}
+  .staff-news-list{display:flex;flex-direction:column;gap:.75rem}
+  .staff-news-card{background:var(--g50);border-radius:var(--rm);padding:1rem 1.25rem;border-left:4px solid var(--r400);border:1px solid var(--g200)}
+  .staff-news-card .sn-date{font-size:.72rem;color:var(--g400);font-weight:500}
+  .staff-news-card .sn-title{font-size:.95rem;font-weight:700;color:var(--g800);margin:.15rem 0 .3rem}
+  .staff-news-card .sn-text{font-size:.84rem;color:var(--g500);line-height:1.6;white-space:pre-wrap}
+  .staff-news-card .sn-author{font-size:.75rem;color:var(--g400);margin-top:.4rem;font-style:italic}
   .news-empty{text-align:center;padding:3rem;color:var(--g400)}
   .news-empty .big{font-size:2.5rem;margin-bottom:.5rem;opacity:.4}
 
@@ -254,6 +264,7 @@
     <button data-page="stellen"><span class="ni">📋</span> Stellen</button>
     <button data-page="shifts"><span class="ni">⏰</span> Shifts</button>
     <button data-page="news"><span class="ni">📰</span> News</button>
+    <button data-page="intern" id="internNavBtn" style="display:none"><span class="ni">📁</span> Intern</button>
     <button data-page="admin" id="adminNavBtn" style="display:none"><span class="ni">⚙️</span> Admin</button>
     <button id="loginNavBtn" onclick="openLogin()"><span class="ni">🔐</span> Login</button>
     <div class="user-menu" id="userMenu" style="display:none">
@@ -261,6 +272,8 @@
       <div class="dropdown" id="userDropdown">
         <div class="dd-head">Angemeldet als</div>
         <div style="padding:0 1rem .5rem;font-size:.8rem;color:var(--g600);font-weight:600"><span id="userNameDisplay2"></span></div>
+        <div style="padding:0 1rem .6rem;font-size:.75rem;color:var(--g400)">Rang: <strong id="accountRang" style="color:var(--r600)"></strong></div>
+        <button onclick="openAccountSettings()">👤 Account</button>
         <button onclick="logout()" style="border-top:1px solid var(--g100);color:var(--r500);font-weight:600">🚪 Abmelden</button>
       </div>
     </div>
@@ -295,6 +308,35 @@
       <button class="btn-primary" onclick="submitBewerb()">📩 Bewerbung einreichen</button>
     </div>
     <div class="error" id="bewerbError" style="margin-top:.75rem">Bitte alle Pflichtfelder ausfüllen.</div>
+  </div>
+</div>
+
+<!-- ─── NOTIFICATION BOX ─── -->
+<div id="notificationBox" style="position:fixed;top:80px;right:1rem;z-index:999;display:flex;flex-direction:column;gap:.5rem;max-width:360px;pointer-events:none"></div>
+
+<!-- ═══════ ACCOUNT SETTINGS MODAL ═══════ -->
+<div class="modal-overlay" id="accountModal">
+  <div class="modal" style="max-width:450px">
+    <h2>👤 Account-Einstellungen</h2>
+    <p style="margin-bottom:.75rem">Benutzer: <strong id="accModalUser"></strong> · Rang: <strong id="accModalRang"></strong></p>
+    <div class="sub-title">Benachrichtigungen</div>
+    <div id="accNotifySettings"></div>
+    <div class="btn-row" style="margin-top:1rem">
+      <button class="btn-secondary" onclick="closeAccountSettings()">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ STAFF NEWS TYPE MODAL ═══════ -->
+<div class="modal-overlay" id="staffNewsTypeModal" style="z-index:1000">
+  <div class="modal" style="max-width:380px">
+    <h2>📰 News-Typ wählen</h2>
+    <p>Für wen ist dieser Beitrag bestimmt?</p>
+    <div style="display:flex;flex-direction:column;gap:.75rem;margin:1.25rem 0">
+      <button onclick="publishNews('public')" style="padding:.8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.9rem;cursor:pointer;font-family:inherit">🌍 Öffentlich</button>
+      <button onclick="publishNews('staff')" style="padding:.8rem;background:var(--g700);color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.9rem;cursor:pointer;font-family:inherit">🔒 Nur Staff</button>
+    </div>
+    <button class="btn-secondary" onclick="closeStaffNewsTypeModal()" style="width:100%">Abbrechen</button>
   </div>
 </div>
 
@@ -384,6 +426,31 @@
   </div>
 </section>
 
+<!-- ═══════════ INTERN ═══════════ -->
+<section id="intern" class="page">
+  <div class="card">
+    <div class="ch"><div class="ci">📁</div><h2>Intern<span>er Bereich</span></h2><span class="badge" id="internBadge"></span></div>
+
+    <div class="admin-nav" id="internSubNav">
+      <button class="active" data-intern="dokumente">📄 Dokumente</button>
+      <button data-intern="staffnews">📰 Staff News</button>
+    </div>
+
+    <!-- Intern: Dokumente -->
+    <div class="admin-panel active" id="ipanel-dokumente">
+      <div class="sub-title">Dokumente & Links · FDL</div>
+      <div id="internDokFdl" class="intern-links"></div>
+      <div class="sub-title" style="margin-top:1rem">Dokumente & Links · TF</div>
+      <div id="internDokTf" class="intern-links"></div>
+    </div>
+
+    <!-- Intern: Staff News -->
+    <div class="admin-panel" id="ipanel-staffnews">
+      <div class="staff-news-list" id="staffNewsList"></div>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════ ADMIN ═══════════ -->
 <section id="admin" class="page">
   <div class="card">
@@ -462,13 +529,33 @@ Wir freuen uns, Sie auf unserer Website begrüßen zu dürfen. Hier finden Sie a
 Bei Fragen wenden Sie sich bitte per Ticket auf unserem Discord Server an uns!.
 Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn</a>`;
 
-  const ADMINS = [
-    { username: 'jggaming2518',    password: 'JLG161218MGB!' },
-    { username: 'leon',    password: '123#AG456789!' },
-    { username: 'felix',    password: '987#AG654321!' },
-   
-    // Hier beliebig viele weitere Admins hinzufügen
+  const ACCOUNTS = [
+    { username: 'jggaming2518', password: 'JLG161218MGB!', logs: true,  rang: 'Admin' },
+    { username: 'leon',         password: '123#AG456789!',  logs: false,  rang: 'Admin'   },
+    { username: 'felix',        password: '987#AG654321!',  logs: false, rang: 'Admin'    },
+    // Hier weitere Accounts hinzufügen (rang: 'Admin'|'FDL'|'TF', logs: true/false)
   ];
+
+  // ─── Intern: Dokumente (Links organisiert nach Rang) ───
+  const INTERN_DOKUMENTE = {
+    fdl: [
+      { text: 'FDL-Dienstvorschrift', url: '#' },
+      { text: 'Betriebsanleitung FDL', url: '#' },
+      // Weitere Links hier
+    ],
+    tf: [
+      { text: 'TF-Handbuch', url: '#' },
+      { text: 'Fahrzeugübersicht', url: '#' },
+      // Weitere Links hier
+    ]
+  };
+
+  // ─── Benachrichtigungseinstellungen (Standardeinstellungen) ───
+  const DEFAULT_NOTIFY = {
+    staff_news: true,
+    public_news: true,
+    app_changes: true,
+  };
 
   const STELLEN = [
     {
@@ -525,14 +612,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         { type:'checkbox', label:'Schichtbereitschaft',     name:'schichtbereit', required:false },
         { type:'textarea', label:'Berufserfahrung',         name:'erfahrung',    required:false },
         { type:'textarea', label:'Motivationsschreiben',    name:'motivation',   required:true },
-        { type:'file',     label:'Lebenslauf (PDF)',        name:'lebenslauf',  required:false },
+        { type:'file',     label:'Lebenslauf (PDF)',        name:'lebenslauf',  required:false, accept:'.pdf,.doc,.docx' },
+        { type:'file',     label:'Zertifikate / Nachweise (Bild)', name:'zertifikate', required:false, accept:'image/*' },
+        { type:'file',     label:'Weitere Anhänge (Bild)',  name:'anhang_bild', required:false, accept:'image/*' },
       ]
     },
     // Hier weitere Stellen hinzufügen...
   ];
-
-  // ─── Admins mit Log-Zugriff ───
-  const LOG_ADMINS = ['jggaming2518', 'leitung']; // Nur diese Admins sehen den Log-Tab
 
   // ─── Discord Webhook (optional – für Benachrichtigungen bei Entscheidungen) ───
   const DISCORD_WEBHOOK_URL = ''; // Webhook-URL hier eintragen, z.B. 'https://discord.com/api/webhooks/...'
@@ -570,7 +656,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }
   } catch(e) {}
 
-  let loggedIn = false, loggedInUser = null;
+  let loggedIn = false, loggedInUser = null, loggedInAccount = null;
   let shifts = []; try{const s=localStorage.getItem('dvn_shifts');if(s)shifts=JSON.parse(s)}catch(e){}
   let applications = []; try{const a=localStorage.getItem('dvn_applications');if(a)applications=JSON.parse(a)}catch(e){}
   let newsItems = []; try{const n=localStorage.getItem('dvn_news');if(n)newsItems=JSON.parse(n)}catch(e){}
@@ -580,14 +666,55 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const entry = { timestamp: new Date().toLocaleString('de-DE'), user: loggedInUser||'System', action, details: details||'' };
     logs.push(entry);
     try{localStorage.setItem('dvn_logs',JSON.stringify(logs))}catch(e){}
+    syncBroadcast('logs');
   }
+
+  // ─── Tab-Sync (BroadcastChannel) ───
+  const syncCh = new BroadcastChannel('dvn-sync');
+  function syncBroadcast(type){
+    let data = null;
+    try {
+      switch(type){
+        case 'shifts':       data = JSON.parse(localStorage.getItem('dvn_shifts')); break;
+        case 'applications': data = JSON.parse(localStorage.getItem('dvn_applications')); break;
+        case 'news':         data = JSON.parse(localStorage.getItem('dvn_news')); break;
+        case 'staff_news':   data = JSON.parse(localStorage.getItem('dvn_staff_news')); break;
+        case 'stellen_open': data = JSON.parse(localStorage.getItem('dvn_stellen_open')); break;
+        case 'logs':         data = JSON.parse(localStorage.getItem('dvn_logs')); break;
+      }
+    } catch(e){}
+    syncCh.postMessage({ type, data });
+  }
+  syncCh.onmessage = (e) => {
+    const { type, data } = e.data || {};
+    if(!data) return;
+    switch(type){
+      case 'shifts':
+        shifts = data; renderPublicShifts();
+        if(loggedIn) renderAdminShifts(); break;
+      case 'applications':
+        applications = data;
+        if(loggedIn) renderAdminPanels(); break;
+      case 'news':
+        newsItems = data; renderNews();
+        if(loggedIn) renderAdminNewsList(); break;
+      case 'staff_news':
+        staffNewsItems = data; renderStaffNews(); break;
+      case 'stellen_open':
+        try{ Object.keys(data).forEach(id=>{ const s=STELLEN.find(x=>x.id===id); if(s) s.open=data[id]; }); }catch(e){}
+        renderStellen(); if(loggedIn) renderAdminPanels(); break;
+      case 'logs':
+        logs = data;
+        if(loggedIn && document.querySelector('#apanel-log.active')) renderLog(); break;
+    }
+  };
 
   document.getElementById('welcomeText').innerHTML = WELCOME_TEXT;
 
   // ─── Navigation ───
   document.querySelectorAll('nav button[data-page]').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (btn.dataset.page === 'admin' && !loggedIn) return;
+      if ((btn.dataset.page === 'admin' || btn.dataset.page === 'intern') && !loggedIn) return;
       document.querySelectorAll('nav button[data-page], .page').forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(btn.dataset.page).classList.add('active');
@@ -600,6 +727,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         renderAdminShifts();
         renderAdminNewsList();
       }
+      if (btn.dataset.page === 'intern') {
+        document.querySelectorAll('#internSubNav button[data-intern]').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#intern .admin-panel').forEach(p => p.classList.remove('active'));
+        const firstIntern = document.querySelector('#internSubNav button[data-intern]');
+        if (firstIntern) { firstIntern.classList.add('active'); document.getElementById('ipanel-'+firstIntern.dataset.intern)?.classList.add('active'); }
+        renderDokumente(); renderStaffNews();
+      }
       if (btn.dataset.page === 'news') renderNews();
       if (btn.dataset.page === 'shifts') renderPublicShifts();
     });
@@ -610,8 +744,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function closeLogin() { document.getElementById('loginModal').classList.remove('open'); }
   function doLogin() {
     const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('loginPass').value;
-    const found=ADMINS.find(a=>a.username===u&&a.password===p);
-    if(found){ loggedIn=true; loggedInUser=u; addLogEntry('Login', 'Benutzer '+u+' hat sich angemeldet'); closeLogin(); updateUI(); }
+    const found=ACCOUNTS.find(a=>a.username===u&&a.password===p);
+    if(found){ loggedIn=true; loggedInUser=u; loggedInAccount=found; addLogEntry('Login', 'Benutzer '+u+' ('+found.rang+') hat sich angemeldet'); closeLogin(); updateUI(); }
     else document.getElementById('loginError').style.display='block';
   }
   function toggleDropdown(e){
@@ -624,7 +758,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function logout(){
     addLogEntry('Logout', 'Benutzer '+loggedInUser+' hat sich abgemeldet');
-    loggedIn=false; loggedInUser=null;
+    loggedIn=false; loggedInUser=null; loggedInAccount=null;
     document.getElementById('userDropdown').classList.remove('open');
     document.querySelectorAll('nav button[data-page], .page').forEach(el => el.classList.remove('active'));
     document.querySelector('nav button[data-page="willkommen"]').classList.add('active');
@@ -637,6 +771,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const userMenu=document.getElementById('userMenu');
     const loginBtn=document.getElementById('loginNavBtn');
     const userDisp=document.getElementById('userNameDisplay');
+    const internBtn=document.getElementById('internNavBtn');
     if(loggedIn){
       if(adminBtn) adminBtn.style.display='flex';
       userMenu.style.display='flex';
@@ -645,12 +780,20 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const d2=document.getElementById('userNameDisplay2');
       if(d2) d2.textContent=loggedInUser;
       const logTabBtn=document.getElementById('logTabBtn');
-      if(logTabBtn) logTabBtn.style.display=LOG_ADMINS.includes(loggedInUser)?'':'none';
+      if(logTabBtn) logTabBtn.style.display=loggedInAccount&&loggedInAccount.logs?'':'none';
+      if(internBtn) internBtn.style.display='flex';
+      const rangEl=document.getElementById('accountRang');
+      if(rangEl) rangEl.textContent=loggedInAccount?loggedInAccount.rang:'';
+      loadNotifyPrefs();
     } else {
       if(adminBtn) adminBtn.style.display='none';
       userMenu.style.display='none';
       loginBtn.style.display='flex';
+      if(internBtn) internBtn.style.display='none';
       if(document.getElementById('admin').classList.contains('active')){
+        document.querySelector('nav button[data-page="willkommen"]').click();
+      }
+      if(document.getElementById('intern').classList.contains('active')){
         document.querySelector('nav button[data-page="willkommen"]').click();
       }
     }
@@ -658,6 +801,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     renderPublicShifts();
     renderAdminPanels();
     renderNews();
+    renderStaffNews();
+    renderNotifications();
   }
 
   // ─── Admin Sub-Navigation ───
@@ -703,29 +848,44 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       if(f.type==='checkbox') return `<div class="ff checkbox" style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem"><input type="checkbox" id="${fid}" name="${f.name}" style="width:18px;height:18px;accent-color:var(--r500)"><label for="${fid}" style="margin:0;cursor:pointer;font-size:.85rem">${f.label}${req}</label></div>`;
       if(f.type==='select') return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><select id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit">${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
       if(f.type==='textarea') return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><textarea id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit;min-height:80px;resize:vertical"></textarea></div>`;
-      if(f.type==='file') return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><input type="file" id="${fid}" name="${f.name}" accept=".pdf,.doc,.docx" style="width:100%;padding:.4rem"></div>`;
+      if(f.type==='file') return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><input type="file" id="${fid}" name="${f.name}" accept="${f.accept||'.pdf,.doc,.docx'}" style="width:100%;padding:.4rem"></div>`;
       const placeholder=f.placeholder?' placeholder="'+f.placeholder+'"':'';
       return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><input type="${f.type}" id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit" ${f.type==='tel'?'pattern="[0-9\\s\\+\\-]+"':''}${placeholder}></div>`;
     }).join('');
     document.getElementById('bewerbModal').classList.add('open');
   }
   function closeBewerb(){ document.getElementById('bewerbModal').classList.remove('open'); currentStelle=null; }
-  function submitBewerb(){
+  async function submitBewerb(){
     if(!currentStelle) return;
-    const data={}; let valid=true;
+    const data={}; let valid=true; const fileReads=[];
     currentStelle.fields.forEach(f=>{
       const el=document.getElementById('bf_'+f.name); if(!el) return;
       if(f.type==='checkbox'){ data[f.name]=el.checked; return; }
-      if(f.type==='file'){ data[f.name]=el.files[0]?el.files[0].name:''; return; }
+      if(f.type==='file'&&el.files[0]){
+        const isImage=f.accept&&f.accept.includes('image');
+        if(isImage){
+          data[f.name]=''; // placeholder
+          fileReads.push(new Promise(res=>{
+            const r=new FileReader();
+            r.onload=e=>{ data[f.name]=e.target.result; res(); };
+            r.readAsDataURL(el.files[0]);
+          }));
+        } else {
+          data[f.name]=el.files[0].name;
+        }
+        return;
+      }
+      if(f.type==='file'){ data[f.name]=''; return; }
       data[f.name]=el.value.trim();
       if(f.required&&!data[f.name]){ valid=false; el.style.borderColor='var(--r400)'; }
       else el.style.borderColor='';
     });
     if(!valid){ document.getElementById('bewerbError').style.display='block'; return; }
     document.getElementById('bewerbError').style.display='none';
+    await Promise.all(fileReads);
     applications.push({ id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), stelleId:currentStelle.id, data, datum:new Date().toLocaleDateString('de-DE'), status:'pending', adminNote:'', adminNoteBy:'' });
     try{localStorage.setItem('dvn_applications',JSON.stringify(applications))}catch(e){}
-    closeBewerb();
+    syncBroadcast('applications'); closeBewerb();
     alert('✅ Bewerbung erfolgreich eingereicht!');
     if(loggedIn) renderAdminPanels();
   }
@@ -749,7 +909,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(applications.length===0) bl.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Noch keine Bewerbungen eingegangen.</div>';
     else bl.innerHTML='<div class="ab-list">'+applications.map((a,i)=>{
       const st=STELLEN.find(s=>s.id===a.stelleId);
-      const dataHtml=Object.entries(a.data).filter(([k])=>!['lebenslauf'].includes(k)).map(([k,v])=>`<span class="k">${k}:</span><span class="v">${v}</span>`).join('');
+      const dataHtml=Object.entries(a.data).filter(([k])=>!['lebenslauf'].includes(k)).map(([k,v])=>{
+        const isImg=typeof v==='string'&&(v.startsWith('data:image')||v.startsWith('blob:'));
+        if(isImg) return `<span class="k">${k}:</span><span class="v"><img src="${v}" style="max-width:120px;max-height:80px;border-radius:6px;border:1px solid var(--g200);cursor:pointer" onclick="window.open(this.src)"></span>`;
+        return `<span class="k">${k}:</span><span class="v">${v}</span>`;
+      }).join('');
       return `<div class="ab-item">
         <div class="ab-head">
           <span class="ab-name">${a.data.vorname||'?'} ${a.data.nachname||'?'}</span>
@@ -788,7 +952,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const logStatus=action==='accepted'?'angenommen':'abgelehnt';
     addLogEntry('Bewerbung '+logStatus, a.data.vorname+' '+a.data.nachname+' ('+(STELLEN.find(s=>s.id===a.stelleId)?.title||'?')+') wurde '+logStatus+(note?' – Grund: '+note:''));
     try{localStorage.setItem('dvn_applications',JSON.stringify(applications))}catch(e){}
-    renderAdminPanels();
+    syncBroadcast('applications'); renderAdminPanels();
 
     // Discord-Benachrichtigung mit Erwähnung
     const st=STELLEN.find(s=>s.id===a.stelleId);
@@ -813,7 +977,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const status=STELLEN[i].open?'geöffnet':'geschlossen';
     addLogEntry('Stelle '+status, STELLEN[i].title+' wurde '+status);
     try { const map={}; STELLEN.forEach(s=>{ map[s.id]=s.open; }); localStorage.setItem('dvn_stellen_open',JSON.stringify(map)); } catch(e) {}
-    renderStellen(); renderAdminPanels();
+    syncBroadcast('stellen_open'); renderStellen(); renderAdminPanels();
   }
 
   // ─── Shifts ───
@@ -850,7 +1014,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       shifts.push({title,date,time,desc,image:imgDataUrl||''});
       addLogEntry('Schicht erstellt', title+' ('+time+(date?' am '+date:'')+')');
       try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){}
-      document.getElementById('sTitle').value=''; document.getElementById('sDate').value='';
+      syncBroadcast('shifts'); document.getElementById('sTitle').value=''; document.getElementById('sDate').value='';
       document.getElementById('sTime').value=''; document.getElementById('sDesc').value='';
       document.getElementById('sImage').value='';
       renderPublicShifts(); renderAdminShifts();
@@ -878,14 +1042,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     s.time=document.getElementById('seTime').value.trim();
     s.desc=document.getElementById('seDesc').value.trim();
     const fileInput=document.getElementById('seImage');
-    const save=()=>{ try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){} addLogEntry('Schicht bearbeitet', s.title+' ('+s.time+')'); closeShiftEdit(); renderPublicShifts(); renderAdminShifts(); };
+    const save=()=>{ try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){} syncBroadcast('shifts'); addLogEntry('Schicht bearbeitet', s.title+' ('+s.time+')'); closeShiftEdit(); renderPublicShifts(); renderAdminShifts(); };
     if(fileInput&&fileInput.files[0]){
       const reader=new FileReader();
       reader.onload=e=>{ s.image=e.target.result; save(); };
       reader.readAsDataURL(fileInput.files[0]);
     } else save();
   }
-  function delShift(i){ const s=shifts[i]; addLogEntry('Schicht gelöscht', s.title+' ('+s.time+')'); shifts.splice(i,1); try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){} renderPublicShifts(); renderAdminShifts(); }
+  function delShift(i){ const s=shifts[i]; addLogEntry('Schicht gelöscht', s.title+' ('+s.time+')'); shifts.splice(i,1); try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){} syncBroadcast('shifts'); renderPublicShifts(); renderAdminShifts(); }
 
   // ─── News ───
   function renderNews(){
@@ -902,23 +1066,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         </div>
       </div>`).join('');
   }
-  function addNews(){
-    const title=document.getElementById('newsTitle').value.trim();
-    const text=document.getElementById('newsText').value.trim();
-    const fileInput=document.getElementById('newsImage');
-    if(!title||!text){ alert('Bitte Titel und Text eingeben!'); return; }
-    const publish=(imgDataUrl)=>{
-      newsItems.push({title,text,image:imgDataUrl||'',date:new Date().toLocaleDateString('de-DE'),author:loggedInUser||'Admin'});
-      addLogEntry('News erstellt', title);
-      try{localStorage.setItem('dvn_news',JSON.stringify(newsItems))}catch(e){}
-      clearNewsForm(); renderNews(); renderAdminNewsList();
-    };
-    if(fileInput&&fileInput.files[0]){
-      const reader=new FileReader();
-      reader.onload=e=>publish(e.target.result);
-      reader.readAsDataURL(fileInput.files[0]);
-    } else publish(null);
-  }
   function clearNewsForm(){ document.getElementById('newsTitle').value=''; document.getElementById('newsText').value=''; document.getElementById('newsImage').value=''; }
   function renderAdminNewsList(){
     const list=document.getElementById('adminNewsList');
@@ -929,7 +1076,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       return `<div class="news-item-admin"><div><div class="nia-title">${n.title}</div><div class="nia-date">${n.date}</div></div><button class="nia-del" onclick="delNews(${realIdx})">🗑️</button></div>`;
     }).join('');
   }
-  function delNews(i){ const n=newsItems[i]; addLogEntry('News gelöscht', n.title); newsItems.splice(i,1); try{localStorage.setItem('dvn_news',JSON.stringify(newsItems))}catch(e){} renderNews(); renderAdminNewsList(); }
+  function delNews(i){ const n=newsItems[i]; addLogEntry('News gelöscht', n.title); newsItems.splice(i,1); try{localStorage.setItem('dvn_news',JSON.stringify(newsItems))}catch(e){} syncBroadcast('news'); renderNews(); renderAdminNewsList(); }
 
   // ─── Log ───
   function renderLog(){
@@ -952,7 +1099,150 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function clearLog(){
     if(!confirm('Wirklich den gesamten Log löschen?')) return;
     logs=[]; try{localStorage.setItem('dvn_logs',JSON.stringify(logs))}catch(e){}
-    renderLog();
+    syncBroadcast('logs'); renderLog();
+  }
+
+  // ─── Intern Sub-Navigation ───
+  document.querySelectorAll('#internSubNav button[data-intern]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#internSubNav button[data-intern]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('#intern .admin-panel').forEach(p=>p.classList.remove('active'));
+      const panel=document.getElementById('ipanel-'+btn.dataset.intern);
+      if(panel){ panel.classList.add('active'); if(btn.dataset.intern==='dokumente') renderDokumente(); if(btn.dataset.intern==='staffnews') renderStaffNews(); }
+    });
+  });
+
+  // ─── Intern: Dokumente ───
+  function renderDokumente(){
+    const fdlEl=document.getElementById('internDokFdl');
+    const tfEl=document.getElementById('internDokTf');
+    if(fdlEl) fdlEl.innerHTML=INTERN_DOKUMENTE.fdl.length?INTERN_DOKUMENTE.fdl.map(l=>`<a href="${l.url}" target="_blank">📄 ${l.text}</a>`).join(''):'<div style="color:var(--g400);font-size:.85rem;padding:.5rem 0">Keine Links konfiguriert.</div>';
+    if(tfEl) tfEl.innerHTML=INTERN_DOKUMENTE.tf.length?INTERN_DOKUMENTE.tf.map(l=>`<a href="${l.url}" target="_blank">📄 ${l.text}</a>`).join(''):'<div style="color:var(--g400);font-size:.85rem;padding:.5rem 0">Keine Links konfiguriert.</div>';
+  }
+
+  // ─── Intern: Staff News ───
+  let staffNewsItems = []; try{const sn=localStorage.getItem('dvn_staff_news');if(sn)staffNewsItems=JSON.parse(sn)}catch(e){}
+
+  function renderStaffNews(){
+    const list=document.getElementById('staffNewsList');
+    const badge=document.getElementById('internBadge');
+    if(!list) return;
+    const forStaff=loggedInAccount&&loggedInAccount.rang!=='Admin';
+    const rangMatch=loggedInAccount?loggedInAccount.rang:'';
+    const showNews=staffNewsItems.filter(n=>!n.rang||n.rang===rangMatch||forStaff);
+    if(badge) badge.textContent=showNews.length+' Beiträge';
+    if(showNews.length===0){ list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Keine Staff-News vorhanden.</div>'; return; }
+    list.innerHTML=showNews.map(n=>`
+      <div class="staff-news-card">
+        <div class="sn-date">${n.date} · ${n.author||'DVN'}</div>
+        <div class="sn-title">${n.title}</div>
+        ${n.text?`<div class="sn-text">${n.text}</div>`:''}
+        <div class="sn-author">Gepostet von ${n.author||'Admin'}</div>
+      </div>`).join('');
+  }
+
+  function addStaffNews(title,text,author,rang){
+    staffNewsItems.push({title,text,date:new Date().toLocaleDateString('de-DE'),author:author||'Admin',rang:rang||'FDL'});
+    try{localStorage.setItem('dvn_staff_news',JSON.stringify(staffNewsItems))}catch(e){}
+    syncBroadcast('staff_news'); renderStaffNews();
+    addLogEntry('Staff-News erstellt', title+(rang?' ['+rang+']':''));
+    showNotification('📰 Staff-News: '+title,'info');
+  }
+
+  // ─── Notification System ───
+  let notificationPrefs = {}; // loaded from localStorage per user
+
+  function loadNotifyPrefs(){
+    if(!loggedInAccount) return;
+    try{
+      const saved=localStorage.getItem('dvn_notify_'+loggedInAccount.username);
+      notificationPrefs=saved?JSON.parse(saved):{...DEFAULT_NOTIFY};
+    }catch(e){ notificationPrefs={...DEFAULT_NOTIFY}; }
+  }
+  function saveNotifyPrefs(){
+    if(!loggedInAccount) return;
+    try{localStorage.setItem('dvn_notify_'+loggedInAccount.username,JSON.stringify(notificationPrefs))}catch(e){}
+  }
+
+  function showNotification(text,type){
+    const box=document.getElementById('notificationBox');
+    if(!box) return;
+    const bg=type==='info'?'#1d4ed8':type==='success'?'#065f46':type==='error'?'#991b1b':'#1d2939';
+    const el=document.createElement('div');
+    el.style.cssText=`background:${bg};color:#fff;padding:.7rem 1rem;border-radius:8px;font-size:.82rem;box-shadow:0 4px 16px rgba(0,0,0,.15);pointer-events:auto;animation:ni .3s ease;max-width:100%`;
+    el.textContent=text;
+    box.appendChild(el);
+    setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); },4000);
+  }
+
+  function renderNotifications(){
+    // render notification settings in account modal
+    const c=document.getElementById('accNotifySettings');
+    if(!c) return;
+    if(!loggedInAccount){ c.innerHTML=''; return; }
+    loadNotifyPrefs();
+    const items=[
+      {key:'staff_news',label:'📰 Staff-News'},
+      {key:'public_news',label:'🌍 Öffentliche News'},
+      {key:'app_changes',label:'📝 Bewerbungs-Änderungen'},
+    ];
+    c.innerHTML=items.map(i=>`
+      <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
+        <input type="checkbox" ${notificationPrefs[i.key]?'checked':''} onchange="toggleNotify('${i.key}')" style="width:17px;height:17px;accent-color:var(--r500)">
+        ${i.label}
+      </label>`).join('');
+  }
+
+  function toggleNotify(key){
+    notificationPrefs[key]=!notificationPrefs[key];
+    saveNotifyPrefs();
+    renderNotifications();
+  }
+
+  // ─── Account Settings ───
+  function openAccountSettings(){
+    if(!loggedInAccount) return;
+    document.getElementById('accModalUser').textContent=loggedInAccount.username;
+    document.getElementById('accModalRang').textContent=loggedInAccount.rang;
+    renderNotifications();
+    document.getElementById('accountModal').classList.add('open');
+  }
+  function closeAccountSettings(){ document.getElementById('accountModal').classList.remove('open'); }
+
+  // ─── Staff News Type Modal (for admins creating news) ───
+  let pendingNewsPublish=null;
+  function openStaffNewsTypeModal(){ document.getElementById('staffNewsTypeModal').classList.add('open'); }
+  function closeStaffNewsTypeModal(){ document.getElementById('staffNewsTypeModal').classList.remove('open'); pendingNewsPublish=null; }
+
+  function addNews(){
+    pendingNewsPublish={ title:document.getElementById('newsTitle').value.trim(), text:document.getElementById('newsText').value.trim() };
+    if(!pendingNewsPublish.title||!pendingNewsPublish.text){ alert('Bitte Titel und Text eingeben!'); pendingNewsPublish=null; return; }
+    openStaffNewsTypeModal();
+  }
+  function publishNews(type){
+    if(!pendingNewsPublish) return;
+    const title=pendingNewsPublish.title, text=pendingNewsPublish.text;
+    const fileInput=document.getElementById('newsImage');
+    const publish=(imgDataUrl)=>{
+      if(type==='public'){
+        newsItems.push({title,text,image:imgDataUrl||'',date:new Date().toLocaleDateString('de-DE'),author:loggedInUser||'Admin'});
+        addLogEntry('News erstellt (öffentlich)', title);
+        try{localStorage.setItem('dvn_news',JSON.stringify(newsItems))}catch(e){}
+        syncBroadcast('news'); clearNewsForm(); renderNews(); renderAdminNewsList();
+        if(notificationPrefs.public_news!==false) showNotification('🌍 Neue öffentliche News: '+title,'info');
+      } else {
+        addStaffNews(title,text,loggedInUser||'Admin','');
+        clearNewsForm(); renderAdminNewsList();
+        if(notificationPrefs.staff_news!==false) showNotification('🔒 Neue Staff-News: '+title,'info');
+      }
+    };
+    if(fileInput&&fileInput.files[0]){
+      const reader=new FileReader();
+      reader.onload=e=>{ publish(e.target.result); closeStaffNewsTypeModal(); };
+      reader.readAsDataURL(fileInput.files[0]);
+    } else { publish(null); closeStaffNewsTypeModal(); }
+    pendingNewsPublish=null;
   }
 
   // ─── Init ───
