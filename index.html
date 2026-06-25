@@ -6,6 +6,8 @@
 <title>DVN – Deutsches Verkehrsnetz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
   :root{--r50:#fff5f7;--r100:#ffebee;--r200:#ffcdd2;--r300:#e57373;--r400:#ef5350;--r500:#c62828;--r600:#b71c1c;--r700:#8e0000;--w:#fff;--g50:#f8f9fc;--g100:#f1f3f8;--g200:#e8ecf4;--g300:#d0d5dd;--g400:#98a2b3;--g500:#667085;--g600:#475467;--g700:#344054;--g800:#1d2939;--sm:0 1px 3px rgba(0,0,0,.06);--md:0 4px 16px rgba(0,0,0,.08);--lg:0 12px 40px rgba(0,0,0,.10);--rs:8px;--rm:12px;--rl:16px}
@@ -823,7 +825,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         { type:'select',   label:'Wie alt sind Sie?',                   name:'alter',         options:['Unter 14','14 oder älter'], required:true },
 
         // ─── Signalkunde (Bild 1) ───
-        { type:'select',   label:'Frage 1: Was bedeutet das Signal? (Das nächste Signal zeigt …)', name:'frage1', image:'images/123.png', options:[
+        { type:'select',   label:'Frage 1: Was bedeutet das Signal? (Das nächste Signal zeigt …)', name:'frage1', image:'images/1_5.png', options:[
           'HP1 -> Freie Fahrt, sie können fahren!',
           'HP2 -> Langsamfahrt!',
           'HP0 -> Sie müssen anhalten!',
@@ -831,7 +833,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         ], required:true },
 
         // ─── Signalkunde (Bild 2) ───
-        { type:'select',   label:'Frage 2: Was bedeutet dieses Signal?', name:'frage2', image:'images/2134.png', options:[
+        { type:'select',   label:'Frage 2: Was bedeutet dieses Signal?', name:'frage2', image:'images/2_5.png', options:[
           'Sh2 -> Schutzhalt',
           'Sh0 -> Halt',
           'Hp0 -> Halt',
@@ -839,7 +841,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         ], required:true },
 
         // ─── Signalkunde (Bild 3) ───
-        { type:'select',   label:'Frage 3: Was bedeutet dieses Signal?', name:'frage3', image:'images/12432.png', options:[
+        { type:'select',   label:'Frage 3: Was bedeutet dieses Signal?', name:'frage3', image:'images/3_5.png', options:[
           'Hp1 -> Halt',
           'Hp1 -> Fahrt',
           'Hp0 -> Halt',
@@ -848,7 +850,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         ], required:true },
 
         // ─── Signalkunde (Bild 4) ───
-        { type:'select',   label:'Frage 4: Was bedeutet dieses Signal?', name:'frage4', image:'images/1242.png', options:[
+        { type:'select',   label:'Frage 4: Was bedeutet dieses Signal?', name:'frage4', image:'images/4_5.png', options:[
           'Hp2 -> Fahrt',
           'Hp1 -> Halt',
           'Hp3 -> Fahrt',
@@ -857,7 +859,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         ], required:true },
 
         // ─── Signalkunde (Bild 5 – Multiple Choice, 2 Antworten) ───
-        { type:'text',     label:'Frage 5: Was bedeutet das Signal? (2 Antworten, durch Komma trennen)', name:'frage5', image:'images/123412.png', required:true, placeholder:'z.B. HP2 -> Langsamfahrt, Ich muss vor dem Signal anhalten' },
+        { type:'text',     label:'Frage 5: Was bedeutet das Signal? (2 Antworten, durch Komma trennen)', name:'frage5', image:'images/5_5.png', required:true, placeholder:'z.B. HP2 -> Langsamfahrt, Ich muss vor dem Signal anhalten' },
         { type:'checkbox', label:'Frage 5a: Hp0 -> Fahrt',              name:'f5_hp0',        required:false },
         { type:'checkbox', label:'Frage 5b: Hp2 -> Langsamfahrt',       name:'f5_hp2',        required:false },
         { type:'checkbox', label:'Frage 5c: Hp1 -> Halt',               name:'f5_hp1',        required:false },
@@ -929,7 +931,59 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     syncBroadcast('logs');
   }
 
-  // ─── Tab-Sync (BroadcastChannel) ───
+  // ─── Firebase-Konfiguration ───
+  // Ersetze die Werte durch deine eigenen aus den Firebase-Projekt-Einstellungen.
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDj5i6mtMvbSLVINEvD1LjBhWp74vclD-Q",
+    authDomain: "dvn-website-9ce7a.firebaseapp.com",
+    databaseURL: "https://dvn-website-9ce7a-default-rtdb.firebaseio.com",
+    projectId: "dvn-website-9ce7a",
+  };
+
+  let fbDatabase = null;
+  let fbConnected = false;
+
+  function fbInit(){
+    if(!FIREBASE_CONFIG.databaseURL || FIREBASE_CONFIG.databaseURL.includes('dein-project')) return;
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      fbDatabase = firebase.database();
+      fbConnected = true;
+      // Firebase-Listener für alle Datentypen – aktualisiert alle Clients in Echtzeit
+      fbSeedLocalData();
+      const fbTypes = ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins'];
+      fbTypes.forEach(type => {
+        const path = 'dvn_'+type;
+        fbDatabase.ref(path).on('value', snapshot => {
+          const val = snapshot.val();
+          if(val !== null){
+            try{ localStorage.setItem(path, JSON.stringify(val)); }catch(e){}
+            broadcastHandler(type, val);
+          }
+        });
+      });
+    } catch(e){ console.warn('Firebase-Init fehlgeschlagen:', e); }
+  }
+
+  function fbSeedLocalData(){
+    // Einmalig: Seedt lokale localStorage-Daten nach Firebase, falls Firebase noch leer ist
+    ['dvn_shifts','dvn_applications','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_stellen_open','dvn_logs','dvn_strafen','dvn_signins'].forEach(path=>{
+      fbDatabase.ref(path).once('value', snapshot => {
+        if(snapshot.val() !== null) return; // Firebase hat bereits Daten
+        try{
+          const local = localStorage.getItem(path);
+          if(local){ fbDatabase.ref(path).set(JSON.parse(local)); }
+        }catch(e){}
+      });
+    });
+  }
+
+  function fbWrite(path, data){
+    if(!fbConnected || !fbDatabase) return;
+    try{ fbDatabase.ref(path).set(data); }catch(e){}
+  }
+
+  // ─── Tab-Sync (BroadcastChannel + Firebase) ───
   const syncCh = new BroadcastChannel('dvn-sync');
   function syncBroadcast(type){
     let data = null;
@@ -949,9 +1003,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       }
     } catch(e){}
     syncCh.postMessage({ type, data });
+    // Auch an Firebase senden
+    if(data !== null && data !== true && ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins'].includes(type)){
+      fbWrite('dvn_'+type, data);
+    }
   }
-  syncCh.onmessage = (e) => {
-    const { type, data } = e.data || {};
+  function broadcastHandler(type, data){
     if(!data) return;
     switch(type){
       case 'shifts':
@@ -1005,6 +1062,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         if(loggedInAccount) loadNotifHistory();
         break;
     }
+  }
+
+  syncCh.onmessage = (e) => {
+    const { type, data } = e.data || {};
+    broadcastHandler(type, data);
   };
 
   document.getElementById('welcomeText').innerHTML = WELCOME_TEXT;
@@ -2392,6 +2454,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }
   }catch(e){}
   updateUI();
+  fbInit(); // Firebase-Init starten (schlägt still fehl, wenn keine Config)
 </script>
 </body>
 </html>
