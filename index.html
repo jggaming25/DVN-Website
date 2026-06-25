@@ -130,6 +130,9 @@
   .btn-toggle{background:var(--g100);color:var(--g700);padding:.45rem 1.1rem;border:none;border-radius:var(--rs);font-weight:600;font-size:.8rem;cursor:pointer;font-family:inherit;transition:all .2s}
   .btn-toggle:hover{background:var(--g200)}
   .btn-toggle.open{background:#d1fae5;color:#065f46}
+  .filter-btn{padding:.35rem .75rem;border:2px solid var(--g200);border-radius:var(--rs);background:transparent;color:var(--g600);font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+  .filter-btn.active{background:var(--r500);color:var(--w);border-color:var(--r500)}
+  .filter-btn:hover:not(.active){background:var(--g100)}
   .btn-toggle.open:hover{background:#a7f3d0}
 
   /* ─── BEWERBUNGEN LISTE (Admin) ─── */
@@ -267,6 +270,10 @@
     <button data-page="intern" id="internNavBtn" style="display:none"><span class="ni">📁</span> Intern</button>
     <button data-page="admin" id="adminNavBtn" style="display:none"><span class="ni">⚙️</span> Admin</button>
     <button id="loginNavBtn" onclick="openLogin()"><span class="ni">🔐</span> Login</button>
+    <div class="notif-bell" id="notifBell" onclick="toggleNotifBox()" style="display:none;position:relative;cursor:pointer;padding:0 .5rem;align-items:center">
+      <span style="font-size:1.15rem">🔔</span>
+      <span id="notifBadge" style="display:none;position:absolute;top:2px;right:0;background:var(--r500);color:#fff;font-size:.6rem;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--r700)">0</span>
+    </div>
     <div class="user-menu" id="userMenu" style="display:none">
       <button id="userMenuBtn" onclick="toggleDropdown(event)">👤 <span id="userNameDisplay"></span> ▾</button>
       <div class="dropdown" id="userDropdown">
@@ -457,7 +464,7 @@
     <div class="ch"><div class="ci">⚙️</div><h2>Admin-<span>Bereich</span></h2><span class="badge" id="adminBadge"></span></div>
 
     <div class="admin-nav">
-      <button class="active" data-apanel="bewerbungen">📋 Bewerbungen</button>
+      <button class="active" data-apanel="bewerbungen" id="bewerbungenTabBtn">📋 Bewerbungen</button>
       <button data-apanel="schichten">⏰ Schichten</button>
       <button data-apanel="newsadmin">📰 News verwalten</button>
       <button data-apanel="log" id="logTabBtn" style="display:none">📜 Log</button>
@@ -468,6 +475,15 @@
       <div class="sub-title">Stellen verwalten</div>
       <div class="sa-grid" id="adminStellenGrid"></div>
       <div class="sub-title" style="margin-top:1rem">Eingegangene Bewerbungen</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem">
+        <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+          <button class="filter-btn active" data-bfilter="all" onclick="setBewFilter('all')">Alle</button>
+          <button class="filter-btn" data-bfilter="pending" onclick="setBewFilter('pending')">⏳ Ausstehend</button>
+          <button class="filter-btn" data-bfilter="accepted" onclick="setBewFilter('accepted')">✅ Angenommen</button>
+          <button class="filter-btn" data-bfilter="rejected" onclick="setBewFilter('rejected')">❌ Abgelehnt</button>
+        </div>
+        <input type="text" id="bewSearch" placeholder="🔍 Discord-Name suchen..." oninput="setBewFilter(document.querySelector('.filter-btn.active')?.dataset.bfilter||'all')" style="padding:.4rem .8rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;flex:1;min-width:150px">
+      </div>
       <div id="adminBewList"></div>
     </div>
 
@@ -530,10 +546,10 @@ Bei Fragen wenden Sie sich bitte per Ticket auf unserem Discord Server an uns!.
 Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn</a>`;
 
   const ACCOUNTS = [
-    { username: 'jggaming2518', password: 'JLG161218MGB!', logs: true,  rang: 'Admin' },
-    { username: 'leon',         password: '123#AG456789!',  logs: false,  rang: 'Admin'   },
-    { username: 'felix',        password: '987#AG654321!',  logs: false, rang: 'Admin'    },
-    // Hier weitere Accounts hinzufügen (rang: 'Admin'|'FDL'|'TF', logs: true/false)
+    { username: 'jggaming2518', password: 'JLG161218MGB!', logs: true,  bewerbungen: true,  rang: 'Admin' },
+    { username: 'leon',         password: '123#AG456789!',  logs: true,  bewerbungen: true,  rang: 'FDL'   },
+    { username: 'felix',        password: '987#AG654321!',  logs: false, bewerbungen: false, rang: 'TF'    },
+    // Hier weitere Accounts hinzufügen (rang: 'Admin'|'FDL'|'TF', logs, bewerbungen: true/false)
   ];
 
   // ─── Intern: Dokumente (Links organisiert nach Rang) ───
@@ -719,9 +735,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       btn.classList.add('active');
       document.getElementById(btn.dataset.page).classList.add('active');
       if (btn.dataset.page === 'admin') {
+        const canBew = getBewerbungenOverride();
+        const bewBtn=document.getElementById('bewerbungenTabBtn');
+        if(bewBtn) bewBtn.style.display=canBew?'':'none';
         document.querySelectorAll('[data-apanel]').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
-        const firstPanel = document.querySelector('[data-apanel]');
+        const firstPanel = canBew ? document.querySelector('[data-apanel]') : document.querySelector('[data-apanel]:not([data-apanel="bewerbungen"])');
         if (firstPanel) { firstPanel.classList.add('active'); document.getElementById('apanel-'+firstPanel.dataset.apanel)?.classList.add('active'); }
         renderAdminPanels();
         renderAdminShifts();
@@ -782,6 +801,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const logTabBtn=document.getElementById('logTabBtn');
       if(logTabBtn) logTabBtn.style.display=loggedInAccount&&loggedInAccount.logs?'':'none';
       if(internBtn) internBtn.style.display='flex';
+      const bell=document.getElementById('notifBell'); if(bell) bell.style.display='flex';
       const rangEl=document.getElementById('accountRang');
       if(rangEl) rangEl.textContent=loggedInAccount?loggedInAccount.rang:'';
       loadNotifyPrefs();
@@ -891,8 +911,17 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
 
   // ─── Admin Panels ───
+  // ─── Admin Bewerbungen Filter ───
+  let bewFilter = 'all';
+  function setBewFilter(f){
+    bewFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.bfilter===f));
+    renderAdminPanels();
+  }
+
   function renderAdminPanels() {
     if(!loggedIn) return;
+    const canBew = getBewerbungenOverride();
     // Stellen Grid im Admin
     const sg=document.getElementById('adminStellenGrid');
     if(sg) sg.innerHTML=STELLEN.map((s,i)=>`
@@ -903,11 +932,16 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         <button class="btn-toggle ${s.open?'open':''}" onclick="toggleStelle(${i})">${s.open?'🔒 Schließen':'🔓 Öffnen'}</button>
       </div>`).join('');
 
-    // Bewerbungsliste
+    // Bewerbungsliste (gefiltert)
     const bl=document.getElementById('adminBewList');
     if(!bl) return;
-    if(applications.length===0) bl.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Noch keine Bewerbungen eingegangen.</div>';
-    else bl.innerHTML='<div class="ab-list">'+applications.map((a,i)=>{
+    const search=(document.getElementById('bewSearch')?.value||'').toLowerCase();
+    let filtered=applications;
+    if(bewFilter!=='all') filtered=filtered.filter(a=>a.status===bewFilter);
+    if(search) filtered=filtered.filter(a=>(a.data.discord||'').toLowerCase().includes(search)||(a.data.vorname||'').toLowerCase().includes(search)||(a.data.nachname||'').toLowerCase().includes(search));
+    if(filtered.length===0) bl.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">'+(bewFilter!=='all'||search?'Keine Bewerbungen gefunden.':'Noch keine Bewerbungen eingegangen.')+'</div>';
+    else bl.innerHTML='<div class="ab-list">'+filtered.map((a)=>{
+      const realIdx=applications.indexOf(a);
       const st=STELLEN.find(s=>s.id===a.stelleId);
       const dataHtml=Object.entries(a.data).filter(([k])=>!['lebenslauf'].includes(k)).map(([k,v])=>{
         const isImg=typeof v==='string'&&(v.startsWith('data:image')||v.startsWith('blob:'));
@@ -922,14 +956,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         </div>
         <div class="ab-data">${dataHtml}</div>
         ${a.adminNote?'<div style="font-size:.8rem;color:var(--g500);margin-top:.3rem">📝 '+(a.adminNoteBy?a.adminNoteBy+': ':'')+a.adminNote+'</div>':''}
-        ${a.status==='pending'?`
+        ${a.status==='pending'&&canBew?`
         <div class="ab-actions">
-          <button class="accept" onclick="appAction(${i},'accepted')">✓ Annehmen</button>
-          <button class="reject" onclick="appAction(${i},'rejected')">✗ Ablehnen</button>
+          <button class="accept" onclick="appAction(${realIdx},'accepted')">✓ Annehmen</button>
+          <button class="reject" onclick="appAction(${realIdx},'rejected')">✗ Ablehnen</button>
         </div>
-        <div class="ab-note-input" id="noteArea${i}">
-          <input type="text" id="noteInput${i}" placeholder="Begründung (optional)">
-          <button onclick="submitNote(${i})">Bestätigen</button>
+        <div class="ab-note-input" id="noteArea${realIdx}">
+          <input type="text" id="noteInput${realIdx}" placeholder="Begründung (optional)">
+          <button onclick="submitNote(${realIdx})">Bestätigen</button>
         </div>`:''}
       </div>`;
     }).join('')+'</div>';
@@ -1165,6 +1199,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     try{localStorage.setItem('dvn_notify_'+loggedInAccount.username,JSON.stringify(notificationPrefs))}catch(e){}
   }
 
+  let notifHistory = [];
+
   function showNotification(text,type){
     const box=document.getElementById('notificationBox');
     if(!box) return;
@@ -1174,10 +1210,34 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     el.textContent=text;
     box.appendChild(el);
     setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); },4000);
+
+    notifHistory.unshift({text,type,time:new Date().toLocaleString('de-DE')});
+    updateNotifBadge();
+  }
+
+  function updateNotifBadge(){
+    const badge=document.getElementById('notifBadge');
+    if(!badge) return;
+    if(notifHistory.length){ badge.style.display='flex'; badge.textContent=notifHistory.length; }
+    else badge.style.display='none';
+  }
+
+  function toggleNotifBox(){
+    const box=document.getElementById('notificationBox');
+    if(!box) return;
+    const existingPopup=document.getElementById('notifPopup');
+    if(existingPopup){ existingPopup.remove(); return; }
+    if(!notifHistory.length){ showNotification('Keine Benachrichtigungen.','info'); return; }
+    const popup=document.createElement('div');
+    popup.id='notifPopup';
+    popup.style.cssText='position:fixed;top:76px;right:1rem;background:var(--w);border-radius:var(--rm);box-shadow:var(--lg);padding:.75rem;min-width:280px;max-width:380px;max-height:400px;overflow-y:auto;z-index:998;border:1px solid var(--g200);animation:ni .2s ease';
+    popup.innerHTML='<div style="font-size:.75rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding-bottom:.5rem;border-bottom:1px solid var(--g100);margin-bottom:.5rem">Benachrichtigungen</div>'+
+      notifHistory.map(n=>`<div style="padding:.4rem .5rem;border-radius:6px;font-size:.8rem;margin-bottom:.25rem;background:${n.type==='info'?'#eef2ff':n.type==='success'?'#ecfdf5':n.type==='error'?'#fef2f2':'var(--g50)'};color:var(--g700)"><span style="font-size:.65rem;color:var(--g400);display:block">${n.time}</span>${n.text}</div>`).join('');
+    popup.addEventListener('click',()=>popup.remove());
+    document.body.appendChild(popup);
   }
 
   function renderNotifications(){
-    // render notification settings in account modal
     const c=document.getElementById('accNotifySettings');
     if(!c) return;
     if(!loggedInAccount){ c.innerHTML=''; return; }
@@ -1187,11 +1247,37 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       {key:'public_news',label:'🌍 Öffentliche News'},
       {key:'app_changes',label:'📝 Bewerbungs-Änderungen'},
     ];
-    c.innerHTML=items.map(i=>`
-      <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
-        <input type="checkbox" ${notificationPrefs[i.key]?'checked':''} onchange="toggleNotify('${i.key}')" style="width:17px;height:17px;accent-color:var(--r500)">
-        ${i.label}
-      </label>`).join('');
+    const canBewOverride = getBewerbungenOverride();
+    c.innerHTML=`
+      <div style="margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--g100)">
+        <div style="font-size:.78rem;font-weight:600;color:var(--g500);margin-bottom:.35rem">🔧 Berechtigungen</div>
+        <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
+          <input type="checkbox" ${canBewOverride?'checked':''} onchange="toggleBewerbungenAccess()" style="width:17px;height:17px;accent-color:var(--r500)">
+          📋 Bewerbungen verwalten (Admin-Tab)
+        </label>
+      </div>
+      <div style="font-size:.78rem;font-weight:600;color:var(--g500);margin-bottom:.35rem">🔔 Benachrichtigungen</div>
+      ${items.map(i=>`
+        <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
+          <input type="checkbox" ${notificationPrefs[i.key]?'checked':''} onchange="toggleNotify('${i.key}')" style="width:17px;height:17px;accent-color:var(--r500)">
+          ${i.label}
+        </label>`).join('')}`;
+  }
+
+  function getBewerbungenOverride(){
+    if(!loggedInAccount) return false;
+    try{
+      const v = localStorage.getItem('dvn_bew_'+loggedInAccount.username);
+      if(v!==null) return JSON.parse(v);
+    }catch(e){}
+    return loggedInAccount.bewerbungen || false;
+  }
+  function toggleBewerbungenAccess(){
+    if(!loggedInAccount) return;
+    const current = getBewerbungenOverride();
+    try{localStorage.setItem('dvn_bew_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
+    renderNotifications();
+    updateUI();
   }
 
   function toggleNotify(key){
