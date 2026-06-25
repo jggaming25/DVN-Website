@@ -697,7 +697,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   const ACCOUNTS = [
     { username: 'jggaming2518', password: 'JLG161218MGB!', logs: true,  bewerbungen: true,  shiftplan: true,  strafen: true,  rang: 'Admin' },
     { username: 'leon',         password: '123#AG456789!', logs: true,  bewerbungen: true,  shiftplan: true,  strafen: true,  rang: 'Admin' },
-    { username: 'felix',        password: '987#AG654321!', logs: true,  bewerbungen: true,  shiftplan: false, strafen: false, rang: 'Admin' },
+    { username: 'felix',        password: '987#AG654321!', logs: true,  bewerbungen: true,  shiftplan: true, strafen: true, rang: 'Admin' },
     // Hier weitere Accounts hinzufügen (rang: 'Admin'|'FDL'|'TF', logs, bewerbungen, shiftplan, strafen: true/false)
   ];
 
@@ -726,7 +726,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   // Beim Import aus Google Sheets bitte die Array-Werte aktualisieren.
   // type: 'tf' = Triebfahrzeugführer, 'stwl' = Schaffner (STWL)
   const DUTIES = [
-    // === Triebfahrzeugführer Duties ===
     { duty: 'Duty 1',  dur:'03:57', veh:'429, 648',  start:'00:59 / AK',      end:'04:56 / SHBF',     type:'tf' },
     { duty: 'Duty 2',  dur:'03:52', veh:'648',        start:'04:34 / STB',     end:'08:26 / MSB',      type:'tf' },
     { duty: 'Duty 3',  dur:'04:02', veh:'648',        start:'04:00 / MSB',    end:'08:02 / MSB',      type:'tf' },
@@ -736,30 +735,36 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     { duty: 'Duty 7',  dur:'02:31', veh:'648',        start:'08:32 / MSB',    end:'11:13 / BHBF',     type:'tf' },
     { duty: 'Duty 8',  dur:'02:41', veh:'648, 429',   start:'07:02 / BHBF',   end:'09:43 / BHBF',     type:'tf' },
     { duty: 'Duty 9',  dur:'04:00', veh:'429 / 648',  start:'04:55 / BHBF',   end:'08:55 / BHBF',     type:'tf' },
-    { duty: 'Duty 10', dur:'02:55', veh:'648,429',     start:'06:01 / SHBF',   end:'09:29 / SHBF',     type:'tf' },
+    { duty: 'Duty 10', dur:'02:55', veh:'648,429',    start:'06:01 / SHBF',   end:'09:29 / SHBF',     type:'tf' },
     { duty: 'Duty 11', dur:'03:10', veh:'429',        start:'05:33 / BHBF',   end:'09:13 / BHBF',     type:'tf' },
     { duty: 'Duty 12', dur:'03:16', veh:'648',        start:'09:40 / SHBF',   end:'12:56 / SHBF',     type:'tf' },
     { duty: 'Duty 13', dur:'01:22', veh:'648',        start:'05:01 / SHBF',   end:'06:23 / BHBF',     type:'tf' },
     { duty: 'Duty 14', dur:'05:07', veh:'648 / 429',  start:'07:33 / BHBF',   end:'12:40 / AK',       type:'tf' },
-    { duty: 'Duty 15', dur:'06:55', veh:'628 / 648 / 429', start:'10:48 / AK',  end:'17:43 / BHBF',   type:'tf' },
+    { duty: 'Duty 15', dur:'06:55', veh:'628 / 648 / 429', start:'10:48 / AK', end:'17:43 / BHBF',    type:'tf' },
     { duty: 'Duty 16', dur:'07:37', veh:'429',        start:'09:10 / STB',    end:'16:47 / AK',       type:'tf' },
     { duty: 'Duty 17', dur:'04:40', veh:'429 / 648',  start:'08:33 / BHBF',   end:'13:13 / BHBF',     type:'tf' },
     { duty: 'Duty 18', dur:'04:26', veh:'429 / 648',  start:'09:03 / BHBF',   end:'13:25 / STB',      type:'tf' },
     { duty: 'Duty 19', dur:'05:23', veh:'648',        start:'10:01 / SHBF',   end:'15:24 / MSB',      type:'tf' },
     { duty: 'Duty 20', dur:'00:53', veh:'648',        start:'11:02 / BHBF',   end:'11:55 / BHBF',     type:'tf' },
-    // === Schaffner/STWL Duties ===
-    { duty: 'Duty 1',  dur:'06:52', veh:'429, 628',   start:'00:59 / AK',     end:'07:51 / STB',      type:'stwl' },
-    { duty: 'Duty 2',  dur:'06:22', veh:'429, 628',   start:'05:33 / BHBF',   end:'11:55 / BHBF',     type:'stwl' },
-    { duty: 'Duty 3',  dur:'05:54', veh:'628',        start:'07:02 / BHBF',   end:'12:56 / SHBF',     type:'stwl' },
-    { duty: 'Duty 4',  dur:'01:41', veh:'628',        start:'09:10 / STB',    end:'10:51 / STB',      type:'stwl' },
-    { duty: 'Duty 5',  dur:'04:15', veh:'628',        start:'16:10 / STB',    end:'20:25 / STB',      type:'stwl' },
-    { duty: 'Duty 6',  dur:'04:53', veh:'628',        start:'17:02 / BHBF',   end:'21:55 / BHBF',     type:'stwl' },
-    { duty: 'Duty 7',  dur:'05:23', veh:'648,628,640', start:'13:01 / SHBF',  end:'18:24 / MSB',      type:'stwl' },
-    { duty: 'Duty 8',  dur:'06:40', veh:'429, 648',   start:'15:16 / BHBF',   end:'21:56 / SHBF',     type:'stwl' },
-    { duty: 'Duty 9',  dur:'03:20', veh:'640',        start:'18:34 / MSB',    end:'21:54 / MSB',      type:'stwl' },
-    { duty: 'Duty 10', dur:'05:51', veh:'648, 429',   start:'20:32',          end:'02:23',            type:'stwl' },
-    { duty: 'Duty 11', dur:'03:40', veh:'429',        start:'20:33',          end:'00:13',            type:'stwl' },
-    { duty: 'Duty 12', dur:'01:40', veh:'429',        start:'19:03',          end:'20:43',            type:'stwl' },
+    { duty: 'Duty 21', dur:'03:23', veh:'429/648',    start:'13:33 / BHBF 1', end:'16:56 / SHBF 101', type:'tf' },
+    { duty: 'Duty 22', dur:'03:50', veh:'429',        start:'15:05 / BHBF 103', end:'19:35 / BHBF 103', type:'tf' },
+    { duty: 'Duty 23', dur:'02:14', veh:'429',        start:'16:59 / AK 1',   end:'19:13 / BHBF 1',   type:'tf' },
+    { duty: 'Duty 24', dur:'04:23', veh:'648/429',    start:'14:01 / SHBF 101', end:'18:24 / MSB 1',   type:'tf' },
+    { duty: 'Duty 25', dur:'02:53', veh:'648',        start:'14:02 / BHBF 5', end:'16:55 / BHBF 5',   type:'tf' },
+    { duty: 'Duty 26', dur:'04:13', veh:'628/648',    start:'16:10 / STB 301', end:'20:23 / BHBF 5',   type:'tf' },
+    { duty: 'Duty 27', dur:'02:46', veh:'648/628',    start:'17:01 / SHBF 101', end:'19:47 / FHUG 100', type:'tf' },
+    { duty: 'Duty 28', dur:'03:31', veh:'648/429',    start:'17:02 / BHBF 5', end:'20:43 / BHBF 1',   type:'tf' },
+    { duty: 'Duty 29', dur:'04:00', veh:'429/628',    start:'18:03 / BHBF 1', end:'21:00 / STB 102',  type:'tf' },
+    { duty: 'Duty 30', dur:'03:21', veh:'648/429',    start:'18:26 / MSB 1',  end:'21:47 / AK 1',     type:'tf' },
+    { duty: 'Duty 31', dur:'02:27', veh:'429/648',    start:'19:33 / BHBF 1', end:'22:00 / MSB 102',  type:'tf' },
+    { duty: 'Duty 33', dur:'04:22', veh:'648',        start:'22:01 / SHBF 101', end:'02:23 / BHBF 5',  type:'tf' },
+    { duty: 'Duty 34', dur:'02:14', veh:'429',        start:'21:59 / AK 1',   end:'00:13 / AK 2',     type:'tf' },
+    { duty: 'Duty 35', dur:'03:37', veh:'648',        start:'22:25 / MSB 102', end:'02:02 / MSB 101',  type:'tf' },
+    { duty: 'Duty 36', dur:'03:45', veh:'429',        start:'04:50 / BHBF 103', end:'08:35 / BHBF 103', type:'tf' },
+    { duty: 'Duty 37', dur:'01:40', veh:'429',        start:'08:50 / BHBF 103', end:'10:28 / BHBF 103', type:'tf' },
+    { duty: 'Duty 38', dur:'04:45', veh:'429',        start:'13:50 / BHBF 102', end:'19:32 / BHBF 2',   type:'tf' },
+    { duty: 'Duty 39', dur:'01:56', veh:'429/648',    start:'20:00 / BHBF 2', end:'21:56 / SHBF 101',  type:'tf' },
+    { duty: 'Duty 40', dur:'04:40', veh:'429',        start:'06:30 / BHBF 102', end:'11:10 / BHBF 102', type:'tf' },
   ];
 
   const STELLEN = [
@@ -1075,7 +1080,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const d2=document.getElementById('userNameDisplay2');
       if(d2) d2.textContent=loggedInUser;
       const logTabBtn=document.getElementById('logTabBtn');
-      if(logTabBtn) logTabBtn.style.display=loggedInAccount&&loggedInAccount.logs?'':'none';
+      if(logTabBtn) logTabBtn.style.display=loggedInAccount&&getAccountOverride(loggedInAccount.username,'logs')?'':'none';
       if(internBtn) internBtn.style.display='flex';
       const spAdminTab=document.getElementById('spAdminTabBtn');
       if(spAdminTab) spAdminTab.style.display=getShiftplanOverride()?'':'none';
@@ -1777,12 +1782,27 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     showNotification('✅ Account angelegt: '+user,'success');
     accManageRender();
   }
+  function getAccountOverride(username,key){
+    try{
+      const v=localStorage.getItem('dvn_'+key+'_'+username);
+      if(v!==null) return JSON.parse(v);
+    }catch(e){}
+    const found=[...ACCOUNTS,...getCustomAccounts()].find(a=>a.username===username);
+    return found?!!found[key]:false;
+  }
   function accManageToggle(username,key){
     const list=getCustomAccounts();
     const acct=list.find(a=>a.username===username);
-    if(!acct) return;
-    acct[key]=!acct[key];
-    saveCustomAccounts(list);
+    if(acct){
+      // Custom account – toggle directly
+      acct[key]=!acct[key];
+      saveCustomAccounts(list);
+    } else {
+      // Built-in account – use localStorage override
+      const current=getAccountOverride(username,key);
+      try{localStorage.setItem('dvn_'+key+'_'+username,JSON.stringify(!current))}catch(e){}
+      syncBroadcast('config');
+    }
     accManageRender();
   }
   function accManageDelete(username){
@@ -1805,10 +1825,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem">
           <div style="font-weight:600;font-size:.85rem;min-width:120px">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(${a.rang}${isCustom?' · benutzerdefiniert':''})</span></div>
           <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">
-            ${['logs','bewerbungen','shiftplan','strafen'].map(k=>`
-              <label style="display:flex;align-items:center;gap:.25rem;font-size:.72rem;cursor:pointer;padding:.15rem .35rem;background:${a[k]?'#bbf7d0':'var(--g50)'};border-radius:4px">
-                <input type="checkbox" ${a[k]?'checked':''} onchange="accManageToggle('${a.username}','${k}')" style="width:14px;height:14px;accent-color:var(--r500)"> ${k}
-              </label>`).join('')}
+            ${['logs','bewerbungen','shiftplan','strafen'].map(k=>{
+              const val=getAccountOverride(a.username,k);
+              return `<label style="display:flex;align-items:center;gap:.25rem;font-size:.72rem;cursor:pointer;padding:.15rem .35rem;background:${val?'#bbf7d0':'var(--g50)'};border-radius:4px">
+                <input type="checkbox" ${val?'checked':''} onchange="accManageToggle('${a.username}','${k}')" style="width:14px;height:14px;accent-color:var(--r500)"> ${k}
+              </label>`;
+            }).join('')}
             ${isCustom?`<button onclick="accManageDelete('${a.username}')" style="padding:.2rem .5rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">✕</button>`:''}
           </div>
         </div>`;
