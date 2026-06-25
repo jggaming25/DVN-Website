@@ -693,6 +693,31 @@
   </div>
 </section>
 
+<footer>
+  <div class="f-inner">
+    <span>© <span id="fyear"></span> DVN – Deutsches Verkehrsnetz</span>
+    <span class="f-links">
+      <a href="https://discord.gg/MT3JcUarXw" target="_blank">Discord</a>
+      <a href="#" onclick="showImpressum();return false">Impressum</a>
+    </span>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="impressumModal">
+  <div class="modal" style="max-width:560px">
+    <h2>Impressum</h2>
+    <p style="margin-top:.75rem;color:var(--g600);font-size:.9rem;line-height:1.6">
+      <strong>Deutsches Verkehrsnetz (DVN)</strong><br>
+      Betreiber: jggaming2518<br>
+      Kontakt: <a href="https://discord.gg/MT3JcUarXw" target="_blank">Discord-Server</a><br><br>
+      Dieses Angebot ist ein nicht-kommerzielles Hobbyprojekt.<br>
+      Alle Inhalte dienen ausschließlich der internen Organisation und Planung.<br><br>
+      <em>Keine Angabe nach §5 DDG erforderlich.</em>
+    </p>
+    <button onclick="document.getElementById('impressumModal').classList.remove('open')" style="margin-top:1rem;padding:.5rem 1.5rem;background:var(--g200);border:none;border-radius:var(--rs);cursor:pointer;font-family:inherit">Schließen</button>
+  </div>
+</div>
+
 <script>
   // ═════════════════════════════════════════════════════════════════════
   //  KONFIGURATION
