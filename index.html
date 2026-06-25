@@ -11,8 +11,10 @@
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
   :root{--r50:#fff5f7;--r100:#ffebee;--r200:#ffcdd2;--r300:#e57373;--r400:#ef5350;--r500:#c62828;--r600:#b71c1c;--r700:#8e0000;--w:#fff;--g50:#f8f9fc;--g100:#f1f3f8;--g200:#e8ecf4;--g300:#d0d5dd;--g400:#98a2b3;--g500:#667085;--g600:#475467;--g700:#344054;--g800:#1d2939;--sm:0 1px 3px rgba(0,0,0,.06);--md:0 4px 16px rgba(0,0,0,.08);--lg:0 12px 40px rgba(0,0,0,.10);--rs:8px;--rm:12px;--rl:16px}
+  .dark{--r50:#2d1a1a;--r100:#3d1f1f;--r200:#5c2a2a;--r300:#8e3a3a;--r400:#c44a4a;--r500:#e06060;--r600:#e87a7a;--r700:#f09494;--w:#1a1d23;--g50:#1e2028;--g100:#262830;--g200:#2d303a;--g300:#3d404c;--g400:#6b7084;--g500:#9ea2b5;--g600:#c5c8d6;--g700:#e2e4ed;--g800:#f1f2f7;--sm:0 1px 3px rgba(0,0,0,.2);--md:0 4px 16px rgba(0,0,0,.25);--lg:0 12px 40px rgba(0,0,0,.3)}
   html{scroll-behavior:smooth}
-  body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--g50);color:var(--g800);min-height:100vh}
+  body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--g50);color:var(--g800);min-height:100vh;display:flex;flex-direction:column}
+  .page-wrap{flex:1}
 
   /* ─── HEADER ─── */
   header{background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:68px;box-shadow:0 4px 20px rgba(198,40,40,.25);position:sticky;top:0;z-index:100}
@@ -271,6 +273,27 @@
     .sc .sa{align-self:center}
     .ab-item .ab-data{grid-template-columns:1fr}
   }
+
+  /* ─── FOOTER ─── */
+  footer{padding:1rem 2rem;border-top:1px solid var(--g200);background:var(--w);margin-top:auto}
+  .f-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;font-size:.82rem;color:var(--g500)}
+  .f-links{display:flex;gap:1.25rem}
+  .f-links a{color:var(--g500);text-decoration:none;transition:color .2s}
+  .f-links a:hover{color:var(--r500)}
+
+  /* ─── DARK MODE OVERRIDES ─── */
+  .dark .modal{background:var(--w);color:var(--g800)}
+  .dark .modal h2{color:var(--g800)}
+  .dark .user-menu .dropdown{background:var(--w);border:1px solid var(--g200)}
+  .dark .user-menu .dropdown button{color:var(--g700)}
+  .dark .user-menu .dropdown .dd-head{color:var(--g400);border-bottom-color:var(--g200)}
+  .dark .sa-card .sa-title{color:var(--g800)}
+  .dark .sa-card .sa-desc{color:var(--g500)}
+  .dark .sa-card .sa-req{color:var(--g600)}
+  .dark .news-card p{color:var(--g500)}
+  .dark .wh h2{color:var(--g800)}
+  .dark .wh p{color:var(--g600)}
+  .dark .modal-overlay{background:rgba(0,0,0,.7)}
 </style>
 </head>
 <body>
@@ -305,6 +328,7 @@
     </div>
   </nav>
 </header>
+<div class="page-wrap">
 
 <!-- ═══════ LOGIN MODAL ═══════ -->
 <div class="modal-overlay" id="loginModal">
@@ -440,7 +464,7 @@
     <p> Plattform für Netzpläne, Stellenanzeigen, News &amp; Schichtplanung</p>
   </div>
   <div class="card">
-    <div class="ch"><div class="ci">✏️</div><h2>Willkommenstext</h2><span class="badge">DVN</span></div>
+    <div class="ch"><div class="ci">✏️</div><h2>Herzlich Willkommen</h2><span class="badge">DVN</span></div>
     <div class="wt" id="welcomeText"></div>
   </div>
   <div class="card">
@@ -478,6 +502,9 @@
   <div class="card">
     <div class="ch"><div class="ci">📋</div><h2>Stellen<span>anzeigen</span></h2><span class="badge" id="stellenBadge"></span></div>
     <div class="sa-grid" id="saGrid"></div>
+    <div style="margin-top:1.5rem;padding:.75rem 1rem;background:var(--g50);border-radius:var(--rs);font-size:.82rem;color:var(--g500);text-align:center;border:1px dashed var(--g300)">
+      ⚠️ Bei allen hier aufgeführten Stellen handelt es sich um <strong>unbezahlte, freiwillige Tätigkeiten</strong> im Rahmen unseres Hobbyprojekts. Es besteht kein Anspruch auf Vergütung.
+    </div>
   </div>
 </section>
 
@@ -692,6 +719,8 @@
     </div>
   </div>
 </section>
+
+</div><!-- /page-wrap -->
 
 <footer>
   <div class="f-inner">
@@ -1140,7 +1169,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       if(document.getElementById('loginRemember').checked){
         try{localStorage.setItem('dvn_session_user',u);localStorage.setItem('dvn_session_pass',p)}catch(e){}
       }
-      addLogEntry('Login', 'Benutzer '+u+' ('+found.rang+') hat sich angemeldet'); closeLogin(); updateUI();
+      addLogEntry('Login', 'Benutzer '+u+' ('+found.rang+') hat sich angemeldet'); closeLogin(); updateUI(); applyDarkMode();
     } else document.getElementById('loginError').style.display='block';
   }
   function toggleDropdown(e){
@@ -2219,7 +2248,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
           <input type="checkbox" ${notificationPrefs[i.key]?'checked':''} onchange="toggleNotify('${i.key}')" style="width:17px;height:17px;accent-color:var(--r500)">
           ${i.label}
-        </label>`).join('')}`;
+        </label>`).join('')}
+      <div style="font-size:.78rem;font-weight:600;color:var(--g500);margin-top:.75rem;margin-bottom:.35rem">🎨 Design</div>
+      <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
+        <input type="checkbox" ${isDarkMode()?'checked':''} onchange="toggleDarkMode()" style="width:17px;height:17px;accent-color:var(--r500)">
+        🌙 Dark Mode
+      </label>`;
   }
 
   function getBewerbungenOverride(){
@@ -2273,6 +2307,23 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     updateUI();
   }
 
+  // ─── Dark Mode ───
+  function isDarkMode(){
+    if(!loggedInAccount) return document.documentElement.classList.contains('dark');
+    try{ return JSON.parse(localStorage.getItem('dvn_darkmode_'+loggedInAccount.username)); }catch(e){ return false; }
+  }
+  function toggleDarkMode(){
+    const on=!isDarkMode();
+    if(loggedInAccount) try{localStorage.setItem('dvn_darkmode_'+loggedInAccount.username,JSON.stringify(on))}catch(e){}
+    document.documentElement.classList.toggle('dark',on);
+    syncBroadcast('config');
+    renderNotifications();
+  }
+  function applyDarkMode(){
+    const on=isDarkMode();
+    document.documentElement.classList.toggle('dark',on);
+  }
+
   // ─── Strafen ───
   let strafenList = []; try{const s=localStorage.getItem('dvn_strafen');if(s)strafenList=JSON.parse(s)}catch(e){}
 
@@ -2315,10 +2366,28 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function strafenUpdateAbgebaut(id,newVal){
     const s=strafenList.find(x=>x.id===id);
     if(!s) return;
-    s.abgebaut=Math.max(0,parseFloat(newVal)||0);
+    const oldAbgebaut = Number(s.abgebaut||0);
+    const newAbgebaut = Math.max(0,parseFloat(newVal)||0);
+    const diff = newAbgebaut - oldAbgebaut;
+    s.abgebaut = newAbgebaut;
     try{localStorage.setItem('dvn_strafen',JSON.stringify(strafenList))}catch(e){}
     syncBroadcast('strafen');
     renderStrafen();
+    if(diff > 0){
+      const nameLower = s.discordName.toLowerCase();
+      if(loggedInAccount && nameLower === loggedInAccount.username.toLowerCase()){
+        showNotification('✅ Dir wurden '+diff.toFixed(1)+'h abgebaut – Rest: '+Math.max(0,Number(s.totalHours)-newAbgebaut).toFixed(1)+'h','success');
+        try{localStorage.setItem('dvn_last_strafe_'+loggedInAccount.username,s.id)}catch(e){}
+      } else if(loggedInAccount){
+        const nid=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+        const msg='✅ Dir wurden '+diff.toFixed(1)+'h Strafe abgebaut – Rest: '+Math.max(0,Number(s.totalHours)-newAbgebaut).toFixed(1)+'h';
+        let hist=[];
+        try{const h=localStorage.getItem('dvn_notifhist_'+s.discordName);if(h)hist=JSON.parse(h)}catch(e){}
+        hist.unshift({id:nid,text:msg,type:'success',time:new Date().toLocaleString('de-DE'),read:false});
+        try{localStorage.setItem('dvn_notifhist_'+s.discordName,JSON.stringify(hist))}catch(e){}
+        syncBroadcast('notifhistory');
+      }
+    }
   }
 
   function strafenDelete(id){
@@ -2479,7 +2548,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }
   }catch(e){}
   updateUI();
+  applyDarkMode();
   fbInit(); // Firebase-Init starten (schlägt still fehl, wenn keine Config)
+  document.getElementById('fyear').textContent = new Date().getFullYear();
+
+  function showImpressum(){ document.getElementById('impressumModal').classList.add('open'); }
 </script>
 </body>
 </html>
