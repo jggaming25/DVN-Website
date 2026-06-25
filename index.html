@@ -48,6 +48,10 @@
   .ch h2{font-size:1.15rem;font-weight:700}
   .ch h2 span{color:var(--r500)}
   .ch .badge{margin-left:auto;background:var(--r100);color:var(--r600);padding:.15rem .7rem;border-radius:20px;font-size:.72rem;font-weight:600;white-space:nowrap}
+  .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin-right:4px}
+  .status-gruen{background:#22c55e}
+  .status-gelb{background:#f59e0b}
+  .status-rot{background:#ef4444}
   .sub-title{font-size:.85rem;color:var(--g500);margin-bottom:.75rem}
 
   /* ─── LOGIN MODAL ─── */
@@ -505,6 +509,7 @@
       <button data-intern="staffnews">📰 Staff News</button>
       <button data-intern="shiftplanview">📋 Shift Plan</button>
       <button data-intern="strafen">⚠️ Strafen</button>
+      <button data-intern="fahrzeuge">🚆 Fahrzeuginfos</button>
     </div>
 
     <!-- Intern: Dokumente -->
@@ -549,6 +554,13 @@
         </div>
       </div>
       <div id="strafenList"></div>
+    </div>
+
+    <!-- Intern: Fahrzeuginfos -->
+    <div class="admin-panel" id="ipanel-fahrzeuge">
+      <div class="sub-title">🚆 Fahrzeuginfos</div>
+      <div style="margin-bottom:.75rem;font-size:.78rem;color:var(--g500)">Fahrzeug-Einsätze basierend auf Shift-Plänen</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:.75rem" id="fahrzeugGrid"></div>
     </div>
   </div>
 </section>
@@ -722,6 +734,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     app_changes: true,
   };
 
+  // ─── Fahrzeuginfos ───
+  const FAHRZEUGE = [
+    '826 001','429 001','429 002','429 003','429 004','429 005',
+    '648 001','648 002','648 004','648 005','648 006','648 007',
+    '628 001','628 201','628 203',
+    '101 055-2','101 084-2','101 070-1',
+  ];
+
   // ─── Dutys (aus DVN Organisationsplan, Stand 25.06.2026) ───
   // Beim Import aus Google Sheets bitte die Array-Werte aktualisieren.
   // type: 'tf' = Triebfahrzeugführer, 'stwl' = Schaffner (STWL)
@@ -815,7 +835,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         { type:'select',   label:'Wie alt sind Sie?',                   name:'alter',         options:['Unter 14','14 oder älter'], required:true },
 
         // ─── Signalkunde (Bild 1) ───
-        { type:'select',   label:'Frage 1: Was bedeutet das Signal? (Das nächste Signal zeigt …)', name:'frage1', options:[
+        { type:'select',   label:'Frage 1: Was bedeutet das Signal? (Das nächste Signal zeigt …)', name:'frage1', image:'images/123.png', options:[
           'HP1 -> Freie Fahrt, sie können fahren!',
           'HP2 -> Langsamfahrt!',
           'HP0 -> Sie müssen anhalten!',
@@ -823,7 +843,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         ], required:true },
 
         // ─── Signalkunde (Bild 2) ───
-        { type:'select',   label:'Frage 2: Was bedeutet dieses Signal?', name:'frage2', options:[
+        { type:'select',   label:'Frage 2: Was bedeutet dieses Signal?', name:'frage2', image:'images/2134.png', options:[
           'Sh2 -> Schutzhalt',
           'Sh0 -> Halt',
           'Hp0 -> Halt',
@@ -831,7 +851,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         ], required:true },
 
         // ─── Signalkunde (Bild 3) ───
-        { type:'select',   label:'Frage 3: Was bedeutet dieses Signal?', name:'frage3', options:[
+        { type:'select',   label:'Frage 3: Was bedeutet dieses Signal?', name:'frage3', image:'images/12432.png', options:[
           'Hp1 -> Halt',
           'Hp1 -> Fahrt',
           'Hp0 -> Halt',
@@ -840,7 +860,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         ], required:true },
 
         // ─── Signalkunde (Bild 4) ───
-        { type:'select',   label:'Frage 4: Was bedeutet dieses Signal?', name:'frage4', options:[
+        { type:'select',   label:'Frage 4: Was bedeutet dieses Signal?', name:'frage4', image:'images/1242.png', options:[
           'Hp2 -> Fahrt',
           'Hp1 -> Halt',
           'Hp3 -> Fahrt',
@@ -849,7 +869,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         ], required:true },
 
         // ─── Signalkunde (Bild 5 – Multiple Choice, 2 Antworten) ───
-        { type:'text',     label:'Frage 5: Was bedeutet das Signal? (2 Antworten, durch Komma trennen)', name:'frage5', required:true, placeholder:'z.B. HP2 -> Langsamfahrt, Ich muss vor dem Signal anhalten' },
+        { type:'text',     label:'Frage 5: Was bedeutet das Signal? (2 Antworten, durch Komma trennen)', name:'frage5', image:'images/123412.png', required:true, placeholder:'z.B. HP2 -> Langsamfahrt, Ich muss vor dem Signal anhalten' },
         { type:'checkbox', label:'Frage 5a: Hp0 -> Fahrt',              name:'f5_hp0',        required:false },
         { type:'checkbox', label:'Frage 5b: Hp2 -> Langsamfahrt',       name:'f5_hp2',        required:false },
         { type:'checkbox', label:'Frage 5c: Hp1 -> Halt',               name:'f5_hp1',        required:false },
@@ -1152,7 +1172,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const req=f.required?' <span class="req" style="color:var(--r500)">*</span>':'';
       const fid='bf_'+f.name;
       if(f.type==='checkbox') return `<div class="ff checkbox" style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem"><input type="checkbox" id="${fid}" name="${f.name}" style="width:18px;height:18px;accent-color:var(--r500)"><label for="${fid}" style="margin:0;cursor:pointer;font-size:.85rem">${f.label}${req}</label></div>`;
-      if(f.type==='select') return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><select id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit">${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
+      if(f.type==='select') {
+        const img=f.image?`<img src="${f.image}" style="max-width:100%;max-height:180px;display:block;margin-bottom:.5rem;border-radius:6px;border:1px solid var(--g200)">`:'';
+        return `${img}<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><select id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit"><option value="">— Bitte wählen —</option>${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
+      }
       if(f.type==='textarea') return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><textarea id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit;min-height:80px;resize:vertical"></textarea></div>`;
       if(f.type==='file') return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><input type="file" id="${fid}" name="${f.name}" accept="${f.accept||'.pdf,.doc,.docx'}" style="width:100%;padding:.4rem"></div>`;
       const placeholder=f.placeholder?' placeholder="'+f.placeholder+'"':'';
@@ -1466,7 +1489,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       btn.classList.add('active');
       document.querySelectorAll('#intern .admin-panel').forEach(p=>p.classList.remove('active'));
       const panel=document.getElementById('ipanel-'+btn.dataset.intern);
-      if(panel){ panel.classList.add('active'); if(btn.dataset.intern==='dokumente') renderDokumente(); if(btn.dataset.intern==='staffnews') renderStaffNews(); if(btn.dataset.intern==='shiftplanview') spvInit(); if(btn.dataset.intern==='strafen') renderStrafen(); }
+      if(panel){ panel.classList.add('active'); if(btn.dataset.intern==='dokumente') renderDokumente(); if(btn.dataset.intern==='staffnews') renderStaffNews(); if(btn.dataset.intern==='shiftplanview') spvInit(); if(btn.dataset.intern==='strafen') renderStrafen(); if(btn.dataset.intern==='fahrzeuge') renderFahrzeuge(); }
     });
   });
 
@@ -2218,6 +2241,53 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     try{localStorage.setItem('dvn_strafen',JSON.stringify(strafenList))}catch(e){}
     syncBroadcast('strafen');
     renderStrafen();
+  }
+
+  function renderFahrzeuge(){
+    const el=document.getElementById('fahrzeugGrid');
+    if(!el) return;
+    const seriesFromId = id => id.split(' ')[0];
+    const dutyMap = {};
+    DUTIES.forEach(d => {
+      const vehSeries = d.veh.replace(/[/,]/g,' ').split(/\s+/).filter(Boolean);
+      vehSeries.forEach(vs => {
+        if(!dutyMap[vs]) dutyMap[vs] = [];
+        dutyMap[vs].push(d);
+      });
+    });
+    const html = FAHRZEUGE.map(vid => {
+      const series = seriesFromId(vid);
+      const relevantDuties = dutyMap[series] || [];
+      const entries = [];
+      shiftPlans.forEach(sp => {
+        (sp.entries.TF||[]).forEach(tf => {
+          const match = relevantDuties.find(d => d.duty === tf.duty);
+          if(match){
+            entries.push({
+              shift: sp.shiftTitle||'',
+              date: sp.date||'',
+              note: tf.note||'',
+              name: tf.name||'',
+              duty: tf.duty,
+              time: match.start.replace(/ \/.*/,'')+' – '+match.end.replace(/ \/.*/,'')
+            });
+          }
+        });
+      });
+      const entriesHtml = entries.length
+        ? entries.map(e => `
+          <div style="display:grid;grid-template-columns:1fr auto auto;gap:.5rem;padding:.3rem .5rem;border-bottom:1px solid var(--g200);font-size:.78rem;align-items:center">
+            <div style="color:var(--g600)">${e.shift} ${e.date}${e.note?' · '+e.note:''}${e.name?' · '+e.name:''}</div>
+            <div style="white-space:nowrap">${e.time}</div>
+            <div style="font-weight:600;white-space:nowrap">${e.duty}</div>
+          </div>`).join('')
+        : '<div style="text-align:center;padding:.5rem;color:var(--g400);font-size:.78rem">Keine Einträge</div>';
+      return `<div style="background:var(--bgc);border:1px solid var(--bc);border-radius:.5rem;overflow:hidden">
+        <div style="font-weight:700;font-size:.85rem;padding:.4rem .6rem;background:var(--r50);border-bottom:1px solid var(--g200)">${vid}</div>
+        ${entriesHtml}
+      </div>`;
+    }).join('');
+    el.innerHTML = html;
   }
 
   function renderStrafen(){
