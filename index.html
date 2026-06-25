@@ -314,6 +314,9 @@
     <input type="text" id="loginUser" placeholder="admin" autocomplete="off">
     <label>Passwort</label>
     <input type="password" id="loginPass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <label style="display:flex;align-items:center;gap:.5rem;margin:.5rem 0;font-size:.85rem;cursor:pointer">
+      <input type="checkbox" id="loginRemember" style="width:17px;height:17px;accent-color:var(--r500)" checked> Angemeldet bleiben
+    </label>
     <div class="btn-row">
       <button class="btn-secondary" onclick="closeLogin()">Abbrechen</button>
       <button class="btn-primary" onclick="doLogin()">Anmelden</button>
@@ -556,14 +559,16 @@
       <div class="sub-title">⚠️ Strafen verwalten</div>
       <div id="strafenEntry" style="display:none;margin-bottom:1.5rem;padding:1rem;background:var(--g50);border-radius:var(--rs)">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-          <input type="text" id="strafenDiscordName" placeholder="Discord Name">
-          <input type="number" id="strafenHours" placeholder="Stunden" min="0" step="0.5">
+          <select id="strafenDiscordName" style="padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-family:inherit">
+            <option value="">— Account wählen —</option>
+          </select>
+          <input type="number" id="strafenHours" placeholder="Stunden gesamt" min="0" step="0.5">
+        </div>
+        <div style="margin-top:.5rem">
+          <input type="number" id="strafenAbgebaut" placeholder="Bereits abgebaute Stunden" min="0" step="0.5" style="width:100%;padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-family:inherit">
         </div>
         <textarea id="strafenReason" placeholder="Grund" style="width:100%;margin-top:.5rem;padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-family:inherit;resize:vertical;min-height:60px"></textarea>
         <div style="display:flex;gap:.5rem;margin-top:.5rem;align-items:center">
-          <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer">
-            <input type="checkbox" id="strafenCompleted" style="width:17px;height:17px;accent-color:var(--r500)"> Abgearbeitet
-          </label>
           <button onclick="strafenAdd()" style="padding:.5rem 1.2rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">➕ Strafe eintragen</button>
         </div>
       </div>
@@ -975,8 +980,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function doLogin() {
     const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('loginPass').value;
     const found=ACCOUNTS.find(a=>a.username===u&&a.password===p);
-    if(found){ loggedIn=true; loggedInUser=u; loggedInAccount=found; addLogEntry('Login', 'Benutzer '+u+' ('+found.rang+') hat sich angemeldet'); closeLogin(); updateUI(); }
-    else document.getElementById('loginError').style.display='block';
+    if(found){
+      loggedIn=true; loggedInUser=u; loggedInAccount=found;
+      loadNotifHistory();
+      if(document.getElementById('loginRemember').checked){
+        try{localStorage.setItem('dvn_session_user',u);localStorage.setItem('dvn_session_pass',p)}catch(e){}
+      }
+      addLogEntry('Login', 'Benutzer '+u+' ('+found.rang+') hat sich angemeldet'); closeLogin(); updateUI();
+    } else document.getElementById('loginError').style.display='block';
   }
   function toggleDropdown(e){
     e.stopPropagation();
@@ -988,6 +999,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function logout(){
     addLogEntry('Logout', 'Benutzer '+loggedInUser+' hat sich abgemeldet');
+    try{localStorage.removeItem('dvn_session_user');localStorage.removeItem('dvn_session_pass')}catch(e){}
     loggedIn=false; loggedInUser=null; loggedInAccount=null;
     document.getElementById('userDropdown').classList.remove('open');
     document.querySelectorAll('nav button[data-page], .page').forEach(el => el.classList.remove('active'));
@@ -1249,7 +1261,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const d=document.createElement('div'); d.className='sc';
       d.innerHTML=`<div class="stb"><div class="l1">${s.time}</div><div class="l2">${s.date||''}</div></div>
         <div class="si"><h3>${s.title}</h3>${s.desc?'<p>'+s.desc+'</p>':''}${s.image?'<br><img src="'+s.image+'" class="shift-img" alt="">':''}</div>
-        <div class="sa"><button onclick="editShift(${i})" title="Bearbeiten">✏️</button><button onclick="delShift(${i})" title="Löschen">🗑️</button></div>`;
+        <div class="sa"><button onclick="editShift(${i})" title="Bearbeiten">✏️</button><button onclick="cancelShift(${i})" title="Absagen">🚫</button></div>`;
       list.appendChild(d);
     });
   }
@@ -1297,7 +1309,35 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       reader.readAsDataURL(fileInput.files[0]);
     } else save();
   }
-  function delShift(i){ const s=shifts[i]; addLogEntry('Schicht gelöscht', s.title+' ('+s.time+')'); shifts.splice(i,1); try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){} syncBroadcast('shifts'); renderPublicShifts(); renderAdminShifts(); }
+  function cancelShift(i){
+    if(!confirm('Schicht wirklich absagen? Der zugehörige Shift-Plan wird gelöscht und alle Angemeldeten benachrichtigt.')) return;
+    const s=shifts[i];
+    // Find shift plans for this shift
+    const affectedPlans=shiftPlans.filter(p=>p.shiftIdx===i);
+    affectedPlans.forEach(plan=>{
+      // Notify all sign-ins for this plan
+      const planSignins=signins.filter(si=>si.shiftPlanId===plan.id);
+      planSignins.forEach(si=>{
+        if(si.username!==loggedInAccount?.username){
+          showNotification('🚫 Schicht '+plan.shiftTitle+' wurde abgesagt – deine Anmeldung wurde entfernt.','error');
+        }
+      });
+      // Remove sign-ins for this plan
+      signins=signins.filter(si=>si.shiftPlanId!==plan.id);
+    });
+    // Remove shift plans for this shift
+    shiftPlans=shiftPlans.filter(p=>p.shiftIdx!==i);
+    try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
+    try{localStorage.setItem('dvn_signins',JSON.stringify(signins))}catch(e){}
+    syncBroadcast('shiftplans'); syncBroadcast('signins');
+    // Remove the shift
+    addLogEntry('Schicht abgesagt', s.title+' ('+s.time+')');
+    shifts.splice(i,1);
+    try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){}
+    syncBroadcast('shifts');
+    renderPublicShifts(); renderAdminShifts();
+    showNotification('🚫 Schicht abgesagt – Pläne gelöscht, alle benachrichtigt.','info');
+  }
 
   // ─── News ───
   function renderNews(){
@@ -1446,40 +1486,58 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     spRenderEditor(plan);
   }
 
+  function spGetShiftTimeRange(){
+    const plan=shiftPlans.find(p=>p.id===editingSpId);
+    if(!plan) return null;
+    const shift=shifts[plan.shiftIdx];
+    if(!shift||!shift.time) return null;
+    // Format: "06:00–14:00" or "06:00-14:00"
+    const parts=shift.time.split(/[–\-]/);
+    if(parts.length<2) return null;
+    return { start:parts[0].trim(), end:parts[1].trim() };
+  }
+
+  function spDutyInShiftRange(duty,shiftRange){
+    if(!shiftRange) return true;
+    // Parse duty start/end times: "00:59 / AK" → "00:59", or "20:32" → "20:32"
+    const dStart=duty.start.split('/')[0].trim();
+    const dEnd=duty.end.split('/')[0].trim();
+    if(!dStart||!dEnd) return true;
+    return dStart>=shiftRange.start && dEnd<=shiftRange.end;
+  }
+
   function spRenderDutyRef(){
     const container=document.getElementById('spDutyRefContent');
     if(!container) return;
-    const tfDuties=DUTIES.filter(d=>d.type==='tf');
-    const stwlDuties=DUTIES.filter(d=>d.type==='stwl');
+    const shiftRange=spGetShiftTimeRange();
+    const tfDuties=DUTIES.filter(d=>d.type==='tf' && spDutyInShiftRange(d,shiftRange));
     const canEdit=getShiftplanOverride();
     container.innerHTML=`
-      <div style="font-weight:600;margin-bottom:.5rem;color:var(--r700)">🚆 TF-Dutys</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.5rem;margin-bottom:1rem">
-        ${tfDuties.map(d=>`
-          <div style="background:var(--w);border:1px solid var(--g200);border-radius:var(--rs);padding:.4rem .6rem;position:relative">
-            <div style="font-weight:600">${d.duty}</div>
+      <div style="font-weight:600;margin-bottom:.5rem;color:var(--r700)">🚆 TF-Dutys ${shiftRange?'('+shiftRange.start+'–'+shiftRange.end+')':''}</div>
+      ${tfDuties.length===0?'<div style="font-size:.82rem;color:var(--g400);padding:.5rem 0">Keine passenden Dutys für diese Schichtzeit.</div>':
+      `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.5rem;margin-bottom:1rem">
+        ${tfDuties.map(d=>{
+          const plan=shiftPlans.find(p=>p.id===editingSpId);
+          const alreadyAssigned=plan&&plan.entries.TF&&plan.entries.TF.some(e=>e.duty===d.duty);
+          return `<div style="background:var(--w);border:1px solid ${alreadyAssigned?'var(--r300)':'var(--g200)'};border-radius:var(--rs);padding:.4rem .6rem;position:relative;${alreadyAssigned?'box-shadow:0 0 0 2px rgba(239,68,68,.15)':''}">
+            <div style="font-weight:600">${d.duty}${alreadyAssigned?' <span style="color:var(--r500);font-size:.7rem">⚠️ bereits vergeben</span>':''}</div>
             <div style="color:var(--g500);font-size:.78rem">Dauer: ${d.dur} · Fahrzeuge: ${d.veh}</div>
             <div style="font-size:.78rem">Start: ${d.start}</div>
             <div style="font-size:.78rem">Ende: ${d.end}</div>
             ${canEdit?`<button onclick="spAssignDuty('${d.duty}')" style="position:absolute;top:.4rem;right:.4rem;padding:.15rem .5rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">+</button>`:''}
-          </div>`).join('')}
-      </div>
-      <div style="font-weight:600;margin-bottom:.5rem;color:var(--r700)">🎫 STWL-Dutys</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.5rem">
-        ${stwlDuties.map(d=>`
-          <div style="background:var(--w);border:1px solid var(--g200);border-radius:var(--rs);padding:.4rem .6rem">
-            <div style="font-weight:600">${d.duty}</div>
-            <div style="color:var(--g500);font-size:.78rem">Dauer: ${d.dur} · Fahrzeuge: ${d.veh}</div>
-            <div style="font-size:.78rem">Start: ${d.start}</div>
-            <div style="font-size:.78rem">Ende: ${d.end}</div>
-          </div>`).join('')}
-      </div>`;
+          </div>`;
+        }).join('')}
+      </div>`}`;
   }
 
   function spAssignDuty(dutyName){
     const plan=shiftPlans.find(p=>p.id===editingSpId);
     if(!plan) return;
     if(!plan.entries.TF) plan.entries.TF=[];
+    // Check if duty already assigned
+    if(plan.entries.TF.some(e=>e.duty===dutyName)){
+      if(!confirm('⚠️ Die Duty "'+dutyName+'" ist bereits vergeben. Trotzdem doppelt belegen?')) return;
+    }
     plan.entries.TF.push({name:'',duty:dutyName,note:''});
     spRenderEditor(plan);
   }
@@ -1502,20 +1560,56 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const tfContainer=document.getElementById('sp_TF');
     if(tfContainer){
       const tfEntries=plan.entries.TF||[];
-      const tfDuties=DUTIES.filter(d=>d.type==='tf');
+      const shiftRange=spGetShiftTimeRange();
+      const tfDuties=DUTIES.filter(d=>d.type==='tf' && spDutyInShiftRange(d,shiftRange));
+      // Check for driver name conflicts (same name assigned to multiple duties)
+      const nameCounts={};
+      tfEntries.forEach(e=>{ if(e.name) nameCounts[e.name]=(nameCounts[e.name]||0)+1; });
       tfContainer.innerHTML=tfEntries.map((e,i)=>`
         <div class="sp-entry" style="flex-wrap:wrap;gap:.35rem">
           <select class="sp-duty-select" onchange="spUpdateTFDuty(${i},this.value)" style="padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;flex:1 1 120px;min-width:0">
             <option value="">— Duty —</option>
             ${tfDuties.map(d=>`<option value="${d.duty}" ${e.duty===d.duty?'selected':''}>${d.duty} (${d.start}→${d.end})</option>`).join('')}
           </select>
-          <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
+          <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" onchange="spCheckNameConflict()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
           <input type="text" class="sp-note" value="${e.note||''}" placeholder="Anmerkung" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
           <button class="sp-del" onclick="spDelEntry('TF',${i})" style="flex-shrink:0">✕</button>
         </div>`).join('');
+      // Show conflict warnings
+      const conflicts=Object.entries(nameCounts).filter(([name,count])=>count>1);
+      if(conflicts.length){
+        const warn=document.createElement('div');
+        warn.style.cssText='margin-top:.4rem;font-size:.78rem;color:var(--r600);background:#fef2f2;padding:.4rem .7rem;border-radius:var(--rs)';
+        warn.innerHTML='⚠️ Fahrer-Konflikt: '+conflicts.map(([name,count])=>`<strong>${name}</strong> (${count}x)`).join(', ')+' – gleicher Fahrer für mehrere Dutys eingetragen.';
+        tfContainer.appendChild(warn);
+      }
     }
     spRenderDutyRef();
     renderSignins(plan);
+  }
+
+  function spCheckNameConflict(){
+    const plan=shiftPlans.find(p=>p.id===editingSpId);
+    if(!plan||!plan.entries.TF) return;
+    const tfContainer=document.getElementById('sp_TF');
+    if(!tfContainer) return;
+    const names=[];
+    tfContainer.querySelectorAll('.sp-name').forEach(el=>{
+      const v=el.value.trim();
+      if(v) names.push(v);
+    });
+    const dupes=names.filter((n,i)=>names.indexOf(n)!==i);
+    if(dupes.length){
+      // Only warn if not already warned for these
+      if(!tfContainer.dataset.conflictWarned || tfContainer.dataset.conflictWarned!==dupes.join(',')){
+        tfContainer.dataset.conflictWarned=dupes.join(',');
+        if(!confirm('⚠️ Der Fahrer "'+dupes[0]+'" ist bereits für eine andere Duty eingetragen. Trotzdem fortfahren?')){
+          spRenderEditor(plan);
+        }
+      }
+    } else {
+      delete tfContainer.dataset.conflictWarned;
+    }
   }
 
   function spUpdateTFDuty(idx,val){
@@ -1695,6 +1789,20 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   let notifHistory = [];
 
+  function loadNotifHistory(){
+    if(!loggedInAccount) return;
+    try{
+      const saved=localStorage.getItem('dvn_notifhist_'+loggedInAccount.username);
+      if(saved) notifHistory=JSON.parse(saved);
+    }catch(e){}
+    updateNotifBadge();
+  }
+  function saveNotifHistory(){
+    if(!loggedInAccount) return;
+    try{localStorage.setItem('dvn_notifhist_'+loggedInAccount.username,JSON.stringify(notifHistory))}catch(e){}
+    updateNotifBadge();
+  }
+
   function showNotification(text,type){
     const box=document.getElementById('notificationBox');
     if(!box) return;
@@ -1705,14 +1813,26 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     box.appendChild(el);
     setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); },4000);
 
-    notifHistory.unshift({text,type,time:new Date().toLocaleString('de-DE')});
-    updateNotifBadge();
+    notifHistory.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text,type,time:new Date().toLocaleString('de-DE'),read:false});
+    saveNotifHistory();
+  }
+
+  function markNotifRead(id){
+    const n=notifHistory.find(x=>x.id===id);
+    if(n) n.read=true;
+    saveNotifHistory();
+  }
+
+  function clearReadNotifs(){
+    notifHistory=notifHistory.filter(n=>!n.read);
+    saveNotifHistory();
   }
 
   function updateNotifBadge(){
     const badge=document.getElementById('notifBadge');
     if(!badge) return;
-    if(notifHistory.length){ badge.style.display='flex'; badge.textContent=notifHistory.length; }
+    const unread=notifHistory.filter(n=>!n.read).length;
+    if(unread){ badge.style.display='flex'; badge.textContent=unread; }
     else badge.style.display='none';
   }
 
@@ -1721,13 +1841,17 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!box) return;
     const existingPopup=document.getElementById('notifPopup');
     if(existingPopup){ existingPopup.remove(); return; }
-    if(!notifHistory.length){ showNotification('Keine Benachrichtigungen.','info'); return; }
+    const unreadCount=notifHistory.filter(n=>!n.read).length;
     const popup=document.createElement('div');
     popup.id='notifPopup';
     popup.style.cssText='position:fixed;top:76px;right:1rem;background:var(--w);border-radius:var(--rm);box-shadow:var(--lg);padding:.75rem;min-width:280px;max-width:380px;max-height:400px;overflow-y:auto;z-index:998;border:1px solid var(--g200);animation:ni .2s ease';
-    popup.innerHTML='<div style="font-size:.75rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding-bottom:.5rem;border-bottom:1px solid var(--g100);margin-bottom:.5rem">Benachrichtigungen</div>'+
-      notifHistory.map(n=>`<div style="padding:.4rem .5rem;border-radius:6px;font-size:.8rem;margin-bottom:.25rem;background:${n.type==='info'?'#eef2ff':n.type==='success'?'#ecfdf5':n.type==='error'?'#fef2f2':'var(--g50)'};color:var(--g700)"><span style="font-size:.65rem;color:var(--g400);display:block">${n.time}</span>${n.text}</div>`).join('');
-    popup.addEventListener('click',()=>popup.remove());
+    popup.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:.5rem;border-bottom:1px solid var(--g100);margin-bottom:.5rem">'+
+      '<span style="font-size:.75rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Benachrichtigungen</span>'+
+      (unreadCount?`<span style="font-size:.7rem;color:var(--r500);cursor:pointer;font-weight:600" onclick="clearReadNotifs();this.closest(\'#notifPopup\').remove()">Alle gelesen löschen</span>`:'')+
+      '</div>'+
+      (notifHistory.length===0?'<div style="font-size:.8rem;color:var(--g400);text-align:center;padding:1rem 0">Keine Benachrichtigungen.</div>':
+      notifHistory.map(n=>`<div onclick="markNotifRead('${n.id}');this.style.opacity='.5'" style="cursor:pointer;padding:.4rem .5rem;border-radius:6px;font-size:.8rem;margin-bottom:.25rem;background:${n.type==='info'?'#eef2ff':n.type==='success'?'#ecfdf5':n.type==='error'?'#fef2f2':'var(--g50)'};color:var(--g700);${n.read?'opacity:.45':''}"><span style="font-size:.65rem;color:var(--g400);display:block">${n.time}</span>${n.text}</div>`).join(''));
+    popup.addEventListener('click',(e)=>{ if(e.target===popup) popup.remove(); });
     document.body.appendChild(popup);
   }
 
@@ -1823,31 +1947,35 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   let strafenList = []; try{const s=localStorage.getItem('dvn_strafen');if(s)strafenList=JSON.parse(s)}catch(e){}
 
   function getStrafenHoursSum(username){
-    return strafenList.filter(s=>s.discordName.toLowerCase()===username.toLowerCase()&&!s.completed).reduce((sum,s)=>sum+Number(s.hours),0);
+    return strafenList.filter(s=>s.discordName.toLowerCase()===username.toLowerCase()).reduce((sum,s)=>sum+Math.max(0,Number(s.totalHours)-Number(s.abgebaut||0)),0);
   }
 
   function strafenAdd(){
-    const name=document.getElementById('strafenDiscordName').value.trim();
-    const hours=parseFloat(document.getElementById('strafenHours').value);
+    const name=document.getElementById('strafenDiscordName').value;
+    const totalHours=parseFloat(document.getElementById('strafenHours').value);
+    const abgebaut=parseFloat(document.getElementById('strafenAbgebaut').value)||0;
     const reason=document.getElementById('strafenReason').value.trim();
-    const completed=document.getElementById('strafenCompleted').checked;
-    if(!name||!hours||!reason){ showNotification('Bitte alle Pflichtfelder ausfüllen.','error'); return; }
-    strafenList.push({ id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), discordName:name, hours, reason, completed, enteredBy:loggedInAccount?.username||'?', timestamp:new Date().toLocaleString('de-DE') });
+    if(!name||!totalHours||!reason){ showNotification('Bitte alle Pflichtfelder ausfüllen.','error'); return; }
+    strafenList.push({ id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), discordName:name, totalHours, abgebaut, reason, enteredBy:loggedInAccount?.username||'?', timestamp:new Date().toLocaleString('de-DE') });
     try{localStorage.setItem('dvn_strafen',JSON.stringify(strafenList))}catch(e){}
     syncBroadcast('strafen');
     showNotification('✅ Strafe eingetragen','success');
-    addLogEntry('Strafe eingetragen', name+' ('+hours+'h)');
+    addLogEntry('Strafe eingetragen', name+' ('+totalHours+'h)');
+    // Benachrichtige den betroffenen Account
+    if(loggedInAccount && name.toLowerCase()===loggedInAccount.username.toLowerCase()){
+      showNotification('⚠️ Dir wurde eine Strafe eingetragen: '+totalHours+'h – '+reason,'error');
+    }
     document.getElementById('strafenDiscordName').value='';
     document.getElementById('strafenHours').value='';
+    document.getElementById('strafenAbgebaut').value='';
     document.getElementById('strafenReason').value='';
-    document.getElementById('strafenCompleted').checked=false;
     renderStrafen();
   }
 
-  function strafenToggleComplete(id){
+  function strafenUpdateAbgebaut(id,newVal){
     const s=strafenList.find(x=>x.id===id);
     if(!s) return;
-    s.completed=!s.completed;
+    s.abgebaut=Math.max(0,parseFloat(newVal)||0);
     try{localStorage.setItem('dvn_strafen',JSON.stringify(strafenList))}catch(e){}
     syncBroadcast('strafen');
     renderStrafen();
@@ -1867,31 +1995,42 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const canEdit=getStrafenOverride();
     const entryForm=document.getElementById('strafenEntry');
     if(entryForm) entryForm.style.display=canEdit?'block':'none';
+    // Populate account select options
+    const nameSelect=document.getElementById('strafenDiscordName');
+    if(nameSelect && nameSelect.tagName==='SELECT'){
+      const currentVal=nameSelect.value;
+      nameSelect.innerHTML='<option value="">— Account wählen —</option>'+ACCOUNTS.map(a=>`<option value="${a.username}">${a.username} (${a.rang})</option>`).join('');
+      if(currentVal) nameSelect.value=currentVal;
+    }
     if(!loggedInAccount){ el.innerHTML=''; return; }
     const isAdmin=canEdit;
     const myName=loggedInAccount.username;
-    // Admins see all, users see only their own
     const filtered=isAdmin?strafenList:strafenList.filter(s=>s.discordName.toLowerCase()===myName.toLowerCase());
     if(filtered.length===0){
       el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400);font-size:.85rem">Keine Einträge.</div>';
       return;
     }
-    const totalHours=filtered.filter(s=>!s.completed).reduce((sum,s)=>sum+Number(s.hours),0);
+    const totalRemaining=filtered.reduce((sum,s)=>sum+Math.max(0,Number(s.totalHours)-Number(s.abgebaut||0)),0);
     el.innerHTML=`
-      <div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">${filtered.length} Einträge · Offene Strafstunden: <strong style="color:${totalHours>=4?'var(--r600)':'var(--g700)'}">${totalHours.toFixed(1)}h</strong></div>
-      ${filtered.map(s=>`
-        <div class="sp-plan-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;${s.completed?'opacity:.55':''}">
-          <div>
-            <div style="font-weight:600;font-size:.9rem">${s.discordName} · ${s.hours}h</div>
+      <div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">${filtered.length} Einträge · Offene Strafstunden: <strong style="color:${totalRemaining>=4?'var(--r600)':'var(--g700)'}">${totalRemaining.toFixed(1)}h</strong></div>
+      ${filtered.map(s=>{
+        const remaining=Math.max(0,Number(s.totalHours)-Number(s.abgebaut||0));
+        const isCompleted=remaining<=0;
+        return `<div class="sp-plan-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;${isCompleted?'opacity:.55':''}">
+          <div style="flex:2;min-width:180px">
+            <div style="font-weight:600;font-size:.9rem">${s.discordName} · ${s.totalHours}h ${isCompleted?'✅':''}</div>
             <div style="font-size:.78rem;color:var(--g500)">${s.reason}</div>
             <div style="font-size:.72rem;color:var(--g400)">${s.timestamp} · von ${s.enteredBy}</div>
           </div>
-          <div style="display:flex;gap:.4rem;align-items:center">
-            <span style="font-size:.78rem;padding:.25rem .6rem;border-radius:var(--rs);background:${s.completed?'var(--g100)':'#bbf7d0'};color:${s.completed?'var(--g500)':'#166534'}">${s.completed?'✅ Erledigt':'⏳ Offen'}</span>
-            ${isAdmin?`<button onclick="strafenToggleComplete('${s.id}')" style="padding:.3rem .6rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem">Umschalten</button>`:''}
+          <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
+            <span style="font-size:.78rem;padding:.25rem .6rem;border-radius:var(--rs);background:${isCompleted?'var(--g100)':'#bbf7d0'};color:${isCompleted?'var(--g500)':'#166534'}">
+              ${isCompleted?'✅ Erledigt':'⏳ Rest: '+remaining.toFixed(1)+'h'}
+            </span>
+            ${!isCompleted&&isAdmin?`<div style="display:flex;align-items:center;gap:.25rem"><span style="font-size:.72rem;color:var(--g400)">Abgebaut:</span><input type="number" value="${s.abgebaut||0}" min="0" max="${s.totalHours}" step="0.5" onchange="strafenUpdateAbgebaut('${s.id}',this.value)" style="width:60px;padding:.25rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.78rem;font-family:inherit"></div>`:''}
             ${isAdmin?`<button onclick="strafenDelete('${s.id}')" style="padding:.3rem .6rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem">✕</button>`:''}
           </div>
-        </div>`).join('')}`;
+        </div>`;
+      }).join('')}`;
   }
 
   function toggleNotify(key){
@@ -1946,6 +2085,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
 
   // ─── Init ───
+  // Auto-Login from session
+  try{
+    const u=localStorage.getItem('dvn_session_user'), p=localStorage.getItem('dvn_session_pass');
+    if(u&&p){
+      const found=ACCOUNTS.find(a=>a.username===u&&a.password===p);
+      if(found){ loggedIn=true; loggedInUser=u; loggedInAccount=found; }
+    }
+  }catch(e){}
   updateUI();
 </script>
 </body>
