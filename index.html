@@ -711,7 +711,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     ],
     tf: [
       { text: 'TF-Handbuch', url: '#' },
-      { text: 'Fahrzeugübersicht', url: '#' },
       // Weitere Links hier
     ]
   };
@@ -722,11 +721,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     public_news: true,
     app_changes: true,
   };
-
-  // ─── Fahrzeuginfos ───
-  const FAHRZEUGE = [
-    '429 001', '429 002', '429 003 + 429 004', '429 005', '648 001', '648 002', '628 201', '648 004', '628 001', '648 006', '648 005'
-  ];
 
   // ─── Dutys (aus DVN Organisationsplan, Stand 25.06.2026) ───
   // Beim Import aus Google Sheets bitte die Array-Werte aktualisieren.
@@ -1803,17 +1797,17 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const list=getCustomAccounts();
     const acct=list.find(a=>a.username===username);
     if(acct){
-      // Custom account – toggle directly
       acct[key]=!acct[key];
       saveCustomAccounts(list);
     } else {
-      // Built-in account – use localStorage override
       const current=getAccountOverride(username,key);
       try{localStorage.setItem('dvn_'+key+'_'+username,JSON.stringify(!current))}catch(e){}
       syncBroadcast('config');
     }
     accManageRender();
     updateUI();
+  }
+  function accManageDelete(username){
     if(!confirm('Account "'+username+'" wirklich löschen?')) return;
     const list=getCustomAccounts().filter(a=>a.username!==username);
     saveCustomAccounts(list);
@@ -2124,16 +2118,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function getBewerbungenOverride(){
     if(!loggedInAccount) return false;
-    try{
-      const v = localStorage.getItem('dvn_bew_'+loggedInAccount.username);
-      if(v!==null) return JSON.parse(v);
-    }catch(e){}
-    return loggedInAccount.bewerbungen || false;
+    return getAccountOverride(loggedInAccount.username, 'bewerbungen');
   }
   function toggleBewerbungenAccess(){
     if(!loggedInAccount) return;
     const current = getBewerbungenOverride();
-    try{localStorage.setItem('dvn_bew_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
+    try{localStorage.setItem('dvn_bewerbungen_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
     syncBroadcast('config');
     renderNotifications();
     updateUI();
@@ -2141,16 +2131,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function getShiftplanOverride(){
     if(!loggedInAccount) return false;
-    try{
-      const v = localStorage.getItem('dvn_sp_'+loggedInAccount.username);
-      if(v!==null) return JSON.parse(v);
-    }catch(e){}
-    return loggedInAccount.shiftplan || false;
+    return getAccountOverride(loggedInAccount.username, 'shiftplan');
   }
   function toggleShiftplanAccess(){
     if(!loggedInAccount) return;
     const current = getShiftplanOverride();
-    try{localStorage.setItem('dvn_sp_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
+    try{localStorage.setItem('dvn_shiftplan_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
     syncBroadcast('config');
     renderNotifications();
     updateUI();
@@ -2158,11 +2144,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function getStrafenOverride(){
     if(!loggedInAccount) return false;
-    try{
-      const v = localStorage.getItem('dvn_strafen_'+loggedInAccount.username);
-      if(v!==null) return JSON.parse(v);
-    }catch(e){}
-    return loggedInAccount.strafen || false;
+    return getAccountOverride(loggedInAccount.username, 'strafen');
   }
   function toggleStrafenAccess(){
     if(!loggedInAccount) return;
