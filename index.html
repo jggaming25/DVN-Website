@@ -931,6 +931,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         case 'shiftplans':   data = JSON.parse(localStorage.getItem('dvn_shiftplans')); break;
         case 'strafen':      data = JSON.parse(localStorage.getItem('dvn_strafen')); break;
         case 'signins':      data = JSON.parse(localStorage.getItem('dvn_signins')); break;
+        case 'config':       data = true; break;
+        case 'notifhistory': data = true; break;
       }
     } catch(e){}
     syncCh.postMessage({ type, data });
@@ -961,14 +963,34 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         logs = data;
         if(loggedIn && document.querySelector('#apanel-log.active')) renderLog(); break;
       case 'strafen':
+        if(loggedInAccount){
+          const myNew=data.filter(s=>s.discordName.toLowerCase()===loggedInAccount.username.toLowerCase());
+          const lastSeenId=localStorage.getItem('dvn_last_strafe_'+loggedInAccount.username)||'';
+          myNew.forEach(s=>{
+            if(s.id>lastSeenId){
+              showNotification('⚠️ Dir wurde eine Strafe eingetragen: '+s.totalHours+'h – '+s.reason,'error');
+            }
+          });
+          if(myNew.length){
+            const maxId=myNew.reduce((m,s)=>s.id>m?s.id:m,'');
+            try{localStorage.setItem('dvn_last_strafe_'+loggedInAccount.username,maxId)}catch(e){}
+          }
+        }
         strafenList = data;
-        if(loggedIn && document.querySelector('#ipanel-strafen.active')) renderStrafen(); break;
+        if(loggedIn && document.querySelector('#ipanel-strafen.active')) renderStrafen();
+        break;
       case 'signins':
         signins = data;
         if(loggedIn && document.querySelector('#apanel-shiftplan.active')){
           const plan=shiftPlans.find(p=>p.id===editingSpId);
           if(plan) renderSignins(plan);
         } break;
+      case 'config':
+        if(loggedIn){ updateUI(); renderNotifications(); accManageRender(); }
+        break;
+      case 'notifhistory':
+        if(loggedInAccount) loadNotifHistory();
+        break;
     }
   };
 
@@ -1348,13 +1370,22 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Find shift plans for this shift
     const affectedPlans=shiftPlans.filter(p=>p.shiftIdx===i);
     affectedPlans.forEach(plan=>{
-      // Notify all sign-ins for this plan
       const planSignins=signins.filter(si=>si.shiftPlanId===plan.id);
       planSignins.forEach(si=>{
         if(si.username!==loggedInAccount?.username){
           showNotification('🚫 Schicht '+plan.shiftTitle+' wurde abgesagt – deine Anmeldung wurde entfernt.','error');
         }
+        // Save notification to each affected user's history (offline support)
+        if(si.username!==loggedInAccount?.username){
+          const nid=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+          const msg='🚫 Schicht '+plan.shiftTitle+' wurde abgesagt – deine Anmeldung wurde entfernt.';
+          let hist=[];
+          try{const s=localStorage.getItem('dvn_notifhist_'+si.username);if(s)hist=JSON.parse(s)}catch(e){}
+          hist.unshift({id:nid,text:msg,type:'error',time:new Date().toLocaleString('de-DE'),read:false});
+          try{localStorage.setItem('dvn_notifhist_'+si.username,JSON.stringify(hist))}catch(e){}
+        }
       });
+      syncBroadcast('notifhistory');
       // Remove sign-ins for this plan
       signins=signins.filter(si=>si.shiftPlanId!==plan.id);
     });
@@ -1523,12 +1554,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     spRenderEditor(plan);
   }
 
+  function timeToMin(t){
+    const p=t.split(':'); return parseInt(p[0])*60+parseInt(p[1]);
+  }
+
   function spGetShiftTimeRange(){
     const plan=shiftPlans.find(p=>p.id===editingSpId);
     if(!plan) return null;
     const shift=shifts[plan.shiftIdx];
     if(!shift||!shift.time) return null;
-    // Format: "06:00–14:00" or "06:00-14:00"
     const parts=shift.time.split(/[–\-]/);
     if(parts.length<2) return null;
     return { start:parts[0].trim(), end:parts[1].trim() };
@@ -1536,11 +1570,16 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function spDutyInShiftRange(duty,shiftRange){
     if(!shiftRange) return true;
-    // Parse duty start/end times: "00:59 / AK" → "00:59", or "20:32" → "20:32"
     const dStart=duty.start.split('/')[0].trim();
     const dEnd=duty.end.split('/')[0].trim();
     if(!dStart||!dEnd) return true;
-    return dStart>=shiftRange.start && dEnd<=shiftRange.end;
+    let sS=timeToMin(shiftRange.start), sE=timeToMin(shiftRange.end);
+    let dS=timeToMin(dStart), dE=timeToMin(dEnd);
+    // Normalize overnight
+    if(sE<=sS) sE+=1440;
+    if(dE<=dS) dE+=1440;
+    // Overlap check: dutyStart < shiftEnd AND dutyEnd > shiftStart
+    return dS < sE && dE > sS;
   }
 
   function spRenderDutyRef(){
@@ -1723,6 +1762,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
   function saveCustomAccounts(list){
     try{localStorage.setItem('dvn_custom_accounts',JSON.stringify(list))}catch(e){}
+    syncBroadcast('config');
   }
   function accManageAdd(){
     const user=document.getElementById('accNewUser').value.trim();
@@ -1970,6 +2010,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
     notifHistory.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text,type,time:new Date().toLocaleString('de-DE'),read:false});
     saveNotifHistory();
+    syncBroadcast('notifhistory');
   }
 
   function markNotifRead(id){
@@ -2063,6 +2104,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!loggedInAccount) return;
     const current = getBewerbungenOverride();
     try{localStorage.setItem('dvn_bew_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
+    syncBroadcast('config');
     renderNotifications();
     updateUI();
   }
@@ -2079,6 +2121,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!loggedInAccount) return;
     const current = getShiftplanOverride();
     try{localStorage.setItem('dvn_sp_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
+    syncBroadcast('config');
     renderNotifications();
     updateUI();
   }
@@ -2095,6 +2138,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!loggedInAccount) return;
     const current = getStrafenOverride();
     try{localStorage.setItem('dvn_strafen_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
+    syncBroadcast('config');
     renderNotifications();
   }
 
@@ -2119,6 +2163,16 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Benachrichtige den betroffenen Account
     if(loggedInAccount && name.toLowerCase()===loggedInAccount.username.toLowerCase()){
       showNotification('⚠️ Dir wurde eine Strafe eingetragen: '+totalHours+'h – '+reason,'error');
+      try{localStorage.setItem('dvn_last_strafe_'+loggedInAccount.username,strafenList[strafenList.length-1].id)}catch(e){}
+    } else if(loggedInAccount){
+      // Offline: save notification to target user's history
+      const nid=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+      const msg='⚠️ Dir wurde eine Strafe eingetragen: '+totalHours+'h – '+reason;
+      let hist=[];
+      try{const s=localStorage.getItem('dvn_notifhist_'+name);if(s)hist=JSON.parse(s)}catch(e){}
+      hist.unshift({id:nid,text:msg,type:'error',time:new Date().toLocaleString('de-DE'),read:false});
+      try{localStorage.setItem('dvn_notifhist_'+name,JSON.stringify(hist))}catch(e){}
+      syncBroadcast('notifhistory');
     }
     document.getElementById('strafenDiscordName').value='';
     document.getElementById('strafenHours').value='';
