@@ -2599,7 +2599,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function showNotification(text,type){
     const box=document.getElementById('notificationBox');
     if(!box) return;
-    const bg=type==='info'?'#1d4ed8':type==='success'?'#065f46':type==='error'?'#991b1b':'#1d2939';
+    const isDark=document.documentElement.classList.contains('dark');
+    let bg;
+    if(isDark){
+      bg=type==='info'?'#1e40af':type==='success'?'#065f46':type==='error'?'#991b1b':'#374151';
+    } else {
+      bg=type==='info'?'#1d4ed8':type==='success'?'#065f46':type==='error'?'#991b1b':'#1d2939';
+    }
     const el=document.createElement('div');
     el.style.cssText=`background:${bg};color:#fff;padding:.7rem 1rem;border-radius:8px;font-size:.82rem;box-shadow:0 4px 16px rgba(0,0,0,.15);pointer-events:auto;animation:ni .3s ease;max-width:100%`;
     el.textContent=text;
@@ -2644,7 +2650,16 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       (unreadCount?`<span style="font-size:.7rem;color:var(--r500);cursor:pointer;font-weight:600" onclick="clearReadNotifs();this.closest(\'#notifPopup\').remove()">Alle gelesen löschen</span>`:'')+
       '</div>'+
       (notifHistory.length===0?'<div style="font-size:.8rem;color:var(--g400);text-align:center;padding:1rem 0">Keine Benachrichtigungen.</div>':
-      notifHistory.map(n=>`<div onclick="markNotifRead('${n.id}');this.style.opacity='.5'" style="cursor:pointer;padding:.4rem .5rem;border-radius:6px;font-size:.8rem;margin-bottom:.25rem;background:${n.type==='info'?'#eef2ff':n.type==='success'?'#ecfdf5':n.type==='error'?'#fef2f2':'var(--g50)'};color:var(--g700);${n.read?'opacity:.45':''}"><span style="font-size:.65rem;color:var(--g400);display:block">${n.time}</span>${n.text}</div>`).join(''));
+      notifHistory.map(n=>{
+        const isDark=document.documentElement.classList.contains('dark');
+        let bg;
+        if(isDark){
+          bg=n.type==='info'?'#1e2a4a':n.type==='success'?'#1a3a2a':n.type==='error'?'#3a1a1a':'var(--g50)';
+        } else {
+          bg=n.type==='info'?'#eef2ff':n.type==='success'?'#ecfdf5':n.type==='error'?'#fef2f2':'var(--g50)';
+        }
+        return `<div onclick="markNotifRead('${n.id}');this.style.opacity='.5'" style="cursor:pointer;padding:.4rem .5rem;border-radius:6px;font-size:.8rem;margin-bottom:.25rem;background:${bg};color:var(--g700);${n.read?'opacity:.45':''}"><span style="font-size:.65rem;color:var(--g400);display:block">${n.time}</span>${n.text}</div>`;
+      }).join(''));
     popup.addEventListener('click',(e)=>{ if(e.target===popup) popup.remove(); });
     document.body.appendChild(popup);
   }
