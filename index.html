@@ -300,7 +300,7 @@
 
 <header>
   <div class="hl">
-    <div class="logo" style="background:none;border:none"><img src="images/dvn-logo.png" alt="DVN" style="height:36px;border-radius:8px"></div>
+    <div class="logo" style="background:none;border:none"><img src="images/dvn_logo.png" alt="DVN" style="height:36px;border-radius:8px"></div>
     <div class="ht">Deutsches Verkehrsnetz<small>Externe Plattform</small></div>
   </div>
   <nav>
@@ -3233,6 +3233,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         if(tabToOpen==='shiftplanview') spvInit();
         if(tabToOpen==='strafen') renderStrafen();
       }
+    }
+  }catch(e){}
+  // Restore admin tab after page reload
+  try{
+    const adminTabToOpen=sessionStorage.getItem('dvn_admin_tab');
+    if(adminTabToOpen && loggedIn){
+      const adminNavBtn=document.querySelector('nav button[data-page="admin"]');
+      if(adminNavBtn) adminNavBtn.click();
     }
   }catch(e){}
   checkPendingTFSuggestions();
