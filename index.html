@@ -2055,15 +2055,24 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         <div class="sp-stwl-title" style="margin-top:1rem">📋 Anmeldungen für diesen Plan</div>
         ${planSignins.map(si=>{
           const roleIcon=si.role==='TF'?'🚆':si.role==='FDL'?'🚦':si.role==='Notfallmanager'?'🆘':'🚧';
-          return `<div class="sp-entry" style="${si.confirmed?'opacity:.6':''}">
-            <span style="flex:1;font-size:.82rem">${roleIcon} <strong>${si.username}</strong> · ${si.role}${si.duty?' ('+si.duty+')':''} · ${si.timeFrom||'?'}–${si.timeTo||'?'}</span>
-            <label style="font-size:.78rem;display:flex;align-items:center;gap:.25rem;cursor:pointer;white-space:nowrap">
-              <input type="checkbox" ${si.confirmed?'checked':''} onchange="spSigninSet('${si.id}','confirmed',this.checked)" style="width:15px;height:15px;accent-color:var(--r500)"> Eingetragen
-            </label>
-            ${si.role==='Schrankenwärter'?`
-              <input type="number" step="0.5" value="${si.actualHours||''}" placeholder="Std." onchange="spSigninSet('${si.id}','actualHours',this.value)" style="width:70px;padding:.25rem .4rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit">
-              <button onclick="spSigninSet('${si.id}','hoursConfirmed',true)" style="padding:.25rem .6rem;background:${si.hoursConfirmed?'#bbf7d0':'var(--g100)'};color:${si.hoursConfirmed?'#166534':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.75rem;font-family:inherit;font-weight:600;white-space:nowrap">${si.hoursConfirmed?'✓ Bestätigt':'Bestätigen'}</button>
-            `:''}
+          const stellwerkeStr=si.stellwerke&&si.stellwerke.length?', Stw: '+si.stellwerke.join('/'):'';
+          return `<div class="sp-entry" style="flex-wrap:wrap;${si.confirmed?'opacity:.6':''}">
+            <div style="flex:1;min-width:200px;font-size:.82rem">
+              <strong>${roleIcon} ${si.username}</strong> · ${si.role}${si.duty?' ('+si.duty+')':''}${stellwerkeStr}
+              <div style="font-size:.75rem;color:var(--g400);margin-top:.1rem">
+                ${si.timeFrom||'?'}–${si.timeTo||'?'}${si.location?' · '+si.location:''}${si.notes?' · "'+si.notes+'"':''}
+                <span style="font-size:.7rem"> · ${si.timestamp||''}</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:.35rem;align-items:center;flex-wrap:wrap">
+              <label style="font-size:.78rem;display:flex;align-items:center;gap:.25rem;cursor:pointer;white-space:nowrap">
+                <input type="checkbox" ${si.confirmed?'checked':''} onchange="spSigninSet('${si.id}','confirmed',this.checked)" style="width:15px;height:15px;accent-color:var(--r500)"> Eingetragen
+              </label>
+              ${si.role==='Schrankenwärter'?`
+                <input type="number" step="0.5" value="${si.actualHours||''}" placeholder="Std." onchange="spSigninSet('${si.id}','actualHours',this.value)" style="width:65px;padding:.2rem .35rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.78rem;font-family:inherit">
+                <button onclick="spSigninSet('${si.id}','hoursConfirmed',true)" style="padding:.2rem .5rem;background:${si.hoursConfirmed?'#bbf7d0':'var(--g100)'};color:${si.hoursConfirmed?'#166534':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit;font-weight:600;white-space:nowrap">${si.hoursConfirmed?'✓ Bestätigt':'Bestätigen'}</button>
+              `:''}
+            </div>
           </div>`;
         }).join('')}`;
     }
@@ -2229,20 +2238,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!el) return;
     const canManage=getAccountsOverride();
     if(!canManage){ el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine Berechtigung.</div>'; return; }
-    const allAccounts=getAllAccounts();
-    el.innerHTML=`<div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">${allAccounts.length} Accounts</div>
-      ${allAccounts.map(a=>{
-        return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem">
-          <div style="font-weight:600;font-size:.85rem;min-width:120px">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(${a.rang})</span></div>
-          <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">
-            ${['logs','bewerbungen','shiftplan','strafen','accounts'].map(k=>{
-              const val=getAccountOverride(a.username,k);
-              return `<label style="display:flex;align-items:center;gap:.25rem;font-size:.72rem;cursor:pointer;padding:.15rem .35rem;background:${val?'#bbf7d0':'var(--g50)'};color:${val?'#166534':'inherit'};border-radius:4px">
-                <input type="checkbox" ${val?'checked':''} onchange="accManageToggle('${a.username}','${k}')" style="width:14px;height:14px;accent-color:var(--r500)"> ${k}
-              </label>`;
-            }).join('')}
-            <button onclick="accManageDelete('${a.username}')" style="padding:.2rem .5rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">✕</button>
-          </div>
+    const adminAccounts=getAllAccounts().filter(a=>a.rang==='Admin');
+    el.innerHTML=`<div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">${adminAccounts.length} Admins</div>
+      ${adminAccounts.map(a=>{
+        return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem;align-items:center">
+          <div style="font-weight:600;font-size:.85rem;flex:1;min-width:120px">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(Admin)</span></div>
+          <button onclick="accManageDelete('${a.username}')" style="padding:.2rem .5rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">✕ Löschen</button>
         </div>`;
       }).join('')}`;
   }
@@ -2635,8 +2636,17 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     try{localStorage.setItem('dvn_signins',JSON.stringify(signins))}catch(e){}
     syncBroadcast('signins');
     addLogEntry('Anmeldung zurückgezogen', loggedInAccount.username);
-    showNotification('✅ Anmeldung zurückgezogen.','success');
+    // Remove user from shift plan entries
     const plan=shiftPlans.find(p=>p.id===planId);
+    if(plan){
+      const username=loggedInAccount.username;
+      Object.keys(plan.entries||{}).forEach(section=>{
+        plan.entries[section]=plan.entries[section].filter(e=>e.name!==username);
+      });
+      try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
+      syncBroadcast('shiftplans');
+    }
+    showNotification('✅ Anmeldung zurückgezogen.','success');
     if(plan && document.getElementById('spvDetail').style.display==='block') spvShow(shiftPlans.indexOf(plan));
   }
   function spSigninSet(signinId, field, value){
@@ -2645,6 +2655,28 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     si[field]=value;
     try{localStorage.setItem('dvn_signins',JSON.stringify(signins))}catch(e){}
     syncBroadcast('signins');
+    // When Schrankenwärter hours are confirmed, apply to strafen
+    if(field==='hoursConfirmed' && value===true && si.role==='Schrankenwärter' && si.actualHours){
+      const hours=parseFloat(si.actualHours);
+      if(hours>0){
+        const userStrafen=strafenList.filter(s=>s.discordName.toLowerCase()===si.username.toLowerCase())
+          .sort((a,b)=>a.timestamp>b.timestamp?1:-1); // oldest first
+        let remaining=hours;
+        userStrafen.forEach(s=>{
+          if(remaining<=0) return;
+          const open=Math.max(0,Number(s.totalHours)-Number(s.abgebaut||0));
+          if(open>0){
+            const deduct=Math.min(remaining,open);
+            s.abgebaut=Number(s.abgebaut||0)+deduct;
+            remaining-=deduct;
+          }
+        });
+        try{localStorage.setItem('dvn_strafen',JSON.stringify(strafenList))}catch(e){}
+        syncBroadcast('strafen');
+        addLogEntry('Strafen abgebaut', si.username+' · '+hours+'h durch Schicht bestätigt');
+        showNotification('✅ '+hours+'h wurden bei '+si.username+' als abgebaute Strafe verbucht.','success');
+      }
+    }
     // Update sign-in container live without re-rendering whole editor
     const plan=shiftPlans.find(p=>p.id===editingSpId);
     if(plan){
@@ -2654,15 +2686,24 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         siContainer.innerHTML=planSignins.length?`<div class="sp-stwl-title" style="margin-top:1rem">📋 Anmeldungen für diesen Plan</div>
           ${planSignins.map(si=>{
             const roleIcon=si.role==='TF'?'🚆':si.role==='FDL'?'🚦':si.role==='Notfallmanager'?'🆘':'🚧';
-            return `<div class="sp-entry" style="${si.confirmed?'opacity:.6':''}">
-              <span style="flex:1;font-size:.82rem">${roleIcon} <strong>${si.username}</strong> · ${si.role}${si.duty?' ('+si.duty+')':''} · ${si.timeFrom||'?'}–${si.timeTo||'?'}</span>
-              <label style="font-size:.78rem;display:flex;align-items:center;gap:.25rem;cursor:pointer;white-space:nowrap">
-                <input type="checkbox" ${si.confirmed?'checked':''} onchange="spSigninSet('${si.id}','confirmed',this.checked)" style="width:15px;height:15px;accent-color:var(--r500)"> Eingetragen
-              </label>
-              ${si.role==='Schrankenwärter'?`
-                <input type="number" step="0.5" value="${si.actualHours||''}" placeholder="Std." onchange="spSigninSet('${si.id}','actualHours',this.value)" style="width:70px;padding:.25rem .4rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit">
-                <button onclick="spSigninSet('${si.id}','hoursConfirmed',true)" style="padding:.25rem .6rem;background:${si.hoursConfirmed?'#bbf7d0':'var(--g100)'};color:${si.hoursConfirmed?'#166534':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.75rem;font-family:inherit;font-weight:600;white-space:nowrap">${si.hoursConfirmed?'✓ Bestätigt':'Bestätigen'}</button>
-              `:''}
+            const stellwerkeStr=si.stellwerke&&si.stellwerke.length?', Stw: '+si.stellwerke.join('/'):'';
+            return `<div class="sp-entry" style="flex-wrap:wrap;${si.confirmed?'opacity:.6':''}">
+              <div style="flex:1;min-width:200px;font-size:.82rem">
+                <strong>${roleIcon} ${si.username}</strong> · ${si.role}${si.duty?' ('+si.duty+')':''}${stellwerkeStr}
+                <div style="font-size:.75rem;color:var(--g400);margin-top:.1rem">
+                  ${si.timeFrom||'?'}–${si.timeTo||'?'}${si.location?' · '+si.location:''}${si.notes?' · "'+si.notes+'"':''}
+                  <span style="font-size:.7rem"> · ${si.timestamp||''}</span>
+                </div>
+              </div>
+              <div style="display:flex;gap:.35rem;align-items:center;flex-wrap:wrap">
+                <label style="font-size:.78rem;display:flex;align-items:center;gap:.25rem;cursor:pointer;white-space:nowrap">
+                  <input type="checkbox" ${si.confirmed?'checked':''} onchange="spSigninSet('${si.id}','confirmed',this.checked)" style="width:15px;height:15px;accent-color:var(--r500)"> Eingetragen
+                </label>
+                ${si.role==='Schrankenwärter'?`
+                  <input type="number" step="0.5" value="${si.actualHours||''}" placeholder="Std." onchange="spSigninSet('${si.id}','actualHours',this.value)" style="width:65px;padding:.2rem .35rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.78rem;font-family:inherit">
+                  <button onclick="spSigninSet('${si.id}','hoursConfirmed',true)" style="padding:.2rem .5rem;background:${si.hoursConfirmed?'#bbf7d0':'var(--g100)'};color:${si.hoursConfirmed?'#166534':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit;font-weight:600;white-space:nowrap">${si.hoursConfirmed?'✓ Bestätigt':'Bestätigen'}</button>
+                `:''}
+              </div>
             </div>`;
           }).join('')}`:
           `<div class="sp-stwl-title" style="margin-top:1rem">📋 Anmeldungen für diesen Plan</div><div style="font-size:.82rem;color:var(--g400);padding:.5rem 0">Keine Anmeldungen.</div>`;
@@ -3219,10 +3260,25 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
 
   // ─── Account Settings ───
+  function getAccountLinks(username){
+    try{const d=localStorage.getItem('dvn_account_links_'+username);return d?JSON.parse(d):{discord:'',roblox:''}}catch(e){return {discord:'',roblox:''}}
+  }
+  function saveAccountLinks(username,links){
+    try{localStorage.setItem('dvn_account_links_'+username,JSON.stringify(links))}catch(e){}
+    syncBroadcast('config');
+  }
   function openAccountSettings(){
     if(!loggedInAccount) return;
     document.getElementById('accModalUser').textContent=loggedInAccount.username;
     document.getElementById('accModalRang').textContent=loggedInAccount.rang;
+    const links=getAccountLinks(loggedInAccount.username);
+    document.getElementById('accPermSettings').innerHTML=`
+      <div class="sub-title">Verknüpfungen</div>
+      <label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.25rem;color:var(--g700)">Discord (z.B. user#1234)</label>
+      <input id="accLinkDiscord" value="${links.discord||''}" placeholder="Discord" style="width:100%;padding:.5rem 1rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit;margin-bottom:.5rem">
+      <label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.25rem;color:var(--g700)">Roblox</label>
+      <input id="accLinkRoblox" value="${links.roblox||''}" placeholder="Roblox-Name" style="width:100%;padding:.5rem 1rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit;margin-bottom:.5rem">
+      <button onclick="saveAccountLinks('${loggedInAccount.username}',{discord:document.getElementById('accLinkDiscord').value,roblox:document.getElementById('accLinkRoblox').value});showNotification('✅ Verknüpfungen gespeichert.','success')" style="padding:.4rem 1rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.82rem;cursor:pointer;font-family:inherit">💾 Speichern</button>`;
     renderNotifications();
     document.getElementById('accountModal').classList.add('open');
   }
