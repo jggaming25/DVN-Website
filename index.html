@@ -1371,7 +1371,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   document.querySelectorAll('[data-apanel]').forEach(btn => {
     btn.addEventListener('click', () => {
       // Autosave shift plan before switching
-      spAutoSave();
+      try{spAutoSave()}catch(e){}
       // Store admin tab + sub-tab
       try{
         sessionStorage.setItem('dvn_admin_tab',btn.dataset.apanel);
@@ -1848,6 +1848,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function spAutoSave(){
     const plan=shiftPlans.find(p=>p.id===editingSpId);
     if(!plan) return;
+    if(!plan.entries) plan.entries={};
     ['AK','BHBF','NS','STB'].forEach(stwl=>{
       const container=document.getElementById('sp_'+stwl);
       if(!container) return;
@@ -1976,6 +1977,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     document.getElementById('spEditor').style.display='block';
     document.getElementById('spEditorTitle').textContent=plan.shiftTitle+(plan.date?' ('+plan.date+')':'');
     document.getElementById('spSaveBtn').style.display=getShiftplanOverride()?'':'none';
+    if(!plan.entries) plan.entries={};
     ['AK','BHBF','NS','STB'].forEach(stwl=>{
       const container=document.getElementById('sp_'+stwl);
       if(!container) return;
@@ -2100,13 +2102,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function spUpdateTFDuty(idx,val){
     const plan=shiftPlans.find(p=>p.id===editingSpId);
-    if(!plan||!plan.entries.TF||!plan.entries.TF[idx]) return;
+    if(!plan) return;
+    if(!plan.entries||!plan.entries.TF||!plan.entries.TF[idx]) return;
     plan.entries.TF[idx].duty=val;
   }
 
   function spAddEntry(stwl){
     const plan=shiftPlans.find(p=>p.id===editingSpId);
     if(!plan){ showNotification('Kein Shift-Plan zum Bearbeiten ausgewählt.','error'); return; }
+    if(!plan.entries) plan.entries={};
     if(!plan.entries[stwl]) plan.entries[stwl]=[];
     if(stwl==='TF'){ plan.entries[stwl].push({name:'',duty:'',note:''}); }
     else if(stwl==='SCHRANKEN'){ plan.entries[stwl].push({name:'',time:'',ort:''}); }
@@ -2122,7 +2126,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function spDelEntry(stwl,idx){
     const plan=shiftPlans.find(p=>p.id===editingSpId);
     if(!plan) return;
-    if(plan.entries[stwl]) plan.entries[stwl].splice(idx,1);
+    if(plan.entries && plan.entries[stwl]) plan.entries[stwl].splice(idx,1);
     try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
     syncBroadcast('shiftplans');
     spRenderEditor(plan);
