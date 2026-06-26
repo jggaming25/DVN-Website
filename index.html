@@ -369,6 +369,7 @@
 
 <!-- ─── NOTIFICATION BOX ─── -->
 <div id="notificationBox" style="position:fixed;top:80px;right:1rem;z-index:999;display:flex;flex-direction:column;gap:.5rem;max-width:360px;pointer-events:none"></div>
+<div id="tfSuggestionBox" style="position:fixed;bottom:1rem;right:1rem;z-index:998;display:flex;flex-direction:column;gap:.5rem;max-width:380px"></div>
 
 <!-- ═══════ ACCOUNT SETTINGS MODAL ═══════ -->
 <div class="modal-overlay" id="accountModal">
@@ -452,6 +453,8 @@
     <input type="text" id="seTitle">
     <label>Datum</label>
     <input type="date" id="seDate">
+    <label>Frist (Anmeldeschluss)</label>
+    <input type="datetime-local" id="seFrist" style="font-family:inherit;padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;width:100%;box-sizing:border-box">
     <label>Zeitraum</label>
     <input type="text" id="seTime" placeholder="z.B. 06:00–14:00">
     <label>Beschreibung</label>
@@ -503,20 +506,11 @@
       <div class="nl-item" style="margin-left:auto;font-size:.7rem;color:var(--g400)">ⓘ DVN – Änderungen vorbehalten</div>
     </div>
     <div style="padding:0 1.5rem 1.5rem">
-      <div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem"><strong>Bahnhöfe im Netz:</strong></div>
+      <div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem"><strong>Anschlussbahnhöfe:</strong></div>
       <div style="display:flex;flex-wrap:wrap;gap:.35rem;font-size:.8rem">
-        <span style="padding:.2rem .6rem;border-radius:6px;background:#dcfce7;color:#166534">Niedersöllern <span style="color:#4ade80;font-size:.7rem">(Anschluss)</span></span>
-        <span style="padding:.2rem .6rem;border-radius:6px;background:#dcfce7;color:#166534">Altenkirchen <span style="color:#4ade80;font-size:.7rem">(Anschluss)</span></span>
-        <span style="padding:.2rem .6rem;border-radius:6px;background:#dcfce7;color:#166534">Bergenau <span style="color:#4ade80;font-size:.7rem">(Anschluss)</span></span>
-        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Hauptbahnhof Mitte</span>
-        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Ostkreuz</span>
-        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Westring</span>
-        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Südbahnhof</span>
-        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Nordtor</span>
-        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Messeplatz</span>
-        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Industriegebiet</span>
-        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Flughafen Terminal</span>
-        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Hafenquartier</span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:#dcfce7;color:#166534">Niedersöllern</span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:#dcfce7;color:#166534">Altenkirchen</span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:#dcfce7;color:#166534">Bergenau</span>
       </div>
     </div>
   </div>
@@ -580,7 +574,9 @@
       <div id="spvPlansList"></div>
       <div id="spvDetail" style="display:none;margin-top:1rem">
         <button onclick="spvClose()" style="padding:.35rem .8rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.82rem;margin-bottom:.75rem">← Zurück</button>
+        <div id="spvViewNav" style="display:flex;gap:.35rem;margin-bottom:.75rem;flex-wrap:wrap"></div>
         <div id="spvContent"></div>
+        <div id="spvTFContent" style="display:none"></div>
       </div>
     </div>
 
@@ -633,6 +629,7 @@
         <input type="date" id="sDate">
         <input type="text" id="sTime" placeholder="Zeitraum (06:00–14:00)">
         <input type="text" id="sDesc" placeholder="Beschreibung">
+        <input type="datetime-local" id="sFrist" style="font-family:inherit;padding:.4rem .6rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.82rem">
         <input type="file" id="sImage" accept="image/*">
         <button onclick="addShift()">➕ Schicht anlegen</button>
       </div>
@@ -1495,7 +1492,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(shifts.length===0){ list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Keine Schichten vorhanden.</div>'; return; }
     shifts.forEach((s,i)=>{
       const d=document.createElement('div'); d.className='sc';
-      d.innerHTML=`<div class="stb"><div class="l1">${s.time}</div><div class="l2">${s.date||''}</div></div>
+      d.innerHTML=`<div class="stb"><div class="l1">${s.time}</div><div class="l2">${s.date||''}</div>${s.frist?`<div class="l2" style="font-size:.7rem;color:var(--r500)">Frist: ${new Date(s.frist).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>`:''}</div>
         <div class="si"><h3>${s.title}</h3>${s.desc?'<p>'+s.desc+'</p>':''}${s.image?'<br><img src="'+s.image+'" class="shift-img" alt="">':''}</div>
         <div class="sa"><button onclick="editShift(${i})" title="Bearbeiten">✏️</button><button onclick="cancelShift(${i})" title="Absagen">🚫</button></div>`;
       list.appendChild(d);
@@ -1504,14 +1501,16 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function addShift(){
     const title=document.getElementById('sTitle').value.trim(), date=document.getElementById('sDate').value;
     const time=document.getElementById('sTime').value.trim(), desc=document.getElementById('sDesc').value.trim();
+    const frist=document.getElementById('sFrist').value;
     const fileInput=document.getElementById('sImage');
     if(!title||!time){ alert('Bitte Titel und Zeitraum angeben!'); return; }
     const addShiftWithImage=(imgDataUrl)=>{
-      shifts.push({title,date,time,desc,image:imgDataUrl||''});
+      shifts.push({title,date,time,desc,frist,image:imgDataUrl||''});
       addLogEntry('Schicht erstellt', title+' ('+time+(date?' am '+date:'')+')');
       try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){}
       syncBroadcast('shifts'); document.getElementById('sTitle').value=''; document.getElementById('sDate').value='';
       document.getElementById('sTime').value=''; document.getElementById('sDesc').value='';
+      document.getElementById('sFrist').value='';
       document.getElementById('sImage').value='';
       renderPublicShifts(); renderAdminShifts();
     };
@@ -1525,6 +1524,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function editShift(i){
     editingShiftIdx=i; const s=shifts[i];
     document.getElementById('seTitle').value=s.title; document.getElementById('seDate').value=s.date||'';
+    document.getElementById('seFrist').value=s.frist||'';
     document.getElementById('seTime').value=s.time; document.getElementById('seDesc').value=s.desc||'';
     document.getElementById('seImage').value='';
     document.getElementById('shiftEditModal').classList.add('open');
@@ -1535,6 +1535,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const s=shifts[editingShiftIdx];
     s.title=document.getElementById('seTitle').value.trim();
     s.date=document.getElementById('seDate').value;
+    s.frist=document.getElementById('seFrist').value;
     s.time=document.getElementById('seTime').value.trim();
     s.desc=document.getElementById('seDesc').value.trim();
     const fileInput=document.getElementById('seImage');
@@ -2008,7 +2009,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">
             ${['logs','bewerbungen','shiftplan','strafen','accounts'].map(k=>{
               const val=getAccountOverride(a.username,k);
-              return `<label style="display:flex;align-items:center;gap:.25rem;font-size:.72rem;cursor:pointer;padding:.15rem .35rem;background:${val?'#bbf7d0':'var(--g50)'};border-radius:4px">
+              return `<label style="display:flex;align-items:center;gap:.25rem;font-size:.72rem;cursor:pointer;padding:.15rem .35rem;background:${val?'#bbf7d0':'var(--g50)'};color:${val?'#166534':'inherit'};border-radius:4px">
                 <input type="checkbox" ${val?'checked':''} onchange="accManageToggle('${a.username}','${k}')" style="width:14px;height:14px;accent-color:var(--r500)"> ${k}
               </label>`;
             }).join('')}
@@ -2042,6 +2043,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const stwlEntries=Object.entries(plan.entries||{}).filter(([k])=>k!=='TF');
     const tfEntries=(plan.entries.TF||[]);
     const planSignins=signins.filter(s=>s.shiftPlanId===plan.id);
+    document.getElementById('spvViewNav').innerHTML=`
+      <button onclick="spvShow(${idx})" style="padding:.3rem .7rem;border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;background:linear-gradient(135deg,var(--r500),var(--r700));color:white;font-weight:600">📋 Übersicht</button>
+      <button onclick="spvShowTFDutyView(${idx})" style="padding:.3rem .7rem;border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;background:var(--g100);color:var(--g600)">🚆 TF-Duty-Ansicht</button>`;
+    document.getElementById('spvTFContent').style.display='none';
+    document.getElementById('spvContent').style.display='block';
     document.getElementById('spvContent').innerHTML=`
       <div style="background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);padding:.75rem 1rem;border-radius:var(--rs);margin-bottom:1rem">
         <div style="font-weight:700;font-size:1rem">${plan.shiftTitle}</div>
@@ -2069,7 +2075,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       <div style="margin-bottom:1rem;background:var(--bgc);border:1px solid var(--bc);border-radius:var(--rs);padding:.75rem 1rem">
         <div style="font-weight:600;font-size:.85rem;color:var(--g600);margin-bottom:.5rem">📋 Anmeldungen</div>
         ${(()=>{const mySignin=planSignins.find(s=>s.username===loggedInAccount?.username);const penalty=getStrafenHoursSum(loggedInAccount?.username||'');return `
-          <div style="margin-bottom:.5rem">${!mySignin?`<button onclick="openSigninModal('${plan.id}')" style="padding:.4rem 1rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:white;border:none;border-radius:var(--rs);font-weight:600;font-size:.8rem;cursor:pointer;font-family:inherit">➕ Anmelden</button>`:`<span style="font-size:.85rem;color:var(--g500)"><strong>✅ Du bist angemeldet</strong></span>`}${penalty>=4?` <span style="font-size:.75rem;color:var(--r600);background:#fef2f2;padding:.2rem .5rem;border-radius:4px">⚠️ Nur Schrankenwärter möglich</span>`:''}</div>
+          <div style="margin-bottom:.5rem">${!mySignin?`<button onclick="openSigninModal('${plan.id}')" style="padding:.4rem 1rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:white;border:none;border-radius:var(--rs);font-weight:600;font-size:.8rem;cursor:pointer;font-family:inherit">➕ Anmelden</button>`:`<span style="font-size:.85rem;color:var(--g500)"><strong>✅ Du bist angemeldet</strong> · <button onclick="signinWithdraw('${plan.id}')" style="background:none;border:none;color:var(--r500);text-decoration:underline;cursor:pointer;font-size:.78rem;font-family:inherit">Zurückziehen</button></span>`}${penalty>=4?` <span style="font-size:.75rem;color:var(--r600);background:#fef2f2;padding:.2rem .5rem;border-radius:4px">⚠️ Nur Schrankenwärter möglich</span>`:''}</div>
         `})()}
         ${planSignins.length===0?'<div style="font-size:.82rem;color:var(--g400)">Keine Anmeldungen.</div>':
           `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.35rem">
@@ -2089,6 +2095,61 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     document.getElementById('spvDetail').style.display='none';
     document.getElementById('spvPlansList').style.display='block';
   }
+  function spvShowTFDutyView(idx){
+    spvShowingIdx = idx;
+    const plan=shiftPlans[idx];
+    if(!plan) return;
+    document.getElementById('spvViewNav').innerHTML=`
+      <button onclick="spvShow(${idx})" style="padding:.3rem .7rem;border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;background:var(--g100);color:var(--g600)">📋 Übersicht</button>
+      <button onclick="spvShowTFDutyView(${idx})" style="padding:.3rem .7rem;border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;background:linear-gradient(135deg,var(--r500),var(--r700));color:white;font-weight:600">🚆 TF-Duty-Ansicht</button>`;
+    document.getElementById('spvContent').style.display='none';
+    const tfEl=document.getElementById('spvTFContent');
+    tfEl.style.display='block';
+    // Get TF sign-ins for this plan
+    const planSignins=signins.filter(s=>s.shiftPlanId===plan.id&&s.role==='TF');
+    // Group by duty
+    const byDuty={};
+    planSignins.forEach(s=>{
+      const d=s.duty||'Keine Duty';
+      if(!byDuty[d]) byDuty[d]=[];
+      byDuty[d].push(s);
+    });
+    const dutyKeys=Object.keys(byDuty).sort();
+    // Check conflicts
+    const conflicts=dutyKeys.filter(d=>byDuty[d].length>1);
+    let html=`
+      <div style="background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);padding:.75rem 1rem;border-radius:var(--rs);margin-bottom:1rem">
+        <div style="font-weight:700;font-size:1rem">🚆 TF-Duty-Ansicht · ${plan.shiftTitle}</div>
+        <div style="font-size:.82rem;opacity:.85">${planSignins.length} TF angemeldet · ${dutyKeys.length} verschiedene Dutys</div>
+      </div>`;
+    if(dutyKeys.length===0){
+      html+='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine TF-Anmeldungen für diesen Plan.</div>';
+    } else {
+      html+=`<div style="display:grid;gap:.5rem">`;
+      dutyKeys.forEach(d=>{
+        const users=byDuty[d];
+        const isConflict=users.length>1;
+        html+=`<div style="background:var(--g50);border-radius:var(--rs);padding:.6rem .8rem;border:1px solid ${isConflict?'var(--r300)':'var(--g200)'}">
+          <div style="font-weight:600;font-size:.82rem;color:${isConflict?'var(--r600)':'var(--g600)'}">${d} ${isConflict?'<span style="font-size:.72rem;background:#fef2f2;color:var(--r600);padding:.1rem .4rem;border-radius:4px">⚠️ Konflikt</span>':''}</div>
+          ${users.map(u=>`<div style="font-size:.78rem;padding:.15rem 0;display:flex;justify-content:space-between"><span>${u.username}</span><span style="color:var(--g400)">${u.timeFrom||'?'}–${u.timeTo||'?'}</span></div>`).join('')}
+        </div>`;
+      });
+      html+=`</div>`;
+      // Generate suggestion button (only for admin/strafen permission)
+      if(getShiftplanOverride()||getStrafenOverride()){
+        const pendingKey='dvn_pending_tf_suggestion_'+plan.id;
+        const hasPending=localStorage.getItem(pendingKey);
+        if(hasPending){
+          html+=`<div style="margin-top:1rem;padding:.6rem .8rem;background:#fefce8;border:1px solid #eab308;border-radius:var(--rs);font-size:.82rem;color:var(--g700)">💡 Es liegt ein TF-Duty-Vorschlag vor – siehe Karte rechts unten.</div>`;
+        } else {
+          html+=`<div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
+            <button onclick="generateTFSuggestion('${plan.id}')" style="padding:.5rem 1rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:white;border:none;border-radius:var(--rs);font-weight:600;font-size:.82rem;cursor:pointer;font-family:inherit">💡 TF-Duty-Vorschlag generieren</button>
+          </div>`;
+        }
+      }
+    }
+    tfEl.innerHTML=html;
+  }
 
   // ─── Sign-In System ───
   let signins = []; try{const s=localStorage.getItem('dvn_signins');if(s)signins=JSON.parse(s)}catch(e){}
@@ -2100,6 +2161,25 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     signinModalPlanId=planId;
     signinModalRole=null;
     const plan=shiftPlans.find(p=>p.id===planId);
+    const shift=plan?shifts[plan.shiftIdx]:null;
+    // Check 2-day rule
+    if(shift&&shift.date){
+      const shiftDate=new Date(shift.date+'T23:59:59');
+      const now=new Date();
+      const twoDaysFromNow=new Date(now.getTime()+2*24*60*60*1000);
+      if(shiftDate>twoDaysFromNow){
+        showNotification('⏳ Anmeldung erst maximal 2 Tage vor Schichtbeginn möglich.','error');
+        return;
+      }
+    }
+    // Check frist (deadline)
+    if(shift&&shift.frist){
+      const fristDate=new Date(shift.frist);
+      if(new Date()>fristDate){
+        showNotification('⏳ Die Anmeldefrist für diese Schicht ist bereits abgelaufen.','error');
+        return;
+      }
+    }
     document.getElementById('signinShiftTitle').textContent=plan?plan.shiftTitle:'';
     document.getElementById('signinFields').style.display='none';
     document.getElementById('signinPenaltyWarning').style.display='none';
@@ -2191,6 +2271,168 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     closeSigninModal();
     const plan=shiftPlans.find(p=>p.id===signinModalPlanId);
     if(plan && document.getElementById('spvDetail').style.display==='block') spvShow(shiftPlans.indexOf(plan));
+  }
+  function signinWithdraw(planId){
+    if(!loggedInAccount||!confirm('Anmeldung wirklich zurückziehen?')) return;
+    const idx=signins.findIndex(s=>s.shiftPlanId===planId&&s.username===loggedInAccount.username);
+    if(idx===-1){ showNotification('Keine Anmeldung gefunden.','error'); return; }
+    signins.splice(idx,1);
+    try{localStorage.setItem('dvn_signins',JSON.stringify(signins))}catch(e){}
+    syncBroadcast('signins');
+    addLogEntry('Anmeldung zurückgezogen', loggedInAccount.username);
+    showNotification('✅ Anmeldung zurückgezogen.','success');
+    const plan=shiftPlans.find(p=>p.id===planId);
+    if(plan && document.getElementById('spvDetail').style.display==='block') spvShow(shiftPlans.indexOf(plan));
+  }
+
+  // ─── TF Duty Suggestion System ───
+  function getTFAssignmentHistory(username){
+    try{
+      const d=localStorage.getItem('dvn_tf_history_'+username);
+      return d?JSON.parse(d):[];
+    }catch(e){return []}
+  }
+  function saveTFAssignmentHistory(username, hist){
+    try{localStorage.setItem('dvn_tf_history_'+username,JSON.stringify(hist))}catch(e){}
+  }
+  function generateTFSuggestion(planId){
+    if(!loggedInAccount) return;
+    const plan=shiftPlans.find(p=>p.id===planId);
+    if(!plan) return;
+    const planSignins=signins.filter(s=>s.shiftPlanId===planId&&s.role==='TF');
+    if(planSignins.length===0){ showNotification('Keine TF-Anmeldungen für diesen Plan.','error'); return; }
+    // Group sign-ins by duty preference
+    const byDuty={};
+    planSignins.forEach(s=>{
+      const d=s.duty||'Keine Duty';
+      if(!byDuty[d]) byDuty[d]=[];
+      byDuty[d].push(s);
+    });
+    const assignments=[];
+    const unassigned=[];
+    const usedDuties=new Set();
+    // First pass: no conflict duties
+    Object.entries(byDuty).forEach(([duty, users])=>{
+      if(users.length===1){
+        assignments.push({username:users[0].username, preferred:duty, suggested:duty});
+        usedDuties.add(duty);
+      } else {
+        // Conflict: check history for priority
+        users.forEach(u=>{
+          const hist=getTFAssignmentHistory(u.username);
+          const lastSame=hist.filter(h=>h.preferredDuty===duty).pop();
+          unassigned.push({username:u.username, preferred:duty, priority:lastSame&&lastSame.assignedDuty!==duty?1:0});
+        });
+      }
+    });
+    // Resolve conflicts: higher priority first
+    const conflictByDuty={};
+    unassigned.forEach(u=>{
+      if(!conflictByDuty[u.preferred]) conflictByDuty[u.preferred]=[];
+      conflictByDuty[u.preferred].push(u);
+    });
+    Object.entries(conflictByDuty).forEach(([duty, users])=>{
+      users.sort((a,b)=>b.priority-a.priority);
+      users.forEach((u,i)=>{
+        if(i===0){
+          assignments.push({username:u.username, preferred:duty, suggested:duty});
+          usedDuties.add(duty);
+        } else {
+          // Find available duty
+          const available=DUTIES.filter(d=>d.type==='tf'&&!usedDuties.has(d.duty));
+          const fallback=available.length>0?available[0].duty:'—';
+          assignments.push({username:u.username, preferred:duty, suggested:fallback});
+          if(fallback!=='—') usedDuties.add(fallback);
+        }
+      });
+    });
+    // Save suggestion
+    const suggestion={shiftPlanId:planId, shiftTitle:plan.shiftTitle||'Unbenannt', generatedAt:new Date().toLocaleString('de-DE'), assignments};
+    try{localStorage.setItem('dvn_pending_tf_suggestion_'+planId,JSON.stringify(suggestion))}catch(e){}
+    let pending=[];
+    try{const p=localStorage.getItem('dvn_pending_tf_suggestions');if(p)pending=JSON.parse(p)}catch(e){}
+    if(!pending.includes(planId)) pending.push(planId);
+    try{localStorage.setItem('dvn_pending_tf_suggestions',JSON.stringify(pending))}catch(e){}
+    showTFSuggestionCard(planId);
+    showNotification('💡 TF-Duty-Vorschlag erstellt – siehe Karte rechts.','success');
+    if(document.getElementById('spvTFContent').style.display==='block'&&spvShowingIdx!==null) spvShowTFDutyView(spvShowingIdx);
+  }
+  function showTFSuggestionCard(planId){
+    const box=document.getElementById('tfSuggestionBox');
+    if(!box) return;
+    let suggestion;
+    try{const d=localStorage.getItem('dvn_pending_tf_suggestion_'+planId);if(d)suggestion=JSON.parse(d)}catch(e){}
+    if(!suggestion) return;
+    const cardId='tf_sugg_'+planId;
+    if(document.getElementById(cardId)) return;
+    const card=document.createElement('div');
+    card.id=cardId;
+    card.style.cssText='background:var(--bgc);border:2px solid var(--r500);border-radius:var(--rs);padding:.75rem;font-size:.82rem;box-shadow:0 4px 12px rgba(0,0,0,.15);pointer-events:auto';
+    card.innerHTML=`
+      <div style="font-weight:700;color:var(--r600);margin-bottom:.35rem">💡 TF-Duty-Vorschlag</div>
+      <div style="font-size:.78rem;color:var(--g500);margin-bottom:.5rem">${suggestion.shiftTitle} · ${suggestion.generatedAt}</div>
+      ${suggestion.assignments.map(a=>`<div style="display:flex;justify-content:space-between;padding:.2rem 0;border-bottom:1px solid var(--g100);font-size:.78rem">
+        <span>${a.username}</span>
+        <span>${a.preferred===a.suggested?'✅ ':'🔄 '}${a.suggested}</span>
+      </div>`).join('')}
+      <div style="display:flex;gap:.5rem;margin-top:.5rem">
+        <button onclick="applyTFSuggestion('${planId}')" style="flex:1;padding:.35rem;background:#bbf7d0;color:#166534;border:none;border-radius:var(--rs);cursor:pointer;font-weight:600;font-size:.78rem;font-family:inherit">✅ Annehmen</button>
+        <button onclick="rejectTFSuggestion('${planId}')" style="flex:1;padding:.35rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-weight:600;font-size:.78rem;font-family:inherit">❌ Ablehnen</button>
+      </div>`;
+    box.appendChild(card);
+  }
+  function applyTFSuggestion(planId){
+    let suggestion;
+    try{const d=localStorage.getItem('dvn_pending_tf_suggestion_'+planId);if(d)suggestion=JSON.parse(d)}catch(e){}
+    if(!suggestion){ showNotification('Kein ausstehender Vorschlag.','error'); return; }
+    const plan=shiftPlans.find(p=>p.id===planId);
+    if(!plan){ showNotification('Plan nicht gefunden.','error'); return; }
+    // Update plan TF entries with suggested assignments
+    if(!plan.entries) plan.entries={};
+    if(!plan.entries.TF) plan.entries.TF=[];
+    suggestion.assignments.forEach(a=>{
+      if(a.suggested!=='—'){
+        const existing=plan.entries.TF.find(e=>e.name===a.username);
+        if(existing){
+          existing.duty=a.suggested;
+        } else {
+          plan.entries.TF.push({name:a.username, duty:a.suggested, note:''});
+        }
+      }
+    });
+    // Save to localStorage & sync
+    try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
+    syncBroadcast('shiftplans');
+    addLogEntry('TF-Duty-Vorschlag angenommen', suggestion.shiftTitle+' ('+suggestion.assignments.filter(a=>a.preferred!==a.suggested).length+' Abweichungen)');
+    // Record history
+    suggestion.assignments.forEach(a=>{
+      const hist=getTFAssignmentHistory(a.username);
+      hist.push({preferredDuty:a.preferred, assignedDuty:a.suggested, shiftPlanId:planId, date:suggestion.generatedAt});
+      if(hist.length>20) hist.splice(0,hist.length-20);
+      saveTFAssignmentHistory(a.username, hist);
+    });
+    // Remove suggestion
+    rejectTFSuggestion(planId);
+    showNotification('✅ TF-Duty-Vorschlag angenommen.','success');
+    if(spvShowingIdx!==null){
+      if(document.getElementById('spvTFContent').style.display==='block') spvShowTFDutyView(spvShowingIdx);
+      if(document.getElementById('spvContent').style.display==='block') spvShow(spvShowingIdx);
+    }
+  }
+  function rejectTFSuggestion(planId){
+    try{localStorage.removeItem('dvn_pending_tf_suggestion_'+planId)}catch(e){}
+    let pending=[];
+    try{const p=localStorage.getItem('dvn_pending_tf_suggestions');if(p)pending=JSON.parse(p)}catch(e){}
+    pending=pending.filter(id=>id!==planId);
+    try{localStorage.setItem('dvn_pending_tf_suggestions',JSON.stringify(pending))}catch(e){}
+    const card=document.getElementById('tf_sugg_'+planId);
+    if(card) card.remove();
+    if(document.getElementById('spvTFContent').style.display==='block'&&spvShowingIdx!==null) spvShowTFDutyView(spvShowingIdx);
+  }
+  function checkPendingTFSuggestions(){
+    let pending=[];
+    try{const p=localStorage.getItem('dvn_pending_tf_suggestions');if(p)pending=JSON.parse(p)}catch(e){}
+    pending.forEach(id=>showTFSuggestionCard(id));
   }
 
   // ─── Notification System ───
@@ -2481,7 +2723,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const el=document.getElementById('strafenList');
     const internEl=document.getElementById('strafenListIntern');
     if(!el&&!internEl) return;
-    const inAdmin=!!el;
+    const inAdmin=!!document.querySelector('#apanel-strafenadmin.active');
     if(inAdmin){
       const canEdit=getStrafenOverride();
       const entryForm=document.getElementById('strafenEntry');
@@ -2630,6 +2872,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }catch(e){}
   updateUI();
   applyDarkMode();
+  checkPendingTFSuggestions();
   fbInit(); // Firebase-Init starten (schlägt still fehl, wenn keine Config)
   document.getElementById('fyear').textContent = new Date().getFullYear();
 
