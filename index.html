@@ -294,6 +294,9 @@
   .dark .wh h2{color:var(--g800)}
   .dark .wh p{color:var(--g600)}
   .dark .modal-overlay{background:rgba(0,0,0,.7)}
+  .dark .admin-nav button{color:var(--g600)}
+  .dark .admin-nav button:hover{background:var(--g200);color:var(--r500)}
+  .dark .admin-nav button.active{background:var(--r100);color:var(--r600)}
 </style>
 </head>
 <body>
@@ -1149,7 +1152,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         staffNewsItems = data; renderStaffNews(); break;
       case 'shiftplans':
         shiftPlans = data;
-        if(document.querySelector('#apanel-shiftplan.active')) spRenderPlans();
+        if(document.querySelector('#apanel-shiftplan.active')){
+          spRenderPlans();
+          if(editingSpId && !shiftPlans.find(p=>p.id===editingSpId)){
+            document.getElementById('spEditor').style.display='none';
+            document.getElementById('spSaveBtn').style.display='none';
+            editingSpId=null;
+          }
+        }
         if(document.querySelector('#ipanel-shiftplanview.active') && spvShowingIdx===null) spvInit(); break;
       case 'stellen_open':
         try{ Object.keys(data).forEach(id=>{ const s=STELLEN.find(x=>x.id===id); if(s) s.open=data[id]; }); }catch(e){}
@@ -1264,7 +1274,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function closeLogin() { document.getElementById('loginModal').classList.remove('open'); }
   function doLogin() {
     const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('loginPass').value;
-    const allAccounts=[...ACCOUNTS,...getCustomAccounts()];
+    const allAccounts=getAllAccounts();
     const account=allAccounts.find(a=>a.username===u);
     if(!account){ document.getElementById('loginError').style.display='block'; return; }
     const hp=hashPassword(p);
@@ -2042,7 +2052,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(suggContainer) suggContainer.innerHTML=suggHtml;
   }
   // Add datalist with all account names for autocomplete
-  const allNames=[...new Set([...ACCOUNTS,...getCustomAccounts()].map(a=>a.username))];
+  const allNames=[...new Set(getAllAccounts().map(a=>a.username))];
   const editor=document.getElementById('spEditor');
   let dl=editor.querySelector('#spEmployees');
   if(!dl){
@@ -2096,7 +2106,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function spAddEntry(stwl){
     const plan=shiftPlans.find(p=>p.id===editingSpId);
-    if(!plan) return;
+    if(!plan){ showNotification('Kein Shift-Plan zum Bearbeiten ausgewählt.','error'); return; }
     if(!plan.entries[stwl]) plan.entries[stwl]=[];
     if(stwl==='TF'){ plan.entries[stwl].push({name:'',duty:'',note:''}); }
     else if(stwl==='SCHRANKEN'){ plan.entries[stwl].push({name:'',time:'',ort:''}); }
@@ -2145,12 +2155,22 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     try{localStorage.setItem('dvn_custom_accounts',JSON.stringify(list))}catch(e){}
     syncBroadcast('config');
   }
+  function getDeletedAccounts(){
+    try{const d=localStorage.getItem('dvn_deleted_accounts');return d?JSON.parse(d):[]}catch(e){return []}
+  }
+  function saveDeletedAccounts(list){
+    try{localStorage.setItem('dvn_deleted_accounts',JSON.stringify(list))}catch(e){}
+    syncBroadcast('config');
+  }
+  function getAllAccounts(){
+    return [...ACCOUNTS,...getCustomAccounts()].filter(a=>!getDeletedAccounts().includes(a.username));
+  }
   function getAccountOverride(username,key){
     try{
       const v=localStorage.getItem('dvn_'+key+'_'+username);
       if(v!==null) return JSON.parse(v);
     }catch(e){}
-    const found=[...ACCOUNTS,...getCustomAccounts()].find(a=>a.username===username);
+    const found=getAllAccounts().find(a=>a.username===username);
     return found?!!found[key]:false;
   }
   function accManageToggle(username,key){
@@ -2169,8 +2189,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
   function accManageDelete(username){
     if(!confirm('Account "'+username+'" wirklich löschen?')) return;
-    const list=getCustomAccounts().filter(a=>a.username!==username);
-    saveCustomAccounts(list);
+    const deleted=getDeletedAccounts();
+    if(!deleted.includes(username)) deleted.push(username);
+    saveDeletedAccounts(deleted);
+    const custom=getCustomAccounts().filter(a=>a.username!==username);
+    saveCustomAccounts(custom);
     accManageRender();
   }
   function accManageRender(){
@@ -2178,13 +2201,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!el) return;
     const canManage=getAccountsOverride();
     if(!canManage){ el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine Berechtigung.</div>'; return; }
-    const custom=getCustomAccounts();
-    const allAccounts=[...ACCOUNTS,...custom];
-    el.innerHTML=`<div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">${allAccounts.length} Accounts · ${custom.length} benutzerdefiniert</div>
+    const allAccounts=getAllAccounts();
+    el.innerHTML=`<div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">${allAccounts.length} Accounts</div>
       ${allAccounts.map(a=>{
-        const isCustom=custom.some(c=>c.username===a.username);
         return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem">
-          <div style="font-weight:600;font-size:.85rem;min-width:120px">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(${a.rang}${isCustom?' · benutzerdefiniert':''})</span></div>
+          <div style="font-weight:600;font-size:.85rem;min-width:120px">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(${a.rang})</span></div>
           <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">
             ${['logs','bewerbungen','shiftplan','strafen','accounts'].map(k=>{
               const val=getAccountOverride(a.username,k);
@@ -2192,7 +2213,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
                 <input type="checkbox" ${val?'checked':''} onchange="accManageToggle('${a.username}','${k}')" style="width:14px;height:14px;accent-color:var(--r500)"> ${k}
               </label>`;
             }).join('')}
-            ${isCustom?`<button onclick="accManageDelete('${a.username}')" style="padding:.2rem .5rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">✕</button>`:''}
+            <button onclick="accManageDelete('${a.username}')" style="padding:.2rem .5rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">✕</button>
           </div>
         </div>`;
       }).join('')}`;
@@ -2260,7 +2281,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!el) return;
     const canManage=getAccountsOverride();
     if(!canManage){ el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine Berechtigung.</div>'; return; }
-    const allAccounts=[...ACCOUNTS,...getCustomAccounts()];
+    const allAccounts=getAllAccounts();
     el.innerHTML=allAccounts.map(a=>{
       const cfg=getAccountConfig(a.username);
       const hasOTP=!!getOTP(a.username);
@@ -2378,6 +2399,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const dispoEntries=(plan.entries.DISPO||[]);
     const reserveEntries=(plan.entries.RESERVE||[]);
     const notfallEntries=(plan.entries.NOTFALL||[]);
+    const hasNoEntries=!stwlEntries.length&&!tfEntries.length&&!schrankenEntries.length&&!dispoEntries.length&&!reserveEntries.length&&!notfallEntries.length;
     const planSignins=signins.filter(s=>s.shiftPlanId===plan.id);
     document.getElementById('spvContent').style.display='block';
     document.getElementById('spvContent').innerHTML=`
@@ -2385,6 +2407,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         <div style="font-weight:700;font-size:1rem">${plan.shiftTitle}</div>
         <div style="font-size:.82rem;opacity:.85">${plan.date||''} · ${plan.time||''}</div>
       </div>
+      ${hasNoEntries?'<div style="text-align:center;padding:1.5rem;background:var(--g50);border-radius:var(--rs);border:1px dashed var(--g300);color:var(--g400);margin-bottom:1rem">Für diesen Shift-Plan wurden noch keine Einträge vorgenommen.</div>':''}
       <div style="margin-bottom:1rem">
         <div style="font-weight:600;font-size:.85rem;color:var(--g600);margin-bottom:.5rem">🚉 STWL-Einträge</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem">
@@ -3054,7 +3077,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const nameSelect=document.getElementById('strafenDiscordName');
       if(nameSelect && nameSelect.tagName==='SELECT'){
         const currentVal=nameSelect.value;
-        nameSelect.innerHTML='<option value="">— Account wählen —</option>'+[...ACCOUNTS,...getCustomAccounts()].map(a=>`<option value="${a.username}">${a.username} (${a.rang})</option>`).join('');
+        nameSelect.innerHTML='<option value="">— Account wählen —</option>'+getAllAccounts().map(a=>`<option value="${a.username}">${a.username} (${a.rang})</option>`).join('');
         if(currentVal) nameSelect.value=currentVal;
       }
     }
@@ -3193,7 +3216,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   try{
     const u=localStorage.getItem('dvn_session_user'), p=localStorage.getItem('dvn_session_pass');
     if(u&&p){
-      const allAccounts=[...ACCOUNTS,...getCustomAccounts()];
+    const allAccounts=getAllAccounts();
       const account=allAccounts.find(a=>a.username===u);
       if(account){
         // Check password override, then account password, then OTP, then migration
