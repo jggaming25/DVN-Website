@@ -491,6 +491,24 @@
   </div>
 </div>
 
+<!-- ═══════ STATISTICS MODAL ═══════ -->
+<div class="modal-overlay" id="statsModal">
+  <div class="modal">
+    <h2>📊 Statistik eingeben</h2>
+    <p><span id="statsModalTitle"></span></p>
+    <label>Zuverlässigkeit (%)</label>
+    <input type="number" id="statsReliability" min="0" max="100" step="0.1" placeholder="z.B. 95.5">
+    <label>Verspätungsdurchschnitt (min)</label>
+    <input type="number" id="statsAvgDelay" min="0" step="0.1" placeholder="z.B. 3.2">
+    <label>Notbremsen (Anzahl)</label>
+    <input type="number" id="statsBrakes" min="0" step="1" placeholder="z.B. 2">
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeStatsModal()">Abbrechen</button>
+      <button class="btn-primary" onclick="saveStats()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════ WILLKOMMEN ═══════════ -->
 <section id="willkommen" class="page active">
   <div class="wh">
@@ -548,7 +566,7 @@
 <!-- ═══════════ SHIFTS ═══════════ -->
 <section id="shifts" class="page">
   <div class="card">
-    <div class="ch"><div class="ci">⏰</div><h2>Schicht<span>plan</span></h2><span class="badge" id="shiftCountBadge">0</span></div>
+    <div class="ch"><div class="ci">⏰</div>        <h2>Schichten</h2><span class="badge" id="shiftCountBadge">0</span></div>
     <div class="sl" id="shiftsListPublic"></div>
   </div>
 </section>
@@ -613,7 +631,7 @@
       <button class="active" data-apanel="bewerbungen" id="bewerbungenTabBtn">📋 Bewerbungen</button>
       <button data-apanel="schichten">⏰ Schichten</button>
       <button data-apanel="newsadmin">📰 News verwalten</button>
-      <button data-apanel="shiftplan" id="spAdminTabBtn" style="display:none">📋 Shift Plan</button>
+      <button data-apanel="shiftplan" id="spAdminTabBtn" style="display:none">📋 Schichten</button>
       <button data-apanel="strafenadmin" id="strafenAdminTabBtn" style="display:none">⚠️ Strafen</button>
       <button data-apanel="accounts" id="accountsTabBtn" style="display:none">👥 Accounts</button>
       <button data-apanel="stafflist" id="staffListTabBtn" style="display:none">📋 Staff List</button>
@@ -1047,7 +1065,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   } catch(e) {}
 
   let loggedIn = false, loggedInUser = null, loggedInAccount = null;
-  let shifts = []; try{const s=localStorage.getItem('dvn_shifts');if(s)shifts=JSON.parse(s)}catch(e){}
+  let shifts = []; try{const s=localStorage.getItem('dvn_shifts');if(s)shifts=JSON.parse(s).map(s=>({...s,completed:s.completed||false,stats:s.stats||{reliability:'',avgDelay:'',emergencyBrakes:''}}))}catch(e){}
   let applications = []; try{const a=localStorage.getItem('dvn_applications');if(a)applications=JSON.parse(a)}catch(e){}
   let newsItems = []; try{const n=localStorage.getItem('dvn_news');if(n)newsItems=JSON.parse(n)}catch(e){}
   let logs = []; try{const l=localStorage.getItem('dvn_logs');if(l)logs=JSON.parse(l)}catch(e){}
@@ -1578,14 +1596,34 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   // ─── Shifts ───
   function renderPublicShifts(){
     const list=document.getElementById('shiftsListPublic');
-    list.innerHTML=''; document.getElementById('shiftCountBadge').textContent=shifts.length+' Schichten';
+    list.innerHTML='';
+    const openShifts=shifts.filter(s=>!s.completed);
+    const closedShifts=shifts.filter(s=>s.completed);
+    document.getElementById('shiftCountBadge').textContent=shifts.length+' Schichten';
     if(shifts.length===0){ list.innerHTML='<div style="text-align:center;padding:2.5rem;color:var(--g400)">📅 Keine Schichten eingetragen.</div>'; return; }
-    shifts.forEach(s=>{
+    if(openShifts.length){
+      const head=document.createElement('div'); head.style.cssText='font-weight:700;font-size:.9rem;color:var(--g600);margin-bottom:.75rem;padding:.5rem 0;border-bottom:2px solid var(--g200)';
+      head.textContent='📅 Offene Schichten'; list.appendChild(head);
+      openShifts.forEach(s=>addShiftCard(list,s));
+    }
+    if(closedShifts.length){
+      const head=document.createElement('div'); head.style.cssText='font-weight:700;font-size:.9rem;color:var(--g400);margin:.75rem 0;padding:.5rem 0;border-bottom:2px solid var(--g200)';
+      head.textContent='✅ Abgeschlossene Schichten'; list.appendChild(head);
+      closedShifts.forEach(s=>addShiftCard(list,s));
+    }
+    function addShiftCard(container,s){
       const d=document.createElement('div'); d.className='sc';
       d.innerHTML=`<div class="stb"><div class="l1">${s.time}</div><div class="l2">${s.date||''}</div></div>
-        <div class="si"><h3>${s.title}</h3>${s.desc?'<p>'+s.desc+'</p>':''}${s.image?'<br><img src="'+s.image+'" class="shift-img" alt="">':''}</div>`;
-      list.appendChild(d);
-    });
+        <div class="si"><h3>${s.title}</h3>${s.desc?'<p>'+s.desc+'</p>':''}${s.image?'<br><img src="'+s.image+'" class="shift-img" alt="">':''}
+        ${s.completed && (s.stats?.reliability||s.stats?.avgDelay||s.stats?.emergencyBrakes)?`
+          <div style="margin-top:.5rem;display:flex;gap:.5rem;flex-wrap:wrap;font-size:.78rem">
+            ${s.stats.reliability?`<span style="background:var(--g50);padding:.2rem .6rem;border-radius:4px;border:1px solid var(--g200)">📊 Zuverlässigkeit: <strong>${s.stats.reliability}%</strong></span>`:''}
+            ${s.stats.avgDelay?`<span style="background:var(--g50);padding:.2rem .6rem;border-radius:4px;border:1px solid var(--g200)">⏱ Verspätung ∅: <strong>${s.stats.avgDelay}min</strong></span>`:''}
+            ${s.stats.emergencyBrakes?`<span style="background:var(--g50);padding:.2rem .6rem;border-radius:4px;border:1px solid var(--g200)">🛑 Notbremsen: <strong>${s.stats.emergencyBrakes}</strong></span>`:''}
+          </div>`:''}
+        </div>`;
+      container.appendChild(d);
+    }
   }
   function renderAdminShifts(){
     const list=document.getElementById('adminShiftsList');
@@ -1595,8 +1633,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     shifts.forEach((s,i)=>{
       const d=document.createElement('div'); d.className='sc';
       d.innerHTML=`<div class="stb"><div class="l1">${s.time}</div><div class="l2">${s.date||''}</div>${s.frist?`<div class="l2" style="font-size:.7rem;color:var(--r500)">Frist: ${new Date(s.frist).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>`:''}</div>
-        <div class="si"><h3>${s.title}</h3>${s.desc?'<p>'+s.desc+'</p>':''}${s.image?'<br><img src="'+s.image+'" class="shift-img" alt="">':''}</div>
-        <div class="sa"><button onclick="editShift(${i})" title="Bearbeiten">✏️</button><button onclick="cancelShift(${i})" title="Absagen">🚫</button></div>`;
+        <div class="si"><h3>${s.title}${s.completed?' <span style="font-size:.7rem;color:var(--g400);font-weight:400">(abgeschlossen)</span>':''}</h3>${s.desc?'<p>'+s.desc+'</p>':''}${s.image?'<br><img src="'+s.image+'" class="shift-img" alt="">':''}</div>
+        <div class="sa">${getShiftplanOverride()?`<button onclick="toggleShiftComplete(${i})" style="background:${s.completed?'#bbf7d0':'var(--g100)'};color:${s.completed?'#166534':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;padding:.3rem .6rem;font-family:inherit;width:auto;height:auto">${s.completed?'✅ Erledigt':'⬜ Offen'}</button>
+          <button onclick="openStats(${i})" title="Statistik" style="padding:.3rem .6rem;background:var(--g100);color:var(--g700);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;width:auto;height:auto">📊</button>`:''}
+          <button onclick="editShift(${i})" title="Bearbeiten">✏️</button><button onclick="cancelShift(${i})" title="Absagen">🚫</button></div>`;
       list.appendChild(d);
     });
   }
@@ -1617,7 +1657,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       }
     }
     const addShiftWithImage=(imgDataUrl)=>{
-      shifts.push({title,date,time,desc,frist,image:imgDataUrl||''});
+      shifts.push({title,date,time,desc,frist,image:imgDataUrl||'',completed:false,stats:{reliability:'',avgDelay:'',emergencyBrakes:''}});
       addLogEntry('Schicht erstellt', title+' ('+time+(date?' am '+date:'')+')');
       try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){}
       syncBroadcast('shifts'); document.getElementById('sTitle').value=''; document.getElementById('sDate').value='';
@@ -1695,6 +1735,32 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     syncBroadcast('shifts');
     renderPublicShifts(); renderAdminShifts();
     showNotification('🚫 Schicht abgesagt – Pläne gelöscht, alle benachrichtigt.','info');
+  }
+
+  let statsEditIdx=-1;
+  function toggleShiftComplete(i){
+    shifts[i].completed=!shifts[i].completed;
+    try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){}
+    syncBroadcast('shifts'); renderPublicShifts(); renderAdminShifts();
+  }
+  function openStats(i){
+    statsEditIdx=i; const s=shifts[i];
+    document.getElementById('statsModalTitle').textContent=s.title+' ('+s.time+')';
+    document.getElementById('statsReliability').value=s.stats?.reliability||'';
+    document.getElementById('statsAvgDelay').value=s.stats?.avgDelay||'';
+    document.getElementById('statsBrakes').value=s.stats?.emergencyBrakes||'';
+    document.getElementById('statsModal').classList.add('open');
+  }
+  function closeStatsModal(){
+    document.getElementById('statsModal').classList.remove('open');
+  }
+  function saveStats(){
+    const s=shifts[statsEditIdx]; if(!s) return;
+    s.stats.reliability=document.getElementById('statsReliability').value;
+    s.stats.avgDelay=document.getElementById('statsAvgDelay').value;
+    s.stats.emergencyBrakes=document.getElementById('statsBrakes').value;
+    try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){}
+    syncBroadcast('shifts'); closeStatsModal(); renderPublicShifts(); renderAdminShifts();
   }
 
   // ─── News ───
@@ -2238,12 +2304,21 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!el) return;
     const canManage=getAccountsOverride();
     if(!canManage){ el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine Berechtigung.</div>'; return; }
-    const adminAccounts=getAllAccounts().filter(a=>a.rang==='Admin');
-    el.innerHTML=`<div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">${adminAccounts.length} Admins</div>
-      ${adminAccounts.map(a=>{
-        return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem;align-items:center">
-          <div style="font-weight:600;font-size:.85rem;flex:1;min-width:120px">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(Admin)</span></div>
-          <button onclick="accManageDelete('${a.username}')" style="padding:.2rem .5rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">✕ Löschen</button>
+    const allAccounts=getAllAccounts();
+    el.innerHTML=`<div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">${allAccounts.length} Accounts</div>
+      ${allAccounts.map(a=>{
+        const isSelf=loggedInAccount && a.username===loggedInAccount.username;
+        return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem">
+          <div style="font-weight:600;font-size:.85rem;min-width:120px">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(${a.rang})</span></div>
+          <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">
+            ${['logs','bewerbungen','shiftplan','strafen','accounts'].map(k=>{
+              const val=getAccountOverride(a.username,k);
+              return `<label style="display:flex;align-items:center;gap:.25rem;font-size:.72rem;cursor:${isSelf?'not-allowed':'pointer'};padding:.15rem .35rem;background:${val?'#bbf7d0':'var(--g50)'};color:${val?'#166534':'inherit'};border-radius:4px;${isSelf?'opacity:.5':''}">
+                <input type="checkbox" ${val?'checked':''} ${isSelf?'disabled':''} onchange="accManageToggle('${a.username}','${k}')" style="width:14px;height:14px;accent-color:var(--r500)"> ${k}
+              </label>`;
+            }).join('')}
+            ${!isSelf?`<button onclick="accManageDelete('${a.username}')" style="padding:.2rem .5rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">✕</button>`:''}
+          </div>
         </div>`;
       }).join('')}`;
   }
