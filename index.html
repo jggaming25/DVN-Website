@@ -709,6 +709,7 @@
           <div class="sp-entries" id="sp_NOTFALL"></div>
           <button class="sp-add-entry" onclick="spAddEntry('NOTFALL')">+ Eintrag</button>
         </div>
+        <div id="sp_TFSuggestion" style="margin-top:.75rem"></div>
         <details id="spDutyRef" open style="margin-top:1.25rem;background:var(--g50);border-radius:var(--rs);padding:.75rem 1rem;cursor:pointer">
           <summary style="font-weight:600;font-size:.85rem;color:var(--g600);cursor:pointer">📋 Dutys aus Organisationsplan</summary>
           <div id="spDutyRefContent" style="margin-top:.75rem;font-size:.82rem;cursor:auto"></div>
@@ -1944,6 +1945,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         <label style="display:flex;align-items:center;gap:.25rem;font-size:.78rem;cursor:pointer"><input type="checkbox" class="sp-role-cb" value="TF" ${(e.rollen||[]).includes('TF')?'checked':''} onchange="spAutoSave()" style="width:15px;height:15px;accent-color:var(--r500)"> TF</label>
         <button class="sp-del" onclick="spDelEntry('RESERVE',${i})">✕</button>
       </div>`).join('');
+  }
+  // TF-Duty-Vorschlag im Admin-Editor
+  if(getShiftplanOverride()){
+    const pendingKey='dvn_pending_tf_suggestion_'+plan.id;
+    const hasPending=localStorage.getItem(pendingKey);
+    const suggHtml=hasPending?`<div style="padding:.6rem .8rem;background:#fefce8;border:1px solid #eab308;border-radius:var(--rs);font-size:.82rem;color:var(--g700)">💡 Es liegt ein TF-Duty-Vorschlag vor – siehe Karte rechts unten.</div>`
+      :`<button onclick="generateTFSuggestion('${plan.id}')" style="margin-top:1rem;padding:.5rem 1rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:white;border:none;border-radius:var(--rs);font-weight:600;font-size:.82rem;cursor:pointer;font-family:inherit">💡 TF-Duty-Vorschlag generieren</button>`;
+    const suggContainer=document.getElementById('sp_TFSuggestion');
+    if(suggContainer) suggContainer.innerHTML=suggHtml;
   }
   spRenderDutyRef();
   }
