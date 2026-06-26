@@ -1928,12 +1928,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     spAutoSave();
     showNotification('✅ Shiftplan gespeichert','success');
   }
-    try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
-    syncBroadcast('shiftplans');
-    addLogEntry('Shift-Plan gespeichert', plan.shiftTitle);
-    showNotification('✅ Shift-Plan gespeichert','success');
-    spRenderPlans();
-  }
 
   function spDelete(idx){
     if(!confirm('Shift-Plan wirklich löschen?')) return;
