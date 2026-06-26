@@ -689,6 +689,26 @@
           <div class="sp-entries" id="sp_TF"></div>
           <button class="sp-add-entry" onclick="spAddEntry('TF')">+ Eintrag</button>
         </div>
+        <div class="sp-tf" style="margin-top:1rem">
+          <div class="sp-stwl-title" style="margin-bottom:.5rem">🚧 Schrankenwärter</div>
+          <div class="sp-entries" id="sp_SCHRANKEN"></div>
+          <button class="sp-add-entry" onclick="spAddEntry('SCHRANKEN')">+ Eintrag</button>
+        </div>
+        <div class="sp-tf" style="margin-top:1rem">
+          <div class="sp-stwl-title" style="margin-bottom:.5rem">📋 Disposition</div>
+          <div class="sp-entries" id="sp_DISPO"></div>
+          <button class="sp-add-entry" onclick="spAddEntry('DISPO')">+ Eintrag</button>
+        </div>
+        <div class="sp-tf" style="margin-top:1rem">
+          <div class="sp-stwl-title" style="margin-bottom:.5rem">🔄 Reserve</div>
+          <div class="sp-entries" id="sp_RESERVE"></div>
+          <button class="sp-add-entry" onclick="spAddEntry('RESERVE')">+ Eintrag</button>
+        </div>
+        <div class="sp-tf" style="margin-top:1rem">
+          <div class="sp-stwl-title" style="margin-bottom:.5rem">🆘 Notfallmanager</div>
+          <div class="sp-entries" id="sp_NOTFALL"></div>
+          <button class="sp-add-entry" onclick="spAddEntry('NOTFALL')">+ Eintrag</button>
+        </div>
         <details id="spDutyRef" open style="margin-top:1.25rem;background:var(--g50);border-radius:var(--rs);padding:.75rem 1rem;cursor:pointer">
           <summary style="font-weight:600;font-size:.85rem;color:var(--g600);cursor:pointer">📋 Dutys aus Organisationsplan</summary>
           <div id="spDutyRefContent" style="margin-top:.75rem;font-size:.82rem;cursor:auto"></div>
@@ -1720,7 +1740,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const idx=parseInt(document.getElementById('spShiftSelect').value);
     if(isNaN(idx)||!shifts[idx]){ alert('Bitte eine Schicht auswählen.'); return; }
     const s=shifts[idx];
-    const plan={ id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), shiftIdx:idx, shiftTitle:s.title, date:s.date||new Date().toLocaleDateString('de-DE'), time:s.time, entries:{AK:[],BHBF:[],NS:[],STB:[],TF:[]} };
+    const plan={ id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), shiftIdx:idx, shiftTitle:s.title, date:s.date||new Date().toLocaleDateString('de-DE'), time:s.time, entries:{AK:[],BHBF:[],NS:[],STB:[],TF:[],SCHRANKEN:[],DISPO:[],RESERVE:[],NOTFALL:[]} };
     editingSpId=plan.id;
     shiftPlans.push(plan);
     try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
@@ -1751,6 +1771,31 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         const name=el.querySelector('.sp-name')?.value||'';
         const note=el.querySelector('.sp-note')?.value||'';
         if(name||duty) plan.entries.TF.push({name,duty,note});
+      });
+    }
+    ['SCHRANKEN','DISPO','NOTFALL'].forEach(type=>{
+      const container=document.getElementById('sp_'+type);
+      if(!container) return;
+      const inputs=container.querySelectorAll('.sp-entry');
+      plan.entries[type]=[];
+      inputs.forEach(el=>{
+        const name=el.querySelector('.sp-name')?.value||'';
+        const time=el.querySelector('.sp-time')?.value||'';
+        const ort=el.querySelector('.sp-ort')?.value||'';
+        const fzg=el.querySelector('.sp-fzg')?.value||'';
+        if(name||time) plan.entries[type].push({name,time,ort,fzg});
+      });
+    });
+    const resContainer=document.getElementById('sp_RESERVE');
+    if(resContainer){
+      const resInputs=resContainer.querySelectorAll('.sp-entry');
+      plan.entries.RESERVE=[];
+      resInputs.forEach(el=>{
+        const name=el.querySelector('.sp-name')?.value||'';
+        const time=el.querySelector('.sp-time')?.value||'';
+        const rollen=[];
+        el.querySelectorAll('.sp-role-cb:checked').forEach(cb=>rollen.push(cb.value));
+        if(name||time) plan.entries.RESERVE.push({name,time,rollen});
       });
     }
     try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
@@ -1865,14 +1910,42 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         </div>`).join('');
       // Show conflict warnings
       const conflicts=Object.entries(nameCounts).filter(([name,count])=>count>1);
-      if(conflicts.length){
-        const warn=document.createElement('div');
-        warn.style.cssText='margin-top:.4rem;font-size:.78rem;color:var(--r600);background:#fef2f2;padding:.4rem .7rem;border-radius:var(--rs)';
-        warn.innerHTML='⚠️ Fahrer-Konflikt: '+conflicts.map(([name,count])=>`<strong>${name}</strong> (${count}x)`).join(', ')+' – gleicher Fahrer für mehrere Dutys eingetragen.';
-        tfContainer.appendChild(warn);
-      }
+    if(conflicts.length){
+      const warn=document.createElement('div');
+      warn.style.cssText='margin-top:.4rem;font-size:.78rem;color:var(--r600);background:#fef2f2;padding:.4rem .7rem;border-radius:var(--rs)';
+      warn.innerHTML='⚠️ Fahrer-Konflikt: '+conflicts.map(([name,count])=>`<strong>${name}</strong> (${count}x)`).join(', ')+' – gleicher Fahrer für mehrere Dutys eingetragen.';
+      tfContainer.appendChild(warn);
     }
-    spRenderDutyRef();
+  }
+  // Render Schrankenwärter, Disposition, Notfallmanager
+  ['SCHRANKEN','DISPO','NOTFALL'].forEach(type=>{
+    const container=document.getElementById('sp_'+type);
+    if(!container) return;
+    const entries=plan.entries[type]||[];
+    const labels={SCHRANKEN:'🚧 Schrankenwärter',DISPO:'📋 Disposition',NOTFALL:'🆘 Notfallmanager'};
+    container.innerHTML=entries.map((e,i)=>`
+      <div class="sp-entry">
+        <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" oninput="spAutoSave()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
+        <input type="text" class="sp-time" value="${e.time||''}" placeholder="Zeit" oninput="spAutoSave()" style="flex:0 0 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit">
+        ${type==='SCHRANKEN'?`<input type="text" class="sp-ort" value="${e.ort||''}" placeholder="Ort" oninput="spAutoSave()" style="flex:0 0 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit">`:''}
+        ${type==='NOTFALL'?`<input type="text" class="sp-fzg" value="${e.fzg||''}" placeholder="Fahrzeug" oninput="spAutoSave()" style="flex:0 0 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit">`:''}
+        <button class="sp-del" onclick="spDelEntry('${type}',${i})">✕</button>
+      </div>`).join('');
+  });
+  // Render Reserve
+  const resContainer=document.getElementById('sp_RESERVE');
+  if(resContainer){
+    const resEntries=plan.entries.RESERVE||[];
+    resContainer.innerHTML=resEntries.map((e,i)=>`
+      <div class="sp-entry" style="flex-wrap:wrap;gap:.35rem">
+        <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" oninput="spAutoSave()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
+        <input type="text" class="sp-time" value="${e.time||''}" placeholder="Zeit" oninput="spAutoSave()" style="flex:0 0 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit">
+        <label style="display:flex;align-items:center;gap:.25rem;font-size:.78rem;cursor:pointer"><input type="checkbox" class="sp-role-cb" value="FDL" ${(e.rollen||[]).includes('FDL')?'checked':''} onchange="spAutoSave()" style="width:15px;height:15px;accent-color:var(--r500)"> FDL</label>
+        <label style="display:flex;align-items:center;gap:.25rem;font-size:.78rem;cursor:pointer"><input type="checkbox" class="sp-role-cb" value="TF" ${(e.rollen||[]).includes('TF')?'checked':''} onchange="spAutoSave()" style="width:15px;height:15px;accent-color:var(--r500)"> TF</label>
+        <button class="sp-del" onclick="spDelEntry('RESERVE',${i})">✕</button>
+      </div>`).join('');
+  }
+  spRenderDutyRef();
   }
 
   function spCheckNameConflict(){
@@ -1910,6 +1983,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!plan) return;
     if(!plan.entries[stwl]) plan.entries[stwl]=[];
     if(stwl==='TF'){ plan.entries[stwl].push({name:'',duty:'',note:''}); }
+    else if(stwl==='SCHRANKEN'){ plan.entries[stwl].push({name:'',time:'',ort:''}); }
+    else if(stwl==='DISPO'){ plan.entries[stwl].push({name:'',time:''}); }
+    else if(stwl==='RESERVE'){ plan.entries[stwl].push({name:'',time:'',rollen:[]}); }
+    else if(stwl==='NOTFALL'){ plan.entries[stwl].push({name:'',time:'',fzg:''}); }
     else { plan.entries[stwl].push({name:'',time:''}); }
     try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
     syncBroadcast('shiftplans');
@@ -2040,8 +2117,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const detail=document.getElementById('spvDetail');
     detail.style.display='block';
     // Collect all entries
-    const stwlEntries=Object.entries(plan.entries||{}).filter(([k])=>k!=='TF');
+    const stwlKeys=['AK','BHBF','NS','STB'];
+    const extraKeys=['SCHRANKEN','DISPO','RESERVE','NOTFALL'];
+    const stwlEntries=stwlKeys.filter(k=>(plan.entries||{})[k]&&(plan.entries||{})[k].length).map(k=>[k,plan.entries[k]]);
     const tfEntries=(plan.entries.TF||[]);
+    const schrankenEntries=(plan.entries.SCHRANKEN||[]);
+    const dispoEntries=(plan.entries.DISPO||[]);
+    const reserveEntries=(plan.entries.RESERVE||[]);
+    const notfallEntries=(plan.entries.NOTFALL||[]);
+    const extraLabels={SCHRANKEN:'🚧 Schrankenwärter',DISPO:'📋 Disposition',RESERVE:'🔄 Reserve',NOTFALL:'🆘 Notfallmanager'};
     const planSignins=signins.filter(s=>s.shiftPlanId===plan.id);
     document.getElementById('spvViewNav').innerHTML=`
       <button onclick="spvShow(${idx})" style="padding:.3rem .7rem;border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;background:linear-gradient(135deg,var(--r500),var(--r700));color:white;font-weight:600">📋 Übersicht</button>
@@ -2072,6 +2156,42 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           </div>`).join(''):'<div style="font-size:.82rem;color:var(--g400);padding:.5rem 0">Keine Einträge.</div>'}
         </div>
       </div>
+      ${schrankenEntries.length?`<div style="margin-bottom:1rem">
+        <div style="font-weight:600;font-size:.85rem;color:var(--g600);margin-bottom:.5rem">🚧 Schrankenwärter</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.5rem">
+          ${schrankenEntries.map(e=>`<div style="background:var(--g50);border-radius:var(--rs);padding:.5rem .7rem;border:1px solid var(--g200)">
+            <div style="font-weight:600;font-size:.82rem">${e.name||'?'}</div>
+            <div style="font-size:.78rem;color:var(--g500)">${e.time||''}${e.ort?' · '+e.ort:''}</div>
+          </div>`).join('')}
+        </div>
+      </div>`:''}
+      ${dispoEntries.length?`<div style="margin-bottom:1rem">
+        <div style="font-weight:600;font-size:.85rem;color:var(--g600);margin-bottom:.5rem">📋 Disposition</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.5rem">
+          ${dispoEntries.map(e=>`<div style="background:var(--g50);border-radius:var(--rs);padding:.5rem .7rem;border:1px solid var(--g200)">
+            <div style="font-weight:600;font-size:.82rem">${e.name||'?'}</div>
+            <div style="font-size:.78rem;color:var(--g500)">${e.time||''}</div>
+          </div>`).join('')}
+        </div>
+      </div>`:''}
+      ${reserveEntries.length?`<div style="margin-bottom:1rem">
+        <div style="font-weight:600;font-size:.85rem;color:var(--g600);margin-bottom:.5rem">🔄 Reserve</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.5rem">
+          ${reserveEntries.map(e=>`<div style="background:var(--g50);border-radius:var(--rs);padding:.5rem .7rem;border:1px solid var(--g200)">
+            <div style="font-weight:600;font-size:.82rem">${e.name||'?'}</div>
+            <div style="font-size:.78rem;color:var(--g500)">${e.time||''}${(e.rollen||[]).length?' · '+e.rollen.join('/'):''}</div>
+          </div>`).join('')}
+        </div>
+      </div>`:''}
+      ${notfallEntries.length?`<div style="margin-bottom:1rem">
+        <div style="font-weight:600;font-size:.85rem;color:var(--g600);margin-bottom:.5rem">🆘 Notfallmanager</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.5rem">
+          ${notfallEntries.map(e=>`<div style="background:var(--g50);border-radius:var(--rs);padding:.5rem .7rem;border:1px solid var(--g200)">
+            <div style="font-weight:600;font-size:.82rem">${e.name||'?'}</div>
+            <div style="font-size:.78rem;color:var(--g500)">${e.time||''}${e.fzg?' · 🚗 '+e.fzg:''}</div>
+          </div>`).join('')}
+        </div>
+      </div>`:''}
       <div style="margin-bottom:1rem;background:var(--bgc);border:1px solid var(--bc);border-radius:var(--rs);padding:.75rem 1rem">
         <div style="font-weight:600;font-size:.85rem;color:var(--g600);margin-bottom:.5rem">📋 Anmeldungen</div>
         ${(()=>{const mySignin=planSignins.find(s=>s.username===loggedInAccount?.username);const penalty=getStrafenHoursSum(loggedInAccount?.username||'');return `
