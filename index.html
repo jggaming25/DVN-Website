@@ -576,7 +576,6 @@
         <button onclick="spvClose()" style="padding:.35rem .8rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.82rem;margin-bottom:.75rem">← Zurück</button>
         <div id="spvViewNav" style="display:flex;gap:.35rem;margin-bottom:.75rem;flex-wrap:wrap"></div>
         <div id="spvContent"></div>
-        <div id="spvTFContent" style="display:none"></div>
       </div>
     </div>
 
@@ -1525,6 +1524,16 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const frist=document.getElementById('sFrist').value;
     const fileInput=document.getElementById('sImage');
     if(!title||!time){ alert('Bitte Titel und Zeitraum angeben!'); return; }
+    // Check 2-day min rule: shift must be at least 2 days in the future
+    if(date){
+      const startTime=time.split(/[–\-]/)[0].trim()||'00:00';
+      const shiftDT=new Date(date+'T'+startTime+':00');
+      const minTime=new Date(Date.now()+2*24*60*60*1000);
+      if(shiftDT<minTime){
+        alert('⏳ Die Schicht muss mindestens 2 Tage im Voraus angekündigt werden (frühestens '+minTime.toLocaleString('de-DE')+').');
+        return;
+      }
+    }
     const addShiftWithImage=(imgDataUrl)=>{
       shifts.push({title,date,time,desc,frist,image:imgDataUrl||''});
       addLogEntry('Schicht erstellt', title+' ('+time+(date?' am '+date:'')+')');
@@ -1886,7 +1895,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const entries=plan.entries[stwl]||[];
       container.innerHTML=entries.map((e,i)=>`
         <div class="sp-entry">
-          <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" data-stwl="${stwl}" data-idx="${i}" oninput="spAutoSave()">
+          <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" list="spEmployees" data-stwl="${stwl}" data-idx="${i}" oninput="spAutoSave();spCheckAllConflicts()">
           <input type="text" class="sp-time" value="${e.time||''}" placeholder="Zeit" data-stwl="${stwl}" data-idx="${i}" oninput="spAutoSave()">
           <button class="sp-del" onclick="spDelEntry('${stwl}',${i})">✕</button>
         </div>`).join('');
@@ -1905,7 +1914,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
             <option value="">— Duty —</option>
             ${tfDuties.map(d=>`<option value="${d.duty}" ${e.duty===d.duty?'selected':''}>${d.duty} (${d.start}→${d.end})</option>`).join('')}
           </select>
-          <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" onchange="spCheckNameConflict();spAutoSave()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
+          <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" list="spEmployees" oninput="spCheckAllConflicts();spAutoSave()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
           <input type="text" class="sp-note" value="${e.note||''}" placeholder="Anmerkung" oninput="spAutoSave()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
           <button class="sp-del" onclick="spDelEntry('TF',${i})" style="flex-shrink:0">✕</button>
         </div>`).join('');
@@ -1926,7 +1935,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const labels={SCHRANKEN:'🚧 Schrankenwärter',DISPO:'📋 Disposition',NOTFALL:'🆘 Notfallmanager'};
     container.innerHTML=entries.map((e,i)=>`
       <div class="sp-entry">
-        <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" oninput="spAutoSave()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
+        <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" list="spEmployees" oninput="spAutoSave();spCheckAllConflicts()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
         <input type="text" class="sp-time" value="${e.time||''}" placeholder="Zeit" oninput="spAutoSave()" style="flex:0 0 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit">
         ${type==='SCHRANKEN'?`<input type="text" class="sp-ort" value="${e.ort||''}" placeholder="Ort" oninput="spAutoSave()" style="flex:0 0 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit">`:''}
         ${type==='NOTFALL'?`<input type="text" class="sp-fzg" value="${e.fzg||''}" placeholder="Fahrzeug" oninput="spAutoSave()" style="flex:0 0 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit">`:''}
@@ -1939,7 +1948,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const resEntries=plan.entries.RESERVE||[];
     resContainer.innerHTML=resEntries.map((e,i)=>`
       <div class="sp-entry" style="flex-wrap:wrap;gap:.35rem">
-        <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" oninput="spAutoSave()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
+        <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" list="spEmployees" oninput="spAutoSave();spCheckAllConflicts()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
         <input type="text" class="sp-time" value="${e.time||''}" placeholder="Zeit" oninput="spAutoSave()" style="flex:0 0 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit">
         <label style="display:flex;align-items:center;gap:.25rem;font-size:.78rem;cursor:pointer"><input type="checkbox" class="sp-role-cb" value="FDL" ${(e.rollen||[]).includes('FDL')?'checked':''} onchange="spAutoSave()" style="width:15px;height:15px;accent-color:var(--r500)"> FDL</label>
         <label style="display:flex;align-items:center;gap:.25rem;font-size:.78rem;cursor:pointer"><input type="checkbox" class="sp-role-cb" value="TF" ${(e.rollen||[]).includes('TF')?'checked':''} onchange="spAutoSave()" style="width:15px;height:15px;accent-color:var(--r500)"> TF</label>
@@ -1955,31 +1964,51 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const suggContainer=document.getElementById('sp_TFSuggestion');
     if(suggContainer) suggContainer.innerHTML=suggHtml;
   }
+  // Add datalist with all account names for autocomplete
+  const allNames=[...new Set([...ACCOUNTS,...getCustomAccounts()].map(a=>a.username))];
+  const editor=document.getElementById('spEditor');
+  let dl=editor.querySelector('#spEmployees');
+  if(!dl){
+    dl=document.createElement('datalist');
+    dl.id='spEmployees';
+    editor.appendChild(dl);
+  }
+  dl.innerHTML=allNames.map(n=>`<option value="${n}">`).join('');
+  // Remove old conflict banners then check all
+  editor.querySelectorAll('.sp-conflict-banner').forEach(el=>el.remove());
+  spCheckAllConflicts();
   spRenderDutyRef();
   }
 
-  function spCheckNameConflict(){
+  function spCheckAllConflicts(){
     const plan=shiftPlans.find(p=>p.id===editingSpId);
-    if(!plan||!plan.entries.TF) return;
-    const tfContainer=document.getElementById('sp_TF');
-    if(!tfContainer) return;
-    const names=[];
-    tfContainer.querySelectorAll('.sp-name').forEach(el=>{
+    if(!plan) return;
+    const editor=document.getElementById('spEditor');
+    if(!editor) return;
+    // Collect all names across all sections
+    const nameLocations={};
+    editor.querySelectorAll('.sp-name').forEach(el=>{
       const v=el.value.trim();
-      if(v) names.push(v);
+      if(!v) return;
+      if(!nameLocations[v]) nameLocations[v]=[];
+      // Find the section label
+      const entry=el.closest('.sp-entry');
+      const section=entry?entry.closest('[id^="sp_"]'):null;
+      const sectionLabel=section?section.id.replace('sp_',''):'?';
+      nameLocations[v].push(sectionLabel);
     });
-    const dupes=names.filter((n,i)=>names.indexOf(n)!==i);
-    if(dupes.length){
-      // Only warn if not already warned for these
-      if(!tfContainer.dataset.conflictWarned || tfContainer.dataset.conflictWarned!==dupes.join(',')){
-        tfContainer.dataset.conflictWarned=dupes.join(',');
-        if(!confirm('⚠️ Der Fahrer "'+dupes[0]+'" ist bereits für eine andere Duty eingetragen. Trotzdem fortfahren?')){
-          spRenderEditor(plan);
-        }
+    // Remove old banners
+    editor.querySelectorAll('.sp-conflict-banner').forEach(el=>el.remove());
+    // Show conflicts
+    Object.entries(nameLocations).forEach(([name,sections])=>{
+      if(sections.length>1){
+        const banner=document.createElement('div');
+        banner.className='sp-conflict-banner';
+        banner.style.cssText='margin-top:.4rem;font-size:.78rem;color:var(--r600);background:#fef2f2;padding:.4rem .7rem;border-radius:var(--rs)';
+        banner.innerHTML='⚠️ <strong>'+name+'</strong> ist in mehreren Bereichen eingetragen: '+sections.join(', ')+' – möglicher Konflikt.';
+        editor.insertBefore(banner, editor.querySelector('#sp_TF'));
       }
-    } else {
-      delete tfContainer.dataset.conflictWarned;
-    }
+    });
   }
 
   function spUpdateTFDuty(idx,val){
@@ -2128,19 +2157,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     detail.style.display='block';
     // Collect all entries
     const stwlKeys=['AK','BHBF','NS','STB'];
-    const extraKeys=['SCHRANKEN','DISPO','RESERVE','NOTFALL'];
     const stwlEntries=stwlKeys.filter(k=>(plan.entries||{})[k]&&(plan.entries||{})[k].length).map(k=>[k,plan.entries[k]]);
     const tfEntries=(plan.entries.TF||[]);
     const schrankenEntries=(plan.entries.SCHRANKEN||[]);
     const dispoEntries=(plan.entries.DISPO||[]);
     const reserveEntries=(plan.entries.RESERVE||[]);
     const notfallEntries=(plan.entries.NOTFALL||[]);
-    const extraLabels={SCHRANKEN:'🚧 Schrankenwärter',DISPO:'📋 Disposition',RESERVE:'🔄 Reserve',NOTFALL:'🆘 Notfallmanager'};
     const planSignins=signins.filter(s=>s.shiftPlanId===plan.id);
-    document.getElementById('spvViewNav').innerHTML=`
-      <button onclick="spvShow(${idx})" style="padding:.3rem .7rem;border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;background:linear-gradient(135deg,var(--r500),var(--r700));color:white;font-weight:600">📋 Übersicht</button>
-      <button onclick="spvShowTFDutyView(${idx})" style="padding:.3rem .7rem;border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;background:var(--g100);color:var(--g600)">🚆 TF-Duty-Ansicht</button>`;
-    document.getElementById('spvTFContent').style.display='none';
     document.getElementById('spvContent').style.display='block';
     document.getElementById('spvContent').innerHTML=`
       <div style="background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);padding:.75rem 1rem;border-radius:var(--rs);margin-bottom:1rem">
@@ -2225,61 +2248,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     document.getElementById('spvDetail').style.display='none';
     document.getElementById('spvPlansList').style.display='block';
   }
-  function spvShowTFDutyView(idx){
-    spvShowingIdx = idx;
-    const plan=shiftPlans[idx];
-    if(!plan) return;
-    document.getElementById('spvViewNav').innerHTML=`
-      <button onclick="spvShow(${idx})" style="padding:.3rem .7rem;border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;background:var(--g100);color:var(--g600)">📋 Übersicht</button>
-      <button onclick="spvShowTFDutyView(${idx})" style="padding:.3rem .7rem;border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;background:linear-gradient(135deg,var(--r500),var(--r700));color:white;font-weight:600">🚆 TF-Duty-Ansicht</button>`;
-    document.getElementById('spvContent').style.display='none';
-    const tfEl=document.getElementById('spvTFContent');
-    tfEl.style.display='block';
-    // Get TF sign-ins for this plan
-    const planSignins=signins.filter(s=>s.shiftPlanId===plan.id&&s.role==='TF');
-    // Group by duty
-    const byDuty={};
-    planSignins.forEach(s=>{
-      const d=s.duty||'Keine Duty';
-      if(!byDuty[d]) byDuty[d]=[];
-      byDuty[d].push(s);
-    });
-    const dutyKeys=Object.keys(byDuty).sort();
-    // Check conflicts
-    const conflicts=dutyKeys.filter(d=>byDuty[d].length>1);
-    let html=`
-      <div style="background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);padding:.75rem 1rem;border-radius:var(--rs);margin-bottom:1rem">
-        <div style="font-weight:700;font-size:1rem">🚆 TF-Duty-Ansicht · ${plan.shiftTitle}</div>
-        <div style="font-size:.82rem;opacity:.85">${planSignins.length} TF angemeldet · ${dutyKeys.length} verschiedene Dutys</div>
-      </div>`;
-    if(dutyKeys.length===0){
-      html+='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine TF-Anmeldungen für diesen Plan.</div>';
-    } else {
-      html+=`<div style="display:grid;gap:.5rem">`;
-      dutyKeys.forEach(d=>{
-        const users=byDuty[d];
-        const isConflict=users.length>1;
-        html+=`<div style="background:var(--g50);border-radius:var(--rs);padding:.6rem .8rem;border:1px solid ${isConflict?'var(--r300)':'var(--g200)'}">
-          <div style="font-weight:600;font-size:.82rem;color:${isConflict?'var(--r600)':'var(--g600)'}">${d} ${isConflict?'<span style="font-size:.72rem;background:#fef2f2;color:var(--r600);padding:.1rem .4rem;border-radius:4px">⚠️ Konflikt</span>':''}</div>
-          ${users.map(u=>`<div style="font-size:.78rem;padding:.15rem 0;display:flex;justify-content:space-between"><span>${u.username}</span><span style="color:var(--g400)">${u.timeFrom||'?'}–${u.timeTo||'?'}</span></div>`).join('')}
-        </div>`;
-      });
-      html+=`</div>`;
-      // Generate suggestion button (only for admin/strafen permission)
-      if(getShiftplanOverride()||getStrafenOverride()){
-        const pendingKey='dvn_pending_tf_suggestion_'+plan.id;
-        const hasPending=localStorage.getItem(pendingKey);
-        if(hasPending){
-          html+=`<div style="margin-top:1rem;padding:.6rem .8rem;background:#fefce8;border:1px solid #eab308;border-radius:var(--rs);font-size:.82rem;color:var(--g700)">💡 Es liegt ein TF-Duty-Vorschlag vor – siehe Karte rechts unten.</div>`;
-        } else {
-          html+=`<div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
-            <button onclick="generateTFSuggestion('${plan.id}')" style="padding:.5rem 1rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:white;border:none;border-radius:var(--rs);font-weight:600;font-size:.82rem;cursor:pointer;font-family:inherit">💡 TF-Duty-Vorschlag generieren</button>
-          </div>`;
-        }
-      }
-    }
-    tfEl.innerHTML=html;
-  }
 
   // ─── Sign-In System ───
   let signins = []; try{const s=localStorage.getItem('dvn_signins');if(s)signins=JSON.parse(s)}catch(e){}
@@ -2292,16 +2260,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     signinModalRole=null;
     const plan=shiftPlans.find(p=>p.id===planId);
     const shift=plan?shifts[plan.shiftIdx]:null;
-    // Check 2-day rule
-    if(shift&&shift.date){
-      const shiftDate=new Date(shift.date+'T23:59:59');
-      const now=new Date();
-      const twoDaysFromNow=new Date(now.getTime()+2*24*60*60*1000);
-      if(shiftDate>twoDaysFromNow){
-        showNotification('⏳ Anmeldung erst maximal 2 Tage vor Schichtbeginn möglich.','error');
-        return;
-      }
-    }
     // Check frist (deadline)
     if(shift&&shift.frist){
       const fristDate=new Date(shift.frist);
@@ -2485,7 +2443,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     try{localStorage.setItem('dvn_pending_tf_suggestions',JSON.stringify(pending))}catch(e){}
     showTFSuggestionCard(planId);
     showNotification('💡 TF-Duty-Vorschlag erstellt – siehe Karte rechts.','success');
-    if(document.getElementById('spvTFContent').style.display==='block'&&spvShowingIdx!==null) spvShowTFDutyView(spvShowingIdx);
   }
   function showTFSuggestionCard(planId){
     const box=document.getElementById('tfSuggestionBox');
@@ -2545,7 +2502,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     rejectTFSuggestion(planId);
     showNotification('✅ TF-Duty-Vorschlag angenommen.','success');
     if(spvShowingIdx!==null){
-      if(document.getElementById('spvTFContent').style.display==='block') spvShowTFDutyView(spvShowingIdx);
       if(document.getElementById('spvContent').style.display==='block') spvShow(spvShowingIdx);
     }
   }
@@ -2557,7 +2513,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     try{localStorage.setItem('dvn_pending_tf_suggestions',JSON.stringify(pending))}catch(e){}
     const card=document.getElementById('tf_sugg_'+planId);
     if(card) card.remove();
-    if(document.getElementById('spvTFContent').style.display==='block'&&spvShowingIdx!==null) spvShowTFDutyView(spvShowingIdx);
   }
   function checkPendingTFSuggestions(){
     let pending=[];
