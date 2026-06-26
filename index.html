@@ -847,7 +847,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   // ─── Intern: Dokumente & Links ───
   const INTERN_DOKUMENTE = [
     { text: 'FDL Signalling Guide', url: 'https://docs.google.com/document/d/10caAH-iSulutWpY4eK5f0TIkgfDngV19f30LtIjVRf0/edit?tab=t.0' },
-    { text: 'TF-Handbuch', url: 'https://digibefehl.deutschesverkehrsnetz.de/index.php?' },
+    { text: 'Befehlsoberfläche', url: 'https://digibefehl.deutschesverkehrsnetz.de/index.php?' },
   ];
 
   // ─── Benachrichtigungseinstellungen (Standardeinstellungen) ───
@@ -1150,7 +1150,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       case 'shiftplans':
         shiftPlans = data;
         if(document.querySelector('#apanel-shiftplan.active')) spRenderPlans();
-        if(document.querySelector('#ipanel-shiftplanview.active')) spvInit(); break;
+        if(document.querySelector('#ipanel-shiftplanview.active') && spvShowingIdx===null) spvInit(); break;
       case 'stellen_open':
         try{ Object.keys(data).forEach(id=>{ const s=STELLEN.find(x=>x.id===id); if(s) s.open=data[id]; }); }catch(e){}
         renderStellen(); if(loggedIn) renderAdminPanels(); break;
@@ -1214,6 +1214,20 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
           const sb=document.querySelector('[data-apanel="'+storedTab+'"]');
           if(sb){ sb.classList.add('active'); const sp=document.getElementById('apanel-'+storedTab); if(sp) sp.classList.add('active'); }
+          // Restore sub-tab if accounts
+          if(storedTab==='accounts'){
+            const subTab=sessionStorage.getItem('dvn_admin_subtab');
+            if(subTab){
+              sessionStorage.removeItem('dvn_admin_subtab');
+              const subBtn=document.querySelector('#accSubNav button[data-accsub="'+subTab+'"]');
+              if(subBtn){
+                document.querySelectorAll('#accSubNav button[data-accsub]').forEach(b=>b.classList.remove('active'));
+                subBtn.classList.add('active');
+                document.getElementById('accSubVerwaltung').style.display=subTab==='verwaltung'?'block':'none';
+                document.getElementById('accSubKonfiguration').style.display=subTab==='konfiguration'?'block':'none';
+              }
+            }
+          }
           if(storedTab==='schichten') renderAdminShifts();
           if(storedTab==='newsadmin') renderAdminNewsList();
           if(storedTab==='log') renderLog();
@@ -1348,7 +1362,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     btn.addEventListener('click', () => {
       // Autosave shift plan before switching
       spAutoSave();
-      try{sessionStorage.setItem('dvn_admin_tab',btn.dataset.apanel)}catch(e){}
+      // Store admin tab + sub-tab
+      try{
+        sessionStorage.setItem('dvn_admin_tab',btn.dataset.apanel);
+        const accSub=document.querySelector('#accSubNav button.active');
+        if(accSub) sessionStorage.setItem('dvn_admin_subtab',accSub.dataset.accsub);
+        else sessionStorage.removeItem('dvn_admin_subtab');
+      }catch(e){}
       location.reload();
     });
   });
@@ -2331,6 +2351,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   // ─── Shift Plan Viewer (Intern Read-Only) ───
   function spvInit(){
+    if(spvShowingIdx!==null) return; // don't reset while viewing a detail
     const el=document.getElementById('spvPlansList');
     if(!el) return;
     document.getElementById('spvDetail').style.display='none';
