@@ -587,7 +587,7 @@
     <div class="admin-nav" id="internSubNav">
       <button class="active" data-intern="dokumente">📄 Dokumente</button>
       <button data-intern="staffnews">📰 Staff News</button>
-      <button data-intern="shiftplanview">📋 Shift Plan</button>
+      <button data-intern="shiftplanview">📋 Schichten</button>
       <button data-intern="strafen">⚠️ Strafen</button>
     </div>
 
@@ -1158,7 +1158,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!data) return;
     switch(type){
       case 'shifts':
-        shifts = data; renderPublicShifts();
+        shifts = (data||[]).map(s=>({...s,completed:s.completed||false,stats:s.stats||{reliability:'',avgDelay:'',emergencyBrakes:''}})); renderPublicShifts();
         if(loggedIn) renderAdminShifts(); break;
       case 'applications':
         applications = data;
@@ -1756,6 +1756,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
   function saveStats(){
     const s=shifts[statsEditIdx]; if(!s) return;
+    if(!s.stats) s.stats={reliability:'',avgDelay:'',emergencyBrakes:''};
     s.stats.reliability=document.getElementById('statsReliability').value;
     s.stats.avgDelay=document.getElementById('statsAvgDelay').value;
     s.stats.emergencyBrakes=document.getElementById('statsBrakes').value;
