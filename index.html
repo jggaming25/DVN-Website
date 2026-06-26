@@ -557,10 +557,8 @@
 
     <!-- Intern: Dokumente -->
     <div class="admin-panel active" id="ipanel-dokumente">
-      <div class="sub-title">Dokumente & Links · FDL</div>
-      <div id="internDokFdl" class="intern-links"></div>
-      <div class="sub-title" style="margin-top:1rem">Dokumente & Links · TF</div>
-      <div id="internDokTf" class="intern-links"></div>
+      <div class="sub-title">Dokumente & Links</div>
+      <div id="internDokList" class="intern-links"></div>
     </div>
 
     <!-- Intern: Staff News -->
@@ -818,18 +816,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     return 'dvn1:' + (h >>> 0).toString(36);
   }
 
-  // ─── Intern: Dokumente (Links organisiert nach Rang) ───
-  const INTERN_DOKUMENTE = {
-    fdl: [
-      { text: 'FDL Signalling Guide', url: 'https://docs.google.com/document/d/10caAH-iSulutWpY4eK5f0TIkgfDngV19f30LtIjVRf0/edit?tab=t.0' },
-     
-      // Weitere Links hier
-    ],
-    tf: [
-      { text: 'TF-Handbuch', url: '#' },
-      // Weitere Links hier
-    ]
-  };
+  // ─── Intern: Dokumente & Links ───
+  const INTERN_DOKUMENTE = [
+    { text: 'FDL Signalling Guide', url: 'https://docs.google.com/document/d/10caAH-iSulutWpY4eK5f0TIkgfDngV19f30LtIjVRf0/edit?tab=t.0' },
+    { text: 'TF-Handbuch', url: 'https://digibefehl.deutschesverkehrsnetz.de/index.php?' },
+  ];
 
   // ─── Benachrichtigungseinstellungen (Standardeinstellungen) ───
   const DEFAULT_NOTIFY = {
@@ -1200,8 +1191,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         document.querySelectorAll('#internSubNav button[data-intern]').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('#intern .admin-panel').forEach(p => p.classList.remove('active'));
         const firstIntern = document.querySelector('#internSubNav button[data-intern]:not([style*="display:none"])') || document.querySelector('#internSubNav button[data-intern]');
-        if (firstIntern) { firstIntern.classList.add('active'); document.getElementById('ipanel-'+firstIntern.dataset.intern)?.classList.add('active'); if(firstIntern.dataset.intern==='shiftplan') spInit(); }
+        if (firstIntern) { firstIntern.classList.add('active'); document.getElementById('ipanel-'+firstIntern.dataset.intern)?.classList.add('active'); }
         renderDokumente(); renderStaffNews();
+        try{sessionStorage.removeItem('dvn_intern_tab')}catch(e){}
       }
       if (btn.dataset.page === 'news') renderNews();
       if (btn.dataset.page === 'shifts') renderPublicShifts();
@@ -1669,20 +1661,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   // ─── Intern Sub-Navigation ───
   document.querySelectorAll('#internSubNav button[data-intern]').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#internSubNav button[data-intern]').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      document.querySelectorAll('#intern .admin-panel').forEach(p=>p.classList.remove('active'));
-      const panel=document.getElementById('ipanel-'+btn.dataset.intern);
-      if(panel){ panel.classList.add('active'); if(btn.dataset.intern==='dokumente') renderDokumente(); if(btn.dataset.intern==='staffnews') renderStaffNews(); if(btn.dataset.intern==='shiftplanview') spvInit(); if(btn.dataset.intern==='strafen') renderStrafen(); }
+      try{sessionStorage.setItem('dvn_intern_tab',btn.dataset.intern)}catch(e){}
+      location.reload();
     });
   });
 
   // ─── Intern: Dokumente ───
   function renderDokumente(){
-    const fdlEl=document.getElementById('internDokFdl');
-    const tfEl=document.getElementById('internDokTf');
-    if(fdlEl) fdlEl.innerHTML=INTERN_DOKUMENTE.fdl.length?INTERN_DOKUMENTE.fdl.map(l=>`<a href="${l.url}" target="_blank">📄 ${l.text}</a>`).join(''):'<div style="color:var(--g400);font-size:.85rem;padding:.5rem 0">Keine Links konfiguriert.</div>';
-    if(tfEl) tfEl.innerHTML=INTERN_DOKUMENTE.tf.length?INTERN_DOKUMENTE.tf.map(l=>`<a href="${l.url}" target="_blank">📄 ${l.text}</a>`).join(''):'<div style="color:var(--g400);font-size:.85rem;padding:.5rem 0">Keine Links konfiguriert.</div>';
+    const el=document.getElementById('internDokList');
+    if(el) el.innerHTML=INTERN_DOKUMENTE.length?INTERN_DOKUMENTE.map(l=>`<a href="${l.url}" target="_blank">📄 ${l.text}</a>`).join(''):'<div style="color:var(--g400);font-size:.85rem;padding:.5rem 0">Keine Links konfiguriert.</div>';
   }
 
   // ─── Intern: Staff News ───
@@ -2972,6 +2959,29 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }catch(e){}
   updateUI();
   applyDarkMode();
+  // Restore intern tab after page reload
+  try{
+    const tabToOpen=sessionStorage.getItem('dvn_intern_tab');
+    if(tabToOpen){
+      sessionStorage.removeItem('dvn_intern_tab');
+      // Navigate to Intern page first
+      const internNavBtn=document.querySelector('nav button[data-page="intern"]');
+      if(internNavBtn) internNavBtn.click();
+      // Then activate the correct sub-tab
+      const btn=document.querySelector('#internSubNav button[data-intern="'+tabToOpen+'"]');
+      if(btn){
+        document.querySelectorAll('#internSubNav button[data-intern]').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('#intern .admin-panel').forEach(p=>p.classList.remove('active'));
+        const panel=document.getElementById('ipanel-'+tabToOpen);
+        if(panel) panel.classList.add('active');
+        if(tabToOpen==='dokumente') renderDokumente();
+        if(tabToOpen==='staffnews') renderStaffNews();
+        if(tabToOpen==='shiftplanview') spvInit();
+        if(tabToOpen==='strafen') renderStrafen();
+      }
+    }
+  }catch(e){}
   checkPendingTFSuggestions();
   fbInit(); // Firebase-Init starten (schlägt still fehl, wenn keine Config)
   document.getElementById('fyear').textContent = new Date().getFullYear();
