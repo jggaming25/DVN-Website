@@ -11,7 +11,7 @@
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
   :root{--r50:#fff5f7;--r100:#ffebee;--r200:#ffcdd2;--r300:#e57373;--r400:#ef5350;--r500:#c62828;--r600:#b71c1c;--r700:#8e0000;--w:#fff;--g50:#f8f9fc;--g100:#f1f3f8;--g200:#e8ecf4;--g300:#d0d5dd;--g400:#98a2b3;--g500:#667085;--g600:#475467;--g700:#344054;--g800:#1d2939;--sm:0 1px 3px rgba(0,0,0,.06);--md:0 4px 16px rgba(0,0,0,.08);--lg:0 12px 40px rgba(0,0,0,.10);--rs:8px;--rm:12px;--rl:16px}
-  .dark{--r50:#2d1a1a;--r100:#3d1f1f;--r200:#5c2a2a;--r300:#8e3a3a;--r400:#c44a4a;--r500:#e06060;--r600:#e87a7a;--r700:#f09494;--w:#1a1d23;--g50:#1e2028;--g100:#262830;--g200:#2d303a;--g300:#3d404c;--g400:#6b7084;--g500:#9ea2b5;--g600:#c5c8d6;--g700:#e2e4ed;--g800:#f1f2f7;--sm:0 1px 3px rgba(0,0,0,.2);--md:0 4px 16px rgba(0,0,0,.25);--lg:0 12px 40px rgba(0,0,0,.3)}
+  .dark{--r50:#2d1a1a;--r100:#4a2424;--r200:#6b3030;--r300:#9e4040;--r400:#d45555;--r500:#e06060;--r600:#e87a7a;--r700:#f09494;--w:#111318;--g50:#16181f;--g100:#1e202a;--g200:#262835;--g300:#353849;--g400:#6b7089;--g500:#9ea2bb;--g600:#c5c8da;--g700:#e2e4ef;--g800:#f1f2f9;--sm:0 1px 3px rgba(0,0,0,.3);--md:0 4px 16px rgba(0,0,0,.35);--lg:0 12px 40px rgba(0,0,0,.4)}
   html{scroll-behavior:smooth}
   body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--g50);color:var(--g800);min-height:100vh;display:flex;flex-direction:column}
   .page-wrap{flex:1}
@@ -100,7 +100,7 @@
   .nl-item{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--g600)}
   .nl-item .sw{width:14px;height:14px;border-radius:4px;flex-shrink:0}
   .nl-item .sw.r{background:var(--r500)}
-  .nl-item .sw.g{background:var(--g400)}
+  .nl-item .sw.g{background:#16a34a}
 
   /* ─── STELLENANZEIGEN ─── */
   .sa-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
@@ -333,7 +333,10 @@
 <!-- ═══════ LOGIN MODAL ═══════ -->
 <div class="modal-overlay" id="loginModal">
   <div class="modal">
-    <h2>🔐 Admin-Login</h2>
+    <div style="display:flex;justify-content:space-between;align-items:start">
+      <h2>🔐 Admin-Login</h2>
+      <button onclick="closeLogin()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--g400);padding:0;line-height:1;font-family:inherit">✕</button>
+    </div>
     <p>Bitte melden Sie sich mit Ihren Administrator-Zugangsdaten an.</p>
     <div class="error" id="loginError">Falscher Benutzername oder Passwort.</div>
     <label>Benutzername</label>
@@ -386,6 +389,9 @@
   <div class="modal" style="max-width:500px">
     <h2>📋 Anmeldung · <span id="signinShiftTitle"></span></h2>
     <p>Melde dich für diese Schicht an.</p>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:.5rem">
+      <button class="btn-secondary" onclick="closeSigninModal()" style="font-size:.78rem">✕ Schließen</button>
+    </div>
     <div style="margin:.75rem 0;display:flex;gap:.5rem;flex-wrap:wrap">
       <button class="signin-role-btn" data-role="TF" onclick="signinSelectRole('TF')">🚆 Triebfahrzeugführer</button>
       <button class="signin-role-btn" data-role="FDL" onclick="signinSelectRole('FDL')">🚦 Fahrdienstleiter</button>
@@ -416,8 +422,10 @@
         <textarea id="signinNotes" placeholder="Zusatzinfos..." style="width:100%;padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-family:inherit;resize:vertical;min-height:50px"></textarea>
       </div>
       <div id="signinPenaltyWarning" style="display:none;background:#fef2f2;border:1px solid var(--r300);border-radius:var(--rs);padding:.6rem;font-size:.82rem;color:var(--r700);margin-bottom:.5rem">⚠️ Du hast <span id="signinPenaltyHours">0</span> Strafstunden – nur Schrankenwärter möglich.</div>
-      <button onclick="signinSubmit()" style="padding:.6rem 1.5rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">✅ Anmelden</button>
-      <button class="btn-secondary" onclick="closeSigninModal()" style="margin-left:.5rem">Abbrechen</button>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button onclick="signinSubmit()" style="padding:.6rem 1.5rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">✅ Anmelden</button>
+        <button class="btn-secondary" onclick="closeSigninModal()">Abbrechen</button>
+      </div>
     </div>
   </div>
 </div>
@@ -490,9 +498,26 @@
       <img src="images/3454325345.png" alt="DVN-Netzplan" loading="lazy">
     </div>
     <div class="nl">
-      <div class="nl-item"><span class="sw r"></span> DVN-Stationen</div>
+      <div class="nl-item"><span class="sw r"></span> Normale Bahnhöfe</div>
       <div class="nl-item"><span class="sw g"></span> Anschlussbahnhöfe</div>
       <div class="nl-item" style="margin-left:auto;font-size:.7rem;color:var(--g400)">ⓘ DVN – Änderungen vorbehalten</div>
+    </div>
+    <div style="padding:0 1.5rem 1.5rem">
+      <div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem"><strong>Bahnhöfe im Netz:</strong></div>
+      <div style="display:flex;flex-wrap:wrap;gap:.35rem;font-size:.8rem">
+        <span style="padding:.2rem .6rem;border-radius:6px;background:#dcfce7;color:#166534">Niedersöllern <span style="color:#4ade80;font-size:.7rem">(Anschluss)</span></span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:#dcfce7;color:#166534">Altenkirchen <span style="color:#4ade80;font-size:.7rem">(Anschluss)</span></span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:#dcfce7;color:#166534">Bergenau <span style="color:#4ade80;font-size:.7rem">(Anschluss)</span></span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Hauptbahnhof Mitte</span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Ostkreuz</span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Westring</span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Südbahnhof</span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Nordtor</span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Messeplatz</span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Industriegebiet</span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Flughafen Terminal</span>
+        <span style="padding:.2rem .6rem;border-radius:6px;background:var(--g100);color:var(--g600)">Hafenquartier</span>
+      </div>
     </div>
   </div>
 </section>
@@ -726,6 +751,7 @@
   <div class="f-inner">
     <span>© <span id="fyear"></span> DVN – Deutsches Verkehrsnetz</span>
     <span class="f-links">
+      <a href="#" onclick="toggleDarkMode();return false" id="darkModeToggle">🌙 Dunkel</a>
       <a href="https://discord.gg/MT3JcUarXw" target="_blank">Discord</a>
       <a href="#" onclick="showImpressum();return false">Impressum</a>
     </span>
@@ -760,11 +786,20 @@ Bei Fragen wenden Sie sich bitte per Ticket auf unserem Discord Server an uns!.
 Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn</a>`;
 
   const ACCOUNTS = [
-    { username: 'jggaming2518', password: 'JLG161218MGB!', logs: true,  bewerbungen: true,  shiftplan: true,  strafen: true,  accounts: true,  rang: 'Admin' },
-    { username: 'leon',         password: '123#AG456789!', logs: true,  bewerbungen: true,  shiftplan: true,  strafen: true,  accounts: true,  rang: 'Admin' },
-    { username: 'felix',        password: '987#AG654321!', logs: true,  bewerbungen: true,  shiftplan: true, strafen: true, accounts: true, rang: 'Admin' },
+    { username: 'jggaming2518', password: 'dvn1:5c2ecr', logs: true,  bewerbungen: true,  shiftplan: true,  strafen: true,  accounts: true,  rang: 'Admin' },
+    { username: 'leon',         password: 'dvn1:rtfc13', logs: true,  bewerbungen: true,  shiftplan: true,  strafen: true,  accounts: true,  rang: 'Admin' },
+    { username: 'felix',        password: 'dvn1:1icrlpv', logs: true,  bewerbungen: true,  shiftplan: true, strafen: true, accounts: true, rang: 'Admin' },
     // Hier weitere Accounts hinzufügen (rang: 'Admin'|'FDL'|'TF', logs, bewerbungen, shiftplan, strafen, accounts: true/false)
   ];
+
+  function hashPassword(pw){
+    let h = 0;
+    for(let i = 0; i < pw.length; i++){
+      h = ((h << 7) - h) + pw.charCodeAt(i);
+      h = h & h;
+    }
+    return 'dvn1:' + (h >>> 0).toString(36);
+  }
 
   // ─── Intern: Dokumente (Links organisiert nach Rang) ───
   const INTERN_DOKUMENTE = {
@@ -875,7 +910,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       fields: [
         // ─── Persönliche Daten ───
         { type:'text',     label:'Roblox Name',                         name:'roblox_name',   required:true },
-        { type:'text',     label:'Discord Name',                        name:'discord',       required:true, placeholder:'z.B. user#1234' },
+        { type:'text',     label:'Discord @Name',                        name:'discord',       required:true, placeholder:'z.B. user#1234' },
         { type:'select',   label:'Wie alt sind Sie?',                   name:'alter',         options:['Unter 14','14 oder älter'], required:true },
 
         // ─── Signalkunde (Bild 1) ───
@@ -1162,12 +1197,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function doLogin() {
     const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('loginPass').value;
     const allAccounts=[...ACCOUNTS,...getCustomAccounts()];
-    const found=allAccounts.find(a=>a.username===u&&a.password===p);
+    const found=allAccounts.find(a=>a.username===u&&a.password===hashPassword(p));
     if(found){
       loggedIn=true; loggedInUser=u; loggedInAccount=found;
       loadNotifHistory();
       if(document.getElementById('loginRemember').checked){
-        try{localStorage.setItem('dvn_session_user',u);localStorage.setItem('dvn_session_pass',p)}catch(e){}
+        try{localStorage.setItem('dvn_session_user',u);localStorage.setItem('dvn_session_pass',hashPassword(p))}catch(e){}
       }
       addLogEntry('Login', 'Benutzer '+u+' ('+found.rang+') hat sich angemeldet'); closeLogin(); updateUI(); applyDarkMode();
     } else document.getElementById('loginError').style.display='block';
@@ -1376,11 +1411,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         <div class="ab-actions">
           <button class="accept" onclick="appAction(${realIdx},'accepted')">✓ Annehmen</button>
           <button class="reject" onclick="appAction(${realIdx},'rejected')">✗ Ablehnen</button>
+          <button style="background:#fef2f2;color:var(--r600);border:1px solid var(--r300);padding:.35rem .7rem;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit" onclick="appDelete(${realIdx})">🗑️ Löschen</button>
         </div>
         <div class="ab-note-input" id="noteArea${realIdx}">
           <input type="text" id="noteInput${realIdx}" placeholder="Begründung (optional)">
           <button onclick="submitNote(${realIdx})">Bestätigen</button>
-        </div>`:''}
+        </div>`:`
+        <div class="ab-actions">
+          <button style="background:#fef2f2;color:var(--r600);border:1px solid var(--r300);padding:.35rem .7rem;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit" onclick="appDelete(${realIdx})">🗑️ Löschen</button>
+        </div>`}
       </div>`;
     }).join('')+'</div>';
     document.getElementById('adminBadge').textContent='Angemeldet als '+loggedInUser;
@@ -1421,6 +1460,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(a.data.discord) fields.push({name:'Discord', value:a.data.discord, inline:true});
     if(note) fields.push({name:'Begründung', value:note});
     sendDiscordNotification('Bewerbung '+statusText, desc, color, fields);
+  }
+  function appDelete(idx){
+    if(!confirm('Bewerbung wirklich löschen?')) return;
+    applications.splice(idx,1);
+    try{localStorage.setItem('dvn_applications',JSON.stringify(applications))}catch(e){}
+    syncBroadcast('applications');
+    renderAdminPanels();
   }
   function toggleStelle(i){
     STELLEN[i].open=!STELLEN[i].open;
@@ -1681,6 +1727,34 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     spRenderEditor(plan);
   }
 
+  function spAutoSave(){
+    const plan=shiftPlans.find(p=>p.id===editingSpId);
+    if(!plan) return;
+    ['AK','BHBF','NS','STB'].forEach(stwl=>{
+      const container=document.getElementById('sp_'+stwl);
+      if(!container) return;
+      const inputs=container.querySelectorAll('.sp-entry');
+      plan.entries[stwl]=[];
+      inputs.forEach(el=>{
+        const name=el.querySelector('.sp-name')?.value||'';
+        const time=el.querySelector('.sp-time')?.value||'';
+        if(name||time) plan.entries[stwl].push({name,time});
+      });
+    });
+    const tfContainer=document.getElementById('sp_TF');
+    if(tfContainer){
+      const tfInputs=tfContainer.querySelectorAll('.sp-entry');
+      plan.entries.TF=[];
+      tfInputs.forEach(el=>{
+        const duty=el.querySelector('.sp-duty-select')?.value||'';
+        const name=el.querySelector('.sp-name')?.value||'';
+        const note=el.querySelector('.sp-note')?.value||'';
+        if(name||duty) plan.entries.TF.push({name,duty,note});
+      });
+    }
+    try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
+    syncBroadcast('shiftplans');
+  }
   function spEdit(idx){
     const plan=shiftPlans[idx];
     if(!plan) return;
@@ -1750,6 +1824,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       if(!confirm('⚠️ Die Duty "'+dutyName+'" ist bereits vergeben. Trotzdem doppelt belegen?')) return;
     }
     plan.entries.TF.push({name:'',duty:dutyName,note:''});
+    try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
+    syncBroadcast('shiftplans');
     spRenderEditor(plan);
   }
 
@@ -1763,8 +1839,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const entries=plan.entries[stwl]||[];
       container.innerHTML=entries.map((e,i)=>`
         <div class="sp-entry">
-          <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" data-stwl="${stwl}" data-idx="${i}">
-          <input type="text" class="sp-time" value="${e.time||''}" placeholder="Zeit" data-stwl="${stwl}" data-idx="${i}">
+          <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" data-stwl="${stwl}" data-idx="${i}" oninput="spAutoSave()">
+          <input type="text" class="sp-time" value="${e.time||''}" placeholder="Zeit" data-stwl="${stwl}" data-idx="${i}" oninput="spAutoSave()">
           <button class="sp-del" onclick="spDelEntry('${stwl}',${i})">✕</button>
         </div>`).join('');
     });
@@ -1778,12 +1854,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       tfEntries.forEach(e=>{ if(e.name) nameCounts[e.name]=(nameCounts[e.name]||0)+1; });
       tfContainer.innerHTML=tfEntries.map((e,i)=>`
         <div class="sp-entry" style="flex-wrap:wrap;gap:.35rem">
-          <select class="sp-duty-select" onchange="spUpdateTFDuty(${i},this.value)" style="padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;flex:1 1 120px;min-width:0">
+          <select class="sp-duty-select" onchange="spUpdateTFDuty(${i},this.value);spAutoSave()" style="padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;flex:1 1 120px;min-width:0">
             <option value="">— Duty —</option>
             ${tfDuties.map(d=>`<option value="${d.duty}" ${e.duty===d.duty?'selected':''}>${d.duty} (${d.start}→${d.end})</option>`).join('')}
           </select>
-          <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" onchange="spCheckNameConflict()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
-          <input type="text" class="sp-note" value="${e.note||''}" placeholder="Anmerkung" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
+          <input type="text" class="sp-name" value="${e.name||''}" placeholder="Name" onchange="spCheckNameConflict();spAutoSave()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
+          <input type="text" class="sp-note" value="${e.note||''}" placeholder="Anmerkung" oninput="spAutoSave()" style="flex:1 1 100px;padding:.35rem .5rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit;min-width:0">
           <button class="sp-del" onclick="spDelEntry('TF',${i})" style="flex-shrink:0">✕</button>
         </div>`).join('');
       // Show conflict warnings
@@ -1834,6 +1910,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!plan.entries[stwl]) plan.entries[stwl]=[];
     if(stwl==='TF'){ plan.entries[stwl].push({name:'',duty:'',note:''}); }
     else { plan.entries[stwl].push({name:'',time:''}); }
+    try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
+    syncBroadcast('shiftplans');
     spRenderEditor(plan);
   }
 
@@ -1841,34 +1919,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const plan=shiftPlans.find(p=>p.id===editingSpId);
     if(!plan) return;
     if(plan.entries[stwl]) plan.entries[stwl].splice(idx,1);
+    try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
+    syncBroadcast('shiftplans');
     spRenderEditor(plan);
   }
 
   function spSave(){
-    const plan=shiftPlans.find(p=>p.id===editingSpId);
-    if(!plan) return;
-    ['AK','BHBF','NS','STB'].forEach(stwl=>{
-      const container=document.getElementById('sp_'+stwl);
-      if(!container) return;
-      const entries=[];
-      container.querySelectorAll('.sp-entry').forEach(el=>{
-        const name=el.querySelector('.sp-name')?.value?.trim()||'';
-        const time=el.querySelector('.sp-time')?.value?.trim()||'';
-        if(name||time) entries.push({name,time});
-      });
-      plan.entries[stwl]=entries;
-    });
-    const tfContainer=document.getElementById('sp_TF');
-    if(tfContainer){
-      const tfEntries=[];
-      tfContainer.querySelectorAll('.sp-entry').forEach(el=>{
-        const name=el.querySelector('.sp-name')?.value?.trim()||'';
-        const duty=el.querySelector('.sp-duty-select')?.value||'';
-        const note=el.querySelector('.sp-note')?.value?.trim()||'';
-        if(name||duty) tfEntries.push({name,duty,note});
-      });
-      plan.entries.TF=tfEntries;
-    }
+    spAutoSave();
+    showNotification('✅ Shiftplan gespeichert','success');
+  }
     try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
     syncBroadcast('shiftplans');
     addLogEntry('Shift-Plan gespeichert', plan.shiftTitle);
@@ -1905,7 +1964,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!user||!pass||!rang){ showNotification('Bitte alle Felder ausfüllen.','error'); return; }
     const list=getCustomAccounts();
     if(list.some(a=>a.username===user)||ACCOUNTS.some(a=>a.username===user)){ showNotification('Account existiert bereits.','error'); return; }
-    list.push({username:user,password:pass,logs:false,bewerbungen:false,shiftplan:false,strafen:false,accounts:false,rang});
+    list.push({username:user,password:hashPassword(pass),logs:false,bewerbungen:false,shiftplan:false,strafen:false,accounts:false,rang});
     saveCustomAccounts(list);
     document.getElementById('accNewUser').value=''; document.getElementById('accNewPass').value=''; document.getElementById('accNewRang').value='';
     showNotification('✅ Account angelegt: '+user,'success');
@@ -1994,25 +2053,25 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         <div style="font-weight:700;font-size:1rem">${plan.shiftTitle}</div>
         <div style="font-size:.82rem;opacity:.85">${plan.date||''} · ${plan.time||''}</div>
       </div>
-      ${stwlEntries.length?`<div style="margin-bottom:1rem">
+      <div style="margin-bottom:1rem">
         <div style="font-weight:600;font-size:.85rem;color:var(--g600);margin-bottom:.5rem">🚉 STWL-Einträge</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem">
-          ${stwlEntries.map(([stwl,entries])=>`
+          ${stwlEntries.length?stwlEntries.map(([stwl,entries])=>`
             <div style="background:var(--g50);border-radius:var(--rs);padding:.5rem .7rem;border:1px solid var(--g200)">
               <div style="font-weight:600;font-size:.78rem;color:var(--g500);margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.03em">${stwl}</div>
               ${entries.length?entries.map(e=>`<div style="font-size:.78rem;padding:.15rem 0;display:flex;justify-content:space-between"><span>${e.name||'?'}</span><span style="color:var(--g400)">${e.time||''}</span></div>`).join(''):'<div style="font-size:.75rem;color:var(--g400)">—</div>'}
-            </div>`).join('')}
+            </div>`).join(''):'<div style="font-size:.82rem;color:var(--g400);grid-column:1/-1;padding:.5rem 0">Keine Einträge.</div>'}
         </div>
-      </div>`:''}
-      ${tfEntries.length?`<div style="margin-bottom:1rem">
+      </div>
+      <div style="margin-bottom:1rem">
         <div style="font-weight:600;font-size:.85rem;color:var(--g600);margin-bottom:.5rem">🚆 TF-Einträge</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.5rem">
-          ${tfEntries.map(e=>`<div style="background:var(--g50);border-radius:var(--rs);padding:.5rem .7rem;border:1px solid var(--g200);display:flex;justify-content:space-between;align-items:center">
+          ${tfEntries.length?tfEntries.map(e=>`<div style="background:var(--g50);border-radius:var(--rs);padding:.5rem .7rem;border:1px solid var(--g200);display:flex;justify-content:space-between;align-items:center">
             <div><strong style="font-size:.82rem">${e.name||'?'}</strong><span style="font-size:.75rem;color:var(--g400);margin-left:.5rem">${e.duty||'—'}</span></div>
             ${e.note?`<span style="font-size:.72rem;color:var(--g500);background:var(--g100);padding:.15rem .5rem;border-radius:4px">${e.note}</span>`:''}
-          </div>`).join('')}
+          </div>`).join(''):'<div style="font-size:.82rem;color:var(--g400);padding:.5rem 0">Keine Einträge.</div>'}
         </div>
-      </div>`:''}
+      </div>
       <div style="margin-bottom:1rem;background:var(--bgc);border:1px solid var(--bc);border-radius:var(--rs);padding:.75rem 1rem">
         <div style="font-weight:600;font-size:.85rem;color:var(--g600);margin-bottom:.5rem">📋 Anmeldungen</div>
         ${(()=>{const mySignin=planSignins.find(s=>s.username===loggedInAccount?.username);const penalty=getStrafenHoursSum(loggedInAccount?.username||'');return `
@@ -2050,11 +2109,30 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     document.getElementById('signinShiftTitle').textContent=plan?plan.shiftTitle:'';
     document.getElementById('signinFields').style.display='none';
     document.getElementById('signinPenaltyWarning').style.display='none';
-    // Populate duty dropdown
+    // Populate duty dropdown (gefiltert nach Schichtzeit für TF)
     const dutySel=document.getElementById('signinDuty');
     if(dutySel){
+      const plan=shiftPlans.find(p=>p.id===planId);
+      let tfDuties=DUTIES.filter(d=>d.type==='tf');
+      if(plan){
+        const shift=shifts[plan.shiftIdx];
+        if(shift&&shift.time){
+          const parts=shift.time.split(/[–\-]/);
+          if(parts.length>=2){
+            const sStart=timeToMin(parts[0].trim()), sEnd=timeToMin(parts[1].trim());
+            let ss=sStart, se=sEnd;
+            if(se<=ss) se+=1440;
+            tfDuties=tfDuties.filter(d=>{
+              const ds=timeToMin(d.start.split('/')[0].trim()), de=timeToMin(d.end.split('/')[0].trim());
+              let des=ds, dee=de;
+              if(dee<=des) dee+=1440;
+              return des < se && dee > ss;
+            });
+          }
+        }
+      }
       dutySel.innerHTML='<option value="">— Duty wählen —</option>'+
-        DUTIES.filter(d=>d.type==='tf').map(d=>`<option value="${d.duty}">${d.duty} (${d.start}→${d.end})</option>`).join('');
+        tfDuties.map(d=>`<option value="${d.duty}">${d.duty} (${d.start}→${d.end})</option>`).join('');
     }
     // Populate stellwerke
     const stellwerkeContainer=document.getElementById('signinStellwerkeOptions');
@@ -2309,19 +2387,26 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   // ─── Dark Mode ───
   function isDarkMode(){
-    if(!loggedInAccount) return document.documentElement.classList.contains('dark');
-    try{ return JSON.parse(localStorage.getItem('dvn_darkmode_'+loggedInAccount.username)); }catch(e){ return false; }
+    if(loggedInAccount){
+      try{ const v=localStorage.getItem('dvn_darkmode_'+loggedInAccount.username); if(v!==null) return JSON.parse(v); }catch(e){}
+    }
+    try{ return JSON.parse(localStorage.getItem('dvn_darkmode')); }catch(e){ return false; }
+  }
+  function setDarkMode(on){
+    document.documentElement.classList.toggle('dark',on);
+    try{localStorage.setItem('dvn_darkmode',JSON.stringify(on))}catch(e){}
+    const toggle=document.getElementById('darkModeToggle');
+    if(toggle) toggle.textContent=on?'☀️ Hell':'🌙 Dunkel';
   }
   function toggleDarkMode(){
     const on=!isDarkMode();
     if(loggedInAccount) try{localStorage.setItem('dvn_darkmode_'+loggedInAccount.username,JSON.stringify(on))}catch(e){}
-    document.documentElement.classList.toggle('dark',on);
+    setDarkMode(on);
     syncBroadcast('config');
     renderNotifications();
   }
   function applyDarkMode(){
-    const on=isDarkMode();
-    document.documentElement.classList.toggle('dark',on);
+    setDarkMode(isDarkMode());
   }
 
   // ─── Strafen ───
@@ -2339,15 +2424,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!name||!totalHours||!reason){ showNotification('Bitte alle Pflichtfelder ausfüllen.','error'); return; }
     strafenList.push({ id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), discordName:name, totalHours, abgebaut, reason, enteredBy:loggedInAccount?.username||'?', timestamp:new Date().toLocaleString('de-DE') });
     try{localStorage.setItem('dvn_strafen',JSON.stringify(strafenList))}catch(e){}
-    syncBroadcast('strafen');
-    showNotification('✅ Strafe eingetragen','success');
-    addLogEntry('Strafe eingetragen', name+' ('+totalHours+'h)');
-    // Benachrichtige den betroffenen Account
-    if(loggedInAccount && name.toLowerCase()===loggedInAccount.username.toLowerCase()){
-      showNotification('⚠️ Dir wurde eine Strafe eingetragen: '+totalHours+'h – '+reason,'error');
+    // Notifikation VOR syncBroadcast setzen, damit der Broadcast/Firebase-Handler nicht doppelt benachrichtigt
+    const isSelf = loggedInAccount && name.toLowerCase()===loggedInAccount.username.toLowerCase();
+    if(isSelf){
       try{localStorage.setItem('dvn_last_strafe_'+loggedInAccount.username,strafenList[strafenList.length-1].id)}catch(e){}
     } else if(loggedInAccount){
-      // Offline: save notification to target user's history
       const nid=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
       const msg='⚠️ Dir wurde eine Strafe eingetragen: '+totalHours+'h – '+reason;
       let hist=[];
@@ -2356,6 +2437,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       try{localStorage.setItem('dvn_notifhist_'+name,JSON.stringify(hist))}catch(e){}
       syncBroadcast('notifhistory');
     }
+    syncBroadcast('strafen');
+    if(isSelf) showNotification('⚠️ Dir wurde eine Strafe eingetragen: '+totalHours+'h – '+reason,'error');
+    showNotification('✅ Strafe eingetragen','success');
+    addLogEntry('Strafe eingetragen', name+' ('+totalHours+'h)');
     document.getElementById('strafenDiscordName').value='';
     document.getElementById('strafenHours').value='';
     document.getElementById('strafenAbgebaut').value='';
@@ -2543,7 +2628,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const u=localStorage.getItem('dvn_session_user'), p=localStorage.getItem('dvn_session_pass');
     if(u&&p){
       const allAccounts=[...ACCOUNTS,...getCustomAccounts()];
-      const found=allAccounts.find(a=>a.username===u&&a.password===p);
+      let found=allAccounts.find(a=>a.username===u&&a.password===p);
+      // Migration: falls Session noch Klartext-Passwort enthielt
+      if(!found && !p.startsWith('dvn1:')) found=allAccounts.find(a=>a.username===u&&a.password===hashPassword(p));
       if(found){ loggedIn=true; loggedInUser=u; loggedInAccount=found; }
     }
   }catch(e){}
