@@ -977,7 +977,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       open: true,
       fields: [
         // ─── Persönliche Daten ───
-        { type:'text',     label:'Roblox Name',                         name:'roblox_name',   required:true },
         { type:'text',     label:'Discord @Name',                        name:'discord',       required:true, placeholder:'z.B. user#1234' },
         { type:'select',   label:'Wie alt sind Sie?',                   name:'alter',         options:['Unter 14','14 oder älter'], required:true },
 
@@ -2554,7 +2553,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;flex:1">
           <strong style="font-size:.85rem;min-width:100px">${a.username}</strong>
           <span style="font-size:.72rem;color:var(--g400)">(${a.rang}${hasOTP?' · ⏳ OTP aktiv':' ✓ aktiv'})</span>
-          ${getLinkedAccount('roblox')?`<span style="font-size:.7rem;color:var(--g400)">🎮 ${getLinkedAccount('roblox')}</span>`:''}
           ${getLinkedAccount('discord')?`<span style="font-size:.7rem;color:var(--g400)">💬 ${getLinkedAccount('discord')}</span>`:''}
           <span style="font-size:.7rem;color:var(--g400);margin-left:.25rem">📋 Letzte: ${getLastAttendance(a.username)||'—'}</span>
           <span style="font-size:.7rem;font-weight:600;color:var(--st);background:var(--sg);padding:.1rem .4rem;border-radius:4px">${getAttendanceCountThisMonth(a.username)}× diesen Monat</span>
@@ -3234,30 +3232,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const c=document.getElementById('accLinkedAccounts');
     if(!c) return;
     if(!loggedInAccount){ c.innerHTML=''; return; }
-    const roblox=getLinkedAccount('roblox');
     const discord=getLinkedAccount('discord');
-    const rCode=sessionStorage.getItem('dvn_verify_roblox_code_'+loggedInAccount.username)||'';
-    const rUser=sessionStorage.getItem('dvn_verify_roblox_user_'+loggedInAccount.username)||'';
     c.innerHTML=`
       <div class="sub-title">🔗 Verknüpfte Konten</div>
       <div style="margin-bottom:.5rem;font-size:.85rem">
-        <div style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;flex-wrap:wrap">
-          <span style="min-width:80px">🎮 Roblox</span>
-          ${roblox?`<span style="color:var(--g600)">✅ ${roblox}</span>
-            <button onclick="unlinkAccount('roblox')" style="padding:.25rem .6rem;background:var(--g100);color:var(--g600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.75rem;font-family:inherit">Trennen</button>`
-            :rCode?`<div style="flex:1;min-width:200px">
-              <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
-                <input type="text" id="verifyRobloxUser" value="${rUser}" placeholder="Roblox-Benutzername" style="flex:1;min-width:120px;padding:.4rem .6rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.82rem;font-family:inherit">
-                <button onclick="robloxVerifyCheck()" style="padding:.35rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit">✅ Prüfen</button>
-                <button onclick="cancelRobloxVerify()" style="padding:.35rem .6rem;background:var(--g100);color:var(--g600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.75rem;font-family:inherit">✕</button>
-              </div>
-              <div style="margin-top:.35rem;font-size:.75rem;color:var(--r500);background:var(--r50);padding:.35rem .5rem;border-radius:4px">
-                Setze diesen Code in deine Roblox-Bio: <strong>${rCode}</strong><br>
-                <span style="color:var(--g400)">(Roblox → Einstellungen → Profil → Beschreibung)</span>
-              </div>
-            </div>`
-            :`<button onclick="robloxVerifyStart()" style="padding:.35rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit">🔗 Mit Roblox verbinden</button>`}
-        </div>
         <div style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;flex-wrap:wrap">
           <span style="min-width:80px">💬 Discord</span>
           <input type="text" id="linkDiscord" value="${discord}" placeholder="Name#0000 (manuelle Eingabe)" style="flex:1;min-width:120px;padding:.4rem .6rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.82rem;font-family:inherit">
@@ -3271,17 +3249,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const val=localStorage.getItem('dvn_link_'+platform+'_'+loggedInAccount.username);
       if(val!==null) return val;
     }catch(e){}
-    try{
-      const old=JSON.parse(localStorage.getItem('dvn_account_links_'+loggedInAccount.username));
-      if(old) return old[platform]||'';
-    }catch(e){}
     return '';
   }
   function saveDiscordLink(){
     if(!loggedInAccount) return;
     const val=document.getElementById('linkDiscord').value.trim();
     try{localStorage.setItem('dvn_link_discord_'+loggedInAccount.username,val)}catch(e){}
-    try{localStorage.removeItem('dvn_account_links_'+loggedInAccount.username)}catch(e){}
     if(val) showNotification('💬 Discord: '+val+' gespeichert.','success');
     renderLinkedAccounts();
   }
@@ -3289,57 +3262,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!loggedInAccount||!confirm(platform+' Verknüpfung wirklich trennen?')) return;
     try{localStorage.removeItem('dvn_link_'+platform+'_'+loggedInAccount.username)}catch(e){}
     renderLinkedAccounts();
-  }
-  function robloxVerifyStart(){
-    if(!loggedInAccount) return;
-    const code='DVN-'+Math.random().toString(36).slice(2,7).toUpperCase();
-    sessionStorage.setItem('dvn_verify_roblox_code_'+loggedInAccount.username,code);
-    sessionStorage.setItem('dvn_verify_roblox_user_'+loggedInAccount.username,'');
-    renderLinkedAccounts();
-  }
-  function cancelRobloxVerify(){
-    if(!loggedInAccount) return;
-    sessionStorage.removeItem('dvn_verify_roblox_code_'+loggedInAccount.username);
-    sessionStorage.removeItem('dvn_verify_roblox_user_'+loggedInAccount.username);
-    renderLinkedAccounts();
-  }
-  function robloxVerifyCheck(){
-    if(!loggedInAccount) return;
-    const username=document.getElementById('verifyRobloxUser').value.trim();
-    if(!username){ showNotification('Bitte Roblox-Benutzernamen eingeben.','error'); return; }
-    const code=sessionStorage.getItem('dvn_verify_roblox_code_'+loggedInAccount.username);
-    if(!code){ showNotification('Kein Verifikationscode gefunden. Bitte starte neu.','error'); return; }
-    fetch('https://users.roblox.com/v1/usernames/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usernames:[username],excludeBannedUsers:true})})
-      .then(r=>r.json()).then(d=>{
-        if(!d.data||!d.data[0]){ showNotification('❌ Roblox-Benutzer "'+username+'" nicht gefunden.','error'); return; }
-        const userId=d.data[0].id;
-        // Versuche Bio via API, Fallback auf Profilseite
-        fetch('https://users.roblox.com/v1/users/'+userId)
-          .then(r=>r.json()).then(p=>{
-            const found=(p.description||'').toUpperCase().includes(code);
-            if(found) return verifyDone(username);
-            // Fallback: Profilseite als HTML abrufen
-            return fetch('https://www.roblox.com/users/'+userId+'/profile').then(r=>r.text()).then(html=>{
-              if(html.toUpperCase().includes(code)) return verifyDone(username);
-              showNotification('❌ Code nicht in der Bio gefunden. Schreibe "'+code+'" in deine Roblox-Bio (Einstellungen → Profil → Beschreibung) und versuche es erneut.','error');
-            });
-          }).catch(()=>{
-            // Fallback bei CORS/Netzwerkfehler: Profilseite direkt
-            fetch('https://www.roblox.com/users/'+userId+'/profile').then(r=>r.text()).then(html=>{
-              if(html.toUpperCase().includes(code)) verifyDone(username);
-              else showNotification('❌ Code nicht in der Bio gefunden. Schreibe "'+code+'" in deine Roblox-Bio (Einstellungen → Profil → Beschreibung) und versuche es erneut.','error');
-            }).catch(()=>showNotification('❌ Fehler beim Lesen des Roblox-Profils. Bitte versuche es später erneut.','error'));
-          });
-      }).catch(()=>showNotification('❌ Fehler bei der Roblox-API.','error'));
-  }
-  function verifyDone(username){
-    try{localStorage.setItem('dvn_link_roblox_'+loggedInAccount.username,username)}catch(e){}
-    try{localStorage.removeItem('dvn_account_links_'+loggedInAccount.username)}catch(e){}
-    sessionStorage.removeItem('dvn_verify_roblox_code_'+loggedInAccount.username);
-    sessionStorage.removeItem('dvn_verify_roblox_user_'+loggedInAccount.username);
-    showNotification('✅ Roblox-Konto "'+username+'" erfolgreich verifiziert!','success');
-    renderLinkedAccounts();
-    if(typeof staffListRender==='function') staffListRender();
   }
 
   // ─── Dark Mode ───
@@ -3533,14 +3455,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
 
   // ─── Account Settings ───
-  function getAccountLinks(username){
-    try{const d=localStorage.getItem('dvn_account_links_'+username);return d?JSON.parse(d):{discord:'',roblox:''}}catch(e){return {discord:'',roblox:''}}
-  }
-  function saveAccountLinks(username,links){
-    try{localStorage.setItem('dvn_account_links_'+username,JSON.stringify(links))}catch(e){}
-    syncBroadcast('config');
-  }
-  function openAccountSettings(){
     if(!loggedInAccount) return;
     document.getElementById('accModalUser').textContent=loggedInAccount.username;
     document.getElementById('accModalRang').textContent=loggedInAccount.rang;
