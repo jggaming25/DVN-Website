@@ -3455,6 +3455,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
 
   // ─── Account Settings ───
+  function openAccountSettings(){
     if(!loggedInAccount) return;
     document.getElementById('accModalUser').textContent=loggedInAccount.username;
     document.getElementById('accModalRang').textContent=loggedInAccount.rang;
