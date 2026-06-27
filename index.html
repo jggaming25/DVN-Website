@@ -2432,8 +2432,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const overrides=JSON.parse(localStorage.getItem('dvn_perm_overrides'));
       if(overrides && overrides[username] && overrides[username][key]!==undefined) return overrides[username][key];
     }catch(e){}
-    const found=getAllAccounts().find(a=>a.username===username);
-    return found?!!found[key]:false;
+    return false;
   }
   function setAccountOverride(username,key,val){
     let overrides={};
