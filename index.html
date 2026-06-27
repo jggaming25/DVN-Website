@@ -399,7 +399,7 @@
   <div class="modal" style="max-width:450px">
     <h2>👤 Account-Einstellungen</h2>
     <p style="margin-bottom:.75rem">Benutzer: <strong id="accModalUser"></strong> · Rang: <strong id="accModalRang"></strong></p>
-    <div id="accPermSettings" style="margin-bottom:.75rem"></div>
+    <div id="accLinkedAccounts" style="margin-bottom:.75rem"></div>
     <div class="sub-title">Benachrichtigungen</div>
     <div id="accNotifySettings"></div>
     <div class="btn-row" style="margin-top:1rem">
@@ -706,8 +706,8 @@
         <select id="spShiftSelect" style="padding:.5rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit;flex:1;min-width:180px">
           <option value="">— Schicht auswählen —</option>
         </select>
-        <button id="spNewBtn" onclick="spNew()" style="display:none;padding:.5rem 1.2rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">➕ Neuen Plan erstellen</button>
-        <button id="spSaveBtn" onclick="spSave()" style="display:none;padding:.5rem 1.2rem;background:#065f46;color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">💾 Speichern</button>
+        <button id="spNewBtn" onclick="spNew()" style="padding:.5rem 1.2rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">➕ Neuen Plan erstellen</button>
+        <button id="spSaveBtn" onclick="spSave()" style="padding:.5rem 1.2rem;background:#065f46;color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">💾 Speichern</button>
       </div>
       <div id="spPlansList" style="margin-bottom:1rem"></div>
       <div id="spEditor" style="display:none">
@@ -1232,9 +1232,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       btn.classList.add('active');
       document.getElementById(btn.dataset.page).classList.add('active');
       if (btn.dataset.page === 'admin') {
-        const canBew = getBewerbungenOverride();
         const bewBtn=document.getElementById('bewerbungenTabBtn');
-        if(bewBtn) bewBtn.style.display=canBew?'':'none';
+        if(bewBtn) bewBtn.style.display='';
         const storedTab=sessionStorage.getItem('dvn_admin_tab');
         if(storedTab){
           sessionStorage.removeItem('dvn_admin_tab');
@@ -1350,16 +1349,16 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const d2=document.getElementById('userNameDisplay2');
       if(d2) d2.textContent=loggedInUser;
       const logTabBtn=document.getElementById('logTabBtn');
-      if(logTabBtn) logTabBtn.style.display=loggedInAccount&&getAccountOverride(loggedInAccount.username,'logs')?'':'none';
+      if(logTabBtn) logTabBtn.style.display='';
       if(internBtn) internBtn.style.display='flex';
       const spAdminTab=document.getElementById('spAdminTabBtn');
-      if(spAdminTab) spAdminTab.style.display=getShiftplanOverride()?'':'none';
+      if(spAdminTab) spAdminTab.style.display='';
       const accountsTab=document.getElementById('accountsTabBtn');
-      if(accountsTab) accountsTab.style.display=getAccountsOverride()?'':'none';
+      if(accountsTab) accountsTab.style.display='';
       const staffListTab=document.getElementById('staffListTabBtn');
-      if(staffListTab) staffListTab.style.display=getAccountsOverride()?'':'none';
+      if(staffListTab) staffListTab.style.display='';
       const strafenAdminTab=document.getElementById('strafenAdminTabBtn');
-      if(strafenAdminTab) strafenAdminTab.style.display=getStrafenOverride()?'':'none';
+      if(strafenAdminTab) strafenAdminTab.style.display='';
       const bell=document.getElementById('notifBell'); if(bell) bell.style.display='flex';
       const rangEl=document.getElementById('accountRang');
       if(rangEl) rangEl.textContent=loggedInAccount?loggedInAccount.rang:'';
@@ -1489,7 +1488,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function renderAdminPanels() {
     if(!loggedIn) return;
-    const canBew = getBewerbungenOverride();
     // Stellen Grid im Admin
     const sg=document.getElementById('adminStellenGrid');
     if(sg) sg.innerHTML=STELLEN.map((s,i)=>`
@@ -1634,8 +1632,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const d=document.createElement('div'); d.className='sc';
       d.innerHTML=`<div class="stb"><div class="l1">${s.time}</div><div class="l2">${s.date||''}</div>${s.frist?`<div class="l2" style="font-size:.7rem;color:var(--r500)">Frist: ${new Date(s.frist).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>`:''}</div>
         <div class="si"><h3>${s.title}${s.completed?' <span style="font-size:.7rem;color:var(--g400);font-weight:400">(abgeschlossen)</span>':''}</h3>${s.desc?'<p>'+s.desc+'</p>':''}${s.image?'<br><img src="'+s.image+'" class="shift-img" alt="">':''}</div>
-        <div class="sa">${getShiftplanOverride()?`<button onclick="toggleShiftComplete(${i})" style="background:${s.completed?'#bbf7d0':'var(--g100)'};color:${s.completed?'#166534':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;padding:.3rem .6rem;font-family:inherit;width:auto;height:auto">${s.completed?'✅ Erledigt':'⬜ Offen'}</button>
-          <button onclick="openStats(${i})" title="Statistik" style="padding:.3rem .6rem;background:var(--g100);color:var(--g700);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;width:auto;height:auto">📊</button>`:''}
+         <div class="sa"><button onclick="toggleShiftComplete(${i})" style="background:${s.completed?'#bbf7d0':'var(--g100)'};color:${s.completed?'#166534':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;padding:.3rem .6rem;font-family:inherit;width:auto;height:auto">${s.completed?'✅ Erledigt':'⬜ Offen'}</button>
+          <button onclick="openStats(${i})" title="Statistik" style="padding:.3rem .6rem;background:var(--g100);color:var(--g700);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;width:auto;height:auto">📊</button>
           <button onclick="editShift(${i})" title="Bearbeiten">✏️</button><button onclick="cancelShift(${i})" title="Absagen">🚫</button></div>`;
       list.appendChild(d);
     });
@@ -1878,8 +1876,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const currentVal=sel.value;
     sel.innerHTML='<option value="">— Schicht auswählen —</option>'+shifts.map((s,i)=>`<option value="${i}">${s.title} (${s.time}${s.date?' '+s.date:''})</option>`).join('');
     if(currentVal) sel.value=currentVal;
-    const canEdit=getShiftplanOverride();
-    document.getElementById('spNewBtn').style.display=canEdit?'':'none';
+    document.getElementById('spNewBtn').style.display='';
     document.getElementById('spSaveBtn').style.display='none';
     document.getElementById('spEditor').style.display='none';
     spRenderPlans();
@@ -1889,13 +1886,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const list=document.getElementById('spPlansList');
     if(!list) return;
     if(shiftPlans.length===0){ list.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Noch keine Shift-Pläne erstellt.</div>'; return; }
-    const canEdit=getShiftplanOverride();
     list.innerHTML=shiftPlans.map((p,i)=>`
       <div class="sp-plan-card">
         <div><div class="sp-pc-title">${p.shiftTitle||'Unbenannt'}</div><div class="sp-pc-date">${p.date||''} · ${Object.values(p.entries||{}).reduce((s,e)=>s+e.length,0)} Einträge</div></div>
         <div style="display:flex;gap:.35rem">
           <button onclick="spEdit(${i})">✏️ Bearbeiten</button>
-          ${canEdit?`<button onclick="spDelete(${i})" style="background:#fef2f2;color:var(--r600);border-color:var(--r200)">🗑️</button>`:''}
+          <button onclick="spDelete(${i})" style="background:#fef2f2;color:var(--r600);border-color:var(--r200)">🗑️</button>
         </div>
       </div>`).join('');
   }
@@ -2007,7 +2003,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!container) return;
     const shiftRange=spGetShiftTimeRange();
     const tfDuties=DUTIES.filter(d=>d.type==='tf' && spDutyInShiftRange(d,shiftRange));
-    const canEdit=getShiftplanOverride();
     container.innerHTML=`
       <div style="font-weight:600;margin-bottom:.5rem;color:var(--r700)">🚆 TF-Dutys ${shiftRange?'('+shiftRange.start+'–'+shiftRange.end+')':''}</div>
       ${tfDuties.length===0?'<div style="font-size:.82rem;color:var(--g400);padding:.5rem 0">Keine passenden Dutys für diese Schichtzeit.</div>':
@@ -2020,7 +2015,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
             <div style="color:var(--g500);font-size:.78rem">Dauer: ${d.dur} · Fahrzeuge: ${d.veh}</div>
             <div style="font-size:.78rem">Start: ${d.start}</div>
             <div style="font-size:.78rem">Ende: ${d.end}</div>
-            ${canEdit?`<button onclick="spAssignDuty('${d.duty}')" style="position:absolute;top:.4rem;right:.4rem;padding:.15rem .5rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">+</button>`:''}
+            <button onclick="spAssignDuty('${d.duty}')" style="position:absolute;top:.4rem;right:.4rem;padding:.15rem .5rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">+</button>
           </div>`;
         }).join('')}
       </div>`}`;
@@ -2043,7 +2038,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function spRenderEditor(plan){
     document.getElementById('spEditor').style.display='block';
     document.getElementById('spEditorTitle').textContent=plan.shiftTitle+(plan.date?' ('+plan.date+')':'');
-    document.getElementById('spSaveBtn').style.display=getShiftplanOverride()?'':'none';
+    document.getElementById('spSaveBtn').style.display='';
     if(!plan.entries) plan.entries={};
     ['AK','BHBF','NS','STB'].forEach(stwl=>{
       const container=document.getElementById('sp_'+stwl);
@@ -2145,14 +2140,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }
   }
   // TF-Duty-Vorschlag im Admin-Editor
-  if(getShiftplanOverride()){
-    const pendingKey='dvn_pending_tf_suggestion_'+plan.id;
-    const hasPending=localStorage.getItem(pendingKey);
-    const suggHtml=hasPending?`<div style="padding:.6rem .8rem;background:#fefce8;border:1px solid #eab308;border-radius:var(--rs);font-size:.82rem;color:var(--g700)">💡 Es liegt ein TF-Duty-Vorschlag vor – siehe Karte rechts unten.</div>`
-      :`<button onclick="generateTFSuggestion('${plan.id}')" style="margin-top:1rem;padding:.5rem 1rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:white;border:none;border-radius:var(--rs);font-weight:600;font-size:.82rem;cursor:pointer;font-family:inherit">💡 TF-Duty-Vorschlag generieren</button>`;
-    const suggContainer=document.getElementById('sp_TFSuggestion');
-    if(suggContainer) suggContainer.innerHTML=suggHtml;
-  }
+  const pendingKey='dvn_pending_tf_suggestion_'+plan.id;
+  const hasPending=localStorage.getItem(pendingKey);
+  const suggHtml=hasPending?`<div style="padding:.6rem .8rem;background:#fefce8;border:1px solid #eab308;border-radius:var(--rs);font-size:.82rem;color:var(--g700)">💡 Es liegt ein TF-Duty-Vorschlag vor – siehe Karte rechts unten.</div>`
+    :`<button onclick="generateTFSuggestion('${plan.id}')" style="margin-top:1rem;padding:.5rem 1rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:white;border:none;border-radius:var(--rs);font-weight:600;font-size:.82rem;cursor:pointer;font-family:inherit">💡 TF-Duty-Vorschlag generieren</button>`;
+  const suggContainer=document.getElementById('sp_TFSuggestion');
+  if(suggContainer) suggContainer.innerHTML=suggHtml;
   // Add datalist with all account names for autocomplete
   const allNames=[...new Set(getAllAccounts().map(a=>a.username))];
   const editor=document.getElementById('spEditor');
@@ -2269,28 +2262,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function getAllAccounts(){
     return [...ACCOUNTS,...getCustomAccounts()].filter(a=>!getDeletedAccounts().includes(a.username));
   }
-  function getAccountOverride(username,key){
-    try{
-      const v=localStorage.getItem('dvn_'+key+'_'+username);
-      if(v!==null) return JSON.parse(v);
-    }catch(e){}
-    const found=getAllAccounts().find(a=>a.username===username);
-    return found?!!found[key]:false;
-  }
-  function accManageToggle(username,key){
-    const list=getCustomAccounts();
-    const acct=list.find(a=>a.username===username);
-    if(acct){
-      acct[key]=!acct[key];
-      saveCustomAccounts(list);
-    } else {
-      const current=getAccountOverride(username,key);
-      try{localStorage.setItem('dvn_'+key+'_'+username,JSON.stringify(!current))}catch(e){}
-      syncBroadcast('config');
-    }
-    accManageRender();
-    updateUI();
-  }
   function accManageDelete(username){
     if(!confirm('Account "'+username+'" wirklich löschen?')) return;
     const deleted=getDeletedAccounts();
@@ -2303,8 +2274,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function accManageRender(){
     const el=document.getElementById('accManageList');
     if(!el) return;
-    const canManage=getAccountsOverride();
-    if(!canManage){ el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine Berechtigung.</div>'; return; }
     const allAccounts=getAllAccounts();
     el.innerHTML=`<div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">${allAccounts.length} Accounts</div>
       ${allAccounts.map(a=>{
@@ -2312,12 +2281,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem">
           <div style="font-weight:600;font-size:.85rem;min-width:120px">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(${a.rang})</span></div>
           <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">
-            ${['logs','bewerbungen','shiftplan','strafen','accounts'].map(k=>{
-              const val=getAccountOverride(a.username,k);
-              return `<label style="display:flex;align-items:center;gap:.25rem;font-size:.72rem;cursor:${isSelf?'not-allowed':'pointer'};padding:.15rem .35rem;background:${val?'#bbf7d0':'var(--g50)'};color:${val?'#166534':'inherit'};border-radius:4px;${isSelf?'opacity:.5':''}">
-                <input type="checkbox" ${val?'checked':''} ${isSelf?'disabled':''} onchange="accManageToggle('${a.username}','${k}')" style="width:14px;height:14px;accent-color:var(--r500)"> ${k}
-              </label>`;
-            }).join('')}
             ${!isSelf?`<button onclick="accManageDelete('${a.username}')" style="padding:.2rem .5rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">✕</button>`:''}
           </div>
         </div>`;
@@ -2384,8 +2347,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function staffListRender(){
     const el=document.getElementById('staffListContainer');
     if(!el) return;
-    const canManage=getAccountsOverride();
-    if(!canManage){ el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine Berechtigung.</div>'; return; }
     const allAccounts=getAllAccounts();
     el.innerHTML=allAccounts.map(a=>{
       const cfg=getAccountConfig(a.username);
@@ -3051,33 +3012,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       {key:'public_news',label:'🌍 Öffentliche News'},
       {key:'app_changes',label:'📝 Bewerbungs-Änderungen'},
     ];
-    const canBewOverride = getBewerbungenOverride();
-    const canSpOverride = getShiftplanOverride();
-    const canStrafenOverride = getStrafenOverride();
-    const canAccountsOverride = getAccountsOverride();
-    const accPerm=document.getElementById('accPermSettings');
-    if(accPerm){
-      accPerm.innerHTML=`
-      <div class="sub-title">Berechtigungen</div>
-      <div style="margin-bottom:.5rem">
-        <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
-          <input type="checkbox" ${canBewOverride?'checked':''} onchange="toggleBewerbungenAccess()" style="width:17px;height:17px;accent-color:var(--r500)">
-          📋 Bewerbungen verwalten (Admin-Tab)
-        </label>
-        <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
-          <input type="checkbox" ${canSpOverride?'checked':''} onchange="toggleShiftplanAccess()" style="width:17px;height:17px;accent-color:var(--r500)">
-          📋 Shift Plan schreiben (Intern-Tab)
-        </label>
-        <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
-          <input type="checkbox" ${canStrafenOverride?'checked':''} onchange="toggleStrafenAccess()" style="width:17px;height:17px;accent-color:var(--r500)">
-          ⚠️ Strafen verwalten (Intern-Tab)
-        </label>
-        <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
-          <input type="checkbox" ${canAccountsOverride?'checked':''} onchange="toggleAccountsAccess()" style="width:17px;height:17px;accent-color:var(--r500)">
-          👥 Account-Verwaltung (Admin-Tab)
-        </label>
-      </div>`;
-    }
+    renderLinkedAccounts();
     c.innerHTML=`
       <div style="font-size:.78rem;font-weight:600;color:var(--g500);margin-bottom:.35rem">🔔 Benachrichtigungen</div>
       ${items.map(i=>`
@@ -3092,55 +3027,37 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       </label>`;
   }
 
-  function getBewerbungenOverride(){
-    if(!loggedInAccount) return false;
-    return getAccountOverride(loggedInAccount.username, 'bewerbungen');
+  function renderLinkedAccounts(){
+    const c=document.getElementById('accLinkedAccounts');
+    if(!c) return;
+    if(!loggedInAccount){ c.innerHTML=''; return; }
+    const roblox=getLinkedAccount('roblox');
+    const discord=getLinkedAccount('discord');
+    c.innerHTML=`
+      <div class="sub-title">🔗 Verknüpfte Konten</div>
+      <div style="margin-bottom:.5rem;font-size:.85rem">
+        <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
+          <span style="min-width:80px">🎮 Roblox</span>
+          <input type="text" id="linkRoblox" value="${roblox}" placeholder="Benutzername" style="flex:1;padding:.4rem .6rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.82rem;font-family:inherit">
+        </label>
+        <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
+          <span style="min-width:80px">💬 Discord</span>
+          <input type="text" id="linkDiscord" value="${discord}" placeholder="Name#0000" style="flex:1;padding:.4rem .6rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.82rem;font-family:inherit">
+        </label>
+        <button onclick="saveLinkedAccounts()" style="margin-top:.35rem;padding:.35rem 1rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.8rem;font-family:inherit">💾 Speichern</button>
+      </div>`;
   }
-  function toggleBewerbungenAccess(){
+  function getLinkedAccount(platform){
+    if(!loggedInAccount) return '';
+    try{ return localStorage.getItem('dvn_link_'+platform+'_'+loggedInAccount.username)||''; }catch(e){ return ''; }
+  }
+  function saveLinkedAccounts(){
     if(!loggedInAccount) return;
-    const current = getBewerbungenOverride();
-    try{localStorage.setItem('dvn_bewerbungen_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
-    syncBroadcast('config');
-    renderNotifications();
-    updateUI();
-  }
-
-  function getShiftplanOverride(){
-    if(!loggedInAccount) return false;
-    return getAccountOverride(loggedInAccount.username, 'shiftplan');
-  }
-  function toggleShiftplanAccess(){
-    if(!loggedInAccount) return;
-    const current = getShiftplanOverride();
-    try{localStorage.setItem('dvn_shiftplan_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
-    syncBroadcast('config');
-    renderNotifications();
-    updateUI();
-  }
-
-  function getStrafenOverride(){
-    if(!loggedInAccount) return false;
-    return getAccountOverride(loggedInAccount.username, 'strafen');
-  }
-  function toggleStrafenAccess(){
-    if(!loggedInAccount) return;
-    const current = getStrafenOverride();
-    try{localStorage.setItem('dvn_strafen_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
-    syncBroadcast('config');
-    renderNotifications();
-  }
-
-  function getAccountsOverride(){
-    if(!loggedInAccount) return false;
-    return getAccountOverride(loggedInAccount.username, 'accounts');
-  }
-  function toggleAccountsAccess(){
-    if(!loggedInAccount) return;
-    const current = getAccountsOverride();
-    try{localStorage.setItem('dvn_accounts_'+loggedInAccount.username,JSON.stringify(!current))}catch(e){}
-    syncBroadcast('config');
-    renderNotifications();
-    updateUI();
+    const roblox=document.getElementById('linkRoblox').value.trim();
+    const discord=document.getElementById('linkDiscord').value.trim();
+    try{localStorage.setItem('dvn_link_roblox_'+loggedInAccount.username,roblox)}catch(e){}
+    try{localStorage.setItem('dvn_link_discord_'+loggedInAccount.username,discord)}catch(e){}
+    showNotification('🔗 Verknüpfte Konten gespeichert.','success');
   }
 
   // ─── Dark Mode ───
@@ -3247,9 +3164,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!el&&!internEl) return;
     const inAdmin=!!document.querySelector('#apanel-strafenadmin.active');
     if(inAdmin){
-      const canEdit=getStrafenOverride();
       const entryForm=document.getElementById('strafenEntry');
-      if(entryForm) entryForm.style.display=canEdit?'block':'none';
+      if(entryForm) entryForm.style.display='block';
       const nameSelect=document.getElementById('strafenDiscordName');
       if(nameSelect && nameSelect.tagName==='SELECT'){
         const currentVal=nameSelect.value;
@@ -3260,8 +3176,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!loggedInAccount){ if(el) el.innerHTML=''; if(internEl) internEl.innerHTML=''; return; }
     const myName=loggedInAccount.username;
     if(inAdmin){
-      const canEdit=getStrafenOverride();
-      const filtered=canEdit?strafenList:strafenList.filter(s=>s.discordName.toLowerCase()===myName.toLowerCase());
+      const filtered=strafenList;
       if(filtered.length===0){
         el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--g400);font-size:.85rem">Keine Einträge.</div>';
         return;
@@ -3291,8 +3206,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
               <span style="font-size:.78rem;padding:.25rem .6rem;border-radius:var(--rs);background:${isCompleted?'var(--g100)':'#bbf7d0'};color:${isCompleted?'var(--g500)':'#166534'}">
                 ${isCompleted?'✅ Erledigt':'⏳ Rest: '+remaining.toFixed(1)+'h'}
               </span>
-              ${!isCompleted&&canEdit?`<div style="display:flex;align-items:center;gap:.25rem"><span style="font-size:.72rem;color:var(--g400)">Abgebaut:</span><input type="number" value="${s.abgebaut||0}" min="0" max="${s.totalHours}" step="0.5" onchange="strafenUpdateAbgebaut('${s.id}',this.value)" style="width:60px;padding:.25rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.78rem;font-family:inherit"></div>`:''}
-              ${canEdit?`<button onclick="strafenDelete('${s.id}')" style="padding:.3rem .6rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem">✕</button>`:''}
+              ${`<div style="display:flex;align-items:center;gap:.25rem"><span style="font-size:.72rem;color:var(--g400)">Abgebaut:</span><input type="number" value="${s.abgebaut||0}" min="0" max="${s.totalHours}" step="0.5" onchange="strafenUpdateAbgebaut('${s.id}',this.value)" style="width:60px;padding:.25rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.78rem;font-family:inherit"></div>`}
+              <button onclick="strafenDelete('${s.id}')" style="padding:.3rem .6rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem">✕</button>
             </div>
           </div>`;
         }).join('')}`;
