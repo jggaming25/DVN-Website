@@ -3049,7 +3049,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
   function getLinkedAccount(platform){
     if(!loggedInAccount) return '';
-    try{ return localStorage.getItem('dvn_link_'+platform+'_'+loggedInAccount.username)||''; }catch(e){ return ''; }
+    try{
+      const val=localStorage.getItem('dvn_link_'+platform+'_'+loggedInAccount.username);
+      if(val!==null) return val;
+    }catch(e){}
+    try{
+      const old=JSON.parse(localStorage.getItem('dvn_account_links_'+loggedInAccount.username));
+      if(old) return old[platform]||'';
+    }catch(e){}
+    return '';
   }
   function saveLinkedAccounts(){
     if(!loggedInAccount) return;
@@ -3057,6 +3065,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const discord=document.getElementById('linkDiscord').value.trim();
     try{localStorage.setItem('dvn_link_roblox_'+loggedInAccount.username,roblox)}catch(e){}
     try{localStorage.setItem('dvn_link_discord_'+loggedInAccount.username,discord)}catch(e){}
+    try{localStorage.removeItem('dvn_account_links_'+loggedInAccount.username)}catch(e){}
     showNotification('🔗 Verknüpfte Konten gespeichert.','success');
   }
 
@@ -3262,14 +3271,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!loggedInAccount) return;
     document.getElementById('accModalUser').textContent=loggedInAccount.username;
     document.getElementById('accModalRang').textContent=loggedInAccount.rang;
-    const links=getAccountLinks(loggedInAccount.username);
-    document.getElementById('accPermSettings').innerHTML=`
-      <div class="sub-title">Verknüpfungen</div>
-      <label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.25rem;color:var(--g700)">Discord (z.B. user#1234)</label>
-      <input id="accLinkDiscord" value="${links.discord||''}" placeholder="Discord" style="width:100%;padding:.5rem 1rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit;margin-bottom:.5rem">
-      <label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.25rem;color:var(--g700)">Roblox</label>
-      <input id="accLinkRoblox" value="${links.roblox||''}" placeholder="Roblox-Name" style="width:100%;padding:.5rem 1rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit;margin-bottom:.5rem">
-      <button onclick="saveAccountLinks('${loggedInAccount.username}',{discord:document.getElementById('accLinkDiscord').value,roblox:document.getElementById('accLinkRoblox').value});showNotification('✅ Verknüpfungen gespeichert.','success')" style="padding:.4rem 1rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.82rem;cursor:pointer;font-family:inherit">💾 Speichern</button>`;
+    renderLinkedAccounts();
     renderNotifications();
     document.getElementById('accountModal').classList.add('open');
   }
