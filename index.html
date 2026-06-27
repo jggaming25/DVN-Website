@@ -1295,7 +1295,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         } else {
           document.querySelectorAll('[data-apanel]').forEach(b => b.classList.remove('active'));
           document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
-          const firstPanel = canBew ? document.querySelector('[data-apanel]') : document.querySelector('[data-apanel]:not([data-apanel="bewerbungen"])');
+          const firstPanel = document.querySelector('[data-apanel]');
           if (firstPanel) { firstPanel.classList.add('active'); document.getElementById('apanel-'+firstPanel.dataset.apanel)?.classList.add('active'); }
           renderAdminPanels();
           renderAdminShifts();
@@ -1551,7 +1551,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         </div>
         <div class="ab-data">${dataHtml}</div>
         ${a.adminNote?'<div style="font-size:.8rem;color:var(--g500);margin-top:.3rem">📝 '+(a.adminNoteBy?a.adminNoteBy+': ':'')+a.adminNote+'</div>':''}
-        ${a.status==='pending'&&canBew?`
+        ${a.status==='pending'?`
         <div class="ab-actions">
           <button class="accept" onclick="appAction(${realIdx},'accepted')">✓ Annehmen</button>
           <button class="reject" onclick="appAction(${realIdx},'rejected')">✗ Ablehnen</button>
