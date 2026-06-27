@@ -3309,24 +3309,37 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!username){ showNotification('Bitte Roblox-Benutzernamen eingeben.','error'); return; }
     const code=sessionStorage.getItem('dvn_verify_roblox_code_'+loggedInAccount.username);
     if(!code){ showNotification('Kein Verifikationscode gefunden. Bitte starte neu.','error'); return; }
-    fetch('https://api.roblox.com/users/get-by-username?username='+encodeURIComponent(username))
+    fetch('https://users.roblox.com/v1/usernames/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usernames:[username],excludeBannedUsers:true})})
       .then(r=>r.json()).then(d=>{
-        if(!d||d.error||!d.Id){ showNotification('❌ Roblox-Benutzer "'+username+'" nicht gefunden.','error'); return; }
-        const userId=d.Id;
-        fetch('https://users.roblox.com/v1/users/'+userId).then(r=>r.json()).then(p=>{
-          if((p.description||'').toUpperCase().includes(code)){
-            try{localStorage.setItem('dvn_link_roblox_'+loggedInAccount.username,username)}catch(e){}
-            try{localStorage.removeItem('dvn_account_links_'+loggedInAccount.username)}catch(e){}
-            sessionStorage.removeItem('dvn_verify_roblox_code_'+loggedInAccount.username);
-            sessionStorage.removeItem('dvn_verify_roblox_user_'+loggedInAccount.username);
-            showNotification('✅ Roblox-Konto "'+username+'" erfolgreich verifiziert!','success');
-            renderLinkedAccounts();
-            if(typeof staffListRender==='function') staffListRender();
-          } else {
-            showNotification('❌ Code nicht in der Bio gefunden. Schreibe "'+code+'" in deine Roblox-Bio (Einstellungen → Profil → Beschreibung) und versuche es erneut.','error');
-          }
-        }).catch(()=>showNotification('❌ Fehler beim Abrufen des Roblox-Profils.','error'));
+        if(!d.data||!d.data[0]){ showNotification('❌ Roblox-Benutzer "'+username+'" nicht gefunden.','error'); return; }
+        const userId=d.data[0].id;
+        // Versuche Bio via API, Fallback auf Profilseite
+        fetch('https://users.roblox.com/v1/users/'+userId)
+          .then(r=>r.json()).then(p=>{
+            const found=(p.description||'').toUpperCase().includes(code);
+            if(found) return verifyDone(username);
+            // Fallback: Profilseite als HTML abrufen
+            return fetch('https://www.roblox.com/users/'+userId+'/profile').then(r=>r.text()).then(html=>{
+              if(html.toUpperCase().includes(code)) return verifyDone(username);
+              showNotification('❌ Code nicht in der Bio gefunden. Schreibe "'+code+'" in deine Roblox-Bio (Einstellungen → Profil → Beschreibung) und versuche es erneut.','error');
+            });
+          }).catch(()=>{
+            // Fallback bei CORS/Netzwerkfehler: Profilseite direkt
+            fetch('https://www.roblox.com/users/'+userId+'/profile').then(r=>r.text()).then(html=>{
+              if(html.toUpperCase().includes(code)) verifyDone(username);
+              else showNotification('❌ Code nicht in der Bio gefunden. Schreibe "'+code+'" in deine Roblox-Bio (Einstellungen → Profil → Beschreibung) und versuche es erneut.','error');
+            }).catch(()=>showNotification('❌ Fehler beim Lesen des Roblox-Profils. Bitte versuche es später erneut.','error'));
+          });
       }).catch(()=>showNotification('❌ Fehler bei der Roblox-API.','error'));
+  }
+  function verifyDone(username){
+    try{localStorage.setItem('dvn_link_roblox_'+loggedInAccount.username,username)}catch(e){}
+    try{localStorage.removeItem('dvn_account_links_'+loggedInAccount.username)}catch(e){}
+    sessionStorage.removeItem('dvn_verify_roblox_code_'+loggedInAccount.username);
+    sessionStorage.removeItem('dvn_verify_roblox_user_'+loggedInAccount.username);
+    showNotification('✅ Roblox-Konto "'+username+'" erfolgreich verifiziert!','success');
+    renderLinkedAccounts();
+    if(typeof staffListRender==='function') staffListRender();
   }
 
   // ─── Dark Mode ───
