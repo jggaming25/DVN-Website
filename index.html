@@ -3309,10 +3309,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!username){ showNotification('Bitte Roblox-Benutzernamen eingeben.','error'); return; }
     const code=sessionStorage.getItem('dvn_verify_roblox_code_'+loggedInAccount.username);
     if(!code){ showNotification('Kein Verifikationscode gefunden. Bitte starte neu.','error'); return; }
-    fetch('https://users.roblox.com/v1/usernames/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usernames:[username],excludeBannedUsers:true})})
+    fetch('https://api.roblox.com/users/get-by-username?username='+encodeURIComponent(username))
       .then(r=>r.json()).then(d=>{
-        if(!d.data||!d.data[0]){ showNotification('❌ Roblox-Benutzer "'+username+'" nicht gefunden.','error'); return; }
-        const userId=d.data[0].id;
+        if(!d||d.error||!d.Id){ showNotification('❌ Roblox-Benutzer "'+username+'" nicht gefunden.','error'); return; }
+        const userId=d.Id;
         fetch('https://users.roblox.com/v1/users/'+userId).then(r=>r.json()).then(p=>{
           if((p.description||'').toUpperCase().includes(code)){
             try{localStorage.setItem('dvn_link_roblox_'+loggedInAccount.username,username)}catch(e){}
