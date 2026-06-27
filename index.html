@@ -10,8 +10,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-  :root{--r50:#fff5f7;--r100:#ffebee;--r200:#ffcdd2;--r300:#e57373;--r400:#ef5350;--r500:#c62828;--r600:#b71c1c;--r700:#8e0000;--w:#fff;--g50:#f8f9fc;--g100:#f1f3f8;--g200:#e8ecf4;--g300:#d0d5dd;--g400:#98a2b3;--g500:#667085;--g600:#475467;--g700:#344054;--g800:#1d2939;--sm:0 1px 3px rgba(0,0,0,.06);--md:0 4px 16px rgba(0,0,0,.08);--lg:0 12px 40px rgba(0,0,0,.10);--rs:8px;--rm:12px;--rl:16px}
-  .dark{--r50:#2d1a1a;--r100:#4a2424;--r200:#6b3030;--r300:#9e4040;--r400:#d45555;--r500:#e06060;--r600:#e87a7a;--r700:#f09494;--w:#111318;--g50:#16181f;--g100:#1e202a;--g200:#262835;--g300:#353849;--g400:#6b7089;--g500:#9ea2bb;--g600:#c5c8da;--g700:#e2e4ef;--g800:#f1f2f9;--sm:0 1px 3px rgba(0,0,0,.3);--md:0 4px 16px rgba(0,0,0,.35);--lg:0 12px 40px rgba(0,0,0,.4)}
+  :root{--r50:#fff5f7;--r100:#ffebee;--r200:#ffcdd2;--r300:#e57373;--r400:#ef5350;--r500:#c62828;--r600:#b71c1c;--r700:#8e0000;--w:#fff;--g50:#f8f9fc;--g100:#f1f3f8;--g200:#e8ecf4;--g300:#d0d5dd;--g400:#98a2b3;--g500:#667085;--g600:#475467;--g700:#344054;--g800:#1d2939;--sg:#bbf7d0;--st:#166534;--sm:0 1px 3px rgba(0,0,0,.06);--md:0 4px 16px rgba(0,0,0,.08);--lg:0 12px 40px rgba(0,0,0,.10);--rs:8px;--rm:12px;--rl:16px}
+  .dark{--r50:#3a2222;--r100:#4a2424;--r200:#6b3030;--r300:#9e4040;--r400:#d45555;--r500:#e06060;--r600:#e87a7a;--r700:#f09494;--w:#111318;--g50:#16181f;--g100:#1e202a;--g200:#303349;--g300:#404458;--g400:#858aa5;--g500:#9ea2bb;--g600:#c5c8da;--g700:#e2e4ef;--g800:#f1f2f9;--sg:#1a3a2a;--st:#6ee7a0;--sm:0 1px 3px rgba(0,0,0,.3);--md:0 4px 16px rgba(0,0,0,.35);--lg:0 12px 40px rgba(0,0,0,.4)}
   html{scroll-behavior:smooth}
   body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--g50);color:var(--g800);min-height:100vh;display:flex;flex-direction:column}
   .page-wrap{flex:1}
@@ -636,6 +636,7 @@
       <button data-apanel="accounts" id="accountsTabBtn" style="display:none">👥 Accounts</button>
       <button data-apanel="stafflist" id="staffListTabBtn" style="display:none">📋 Staff List</button>
       <button data-apanel="log" id="logTabBtn" style="display:none">📜 Log</button>
+      <button data-apanel="activity" id="activityTabBtn">📋 Activity</button>
     </div>
 
     <!-- Admin: Bewerbungen -->
@@ -805,6 +806,16 @@
       <div class="sub-title">📋 Staff List</div>
       <div style="font-size:.82rem;color:var(--g500);margin-bottom:.75rem">Rollen, Lizenzen und Einmal-Passwörter für alle Mitarbeiter verwalten.</div>
       <div id="staffListContainer"></div>
+    </div>
+
+    <!-- Admin: Activity -->
+    <div class="admin-panel" id="apanel-activity">
+      <div class="admin-nav" id="actSubNav" style="margin-bottom:.75rem">
+        <button class="active" data-actab="shifts">📅 Schichten</button>
+        <button data-actab="stats">📊 Stats</button>
+      </div>
+      <div id="actShiftsView"></div>
+      <div id="actStatsView" style="display:none"></div>
     </div>
   </div>
 </section>
@@ -1113,7 +1124,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function fbSeedLocalData(){
     // Einmalig: Seedt lokale localStorage-Daten nach Firebase, falls Firebase noch leer ist
-    ['dvn_shifts','dvn_applications','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_stellen_open','dvn_logs','dvn_strafen','dvn_signins'].forEach(path=>{
+    ['dvn_shifts','dvn_applications','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_stellen_open','dvn_logs','dvn_strafen','dvn_signins','dvn_attendance','dvn_perm_overrides'].forEach(path=>{
       fbDatabase.ref(path).once('value', snapshot => {
         if(snapshot.val() !== null) return; // Firebase hat bereits Daten
         try{
@@ -1144,13 +1155,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         case 'shiftplans':   data = JSON.parse(localStorage.getItem('dvn_shiftplans')); break;
         case 'strafen':      data = JSON.parse(localStorage.getItem('dvn_strafen')); break;
         case 'signins':      data = JSON.parse(localStorage.getItem('dvn_signins')); break;
+        case 'attendance':    data = JSON.parse(localStorage.getItem('dvn_attendance')); break;
+        case 'perm_overrides': data = JSON.parse(localStorage.getItem('dvn_perm_overrides')); break;
         case 'config':       data = true; break;
         case 'notifhistory': data = true; break;
       }
     } catch(e){}
     syncCh.postMessage({ type, data });
     // Auch an Firebase senden
-    if(data !== null && data !== true && ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins'].includes(type)){
+    if(data !== null && data !== true && ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins','attendance','perm_overrides'].includes(type)){
       fbWrite('dvn_'+type, data);
     }
   }
@@ -1214,6 +1227,21 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       case 'notifhistory':
         if(loggedInAccount) loadNotifHistory();
         break;
+      case 'attendance':
+        attendance = data;
+        if(loggedIn && document.querySelector('#apanel-activity.active')){
+          if(document.getElementById('actShiftsView')?.style.display!=='none') renderActivity();
+          else renderActivityStats();
+        }
+        if(loggedIn && document.querySelector('#apanel-stafflist.active')) staffListRender();
+        break;
+      case 'perm_overrides':
+        try{localStorage.setItem('dvn_perm_overrides',JSON.stringify(data))}catch(e){}
+        if(loggedIn){
+          updateUI();
+          if(document.querySelector('#apanel-accounts.active')) accManageRender();
+        }
+        break;
     }
   }
 
@@ -1262,6 +1290,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           if(storedTab==='strafenadmin') renderStrafen();
           if(storedTab==='accounts') accManageRender();
           if(storedTab==='stafflist') staffListRender();
+          if(storedTab==='activity') renderActivity();
           renderAdminPanels();
         } else {
           document.querySelectorAll('[data-apanel]').forEach(b => b.classList.remove('active'));
@@ -1632,7 +1661,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const d=document.createElement('div'); d.className='sc';
       d.innerHTML=`<div class="stb"><div class="l1">${s.time}</div><div class="l2">${s.date||''}</div>${s.frist?`<div class="l2" style="font-size:.7rem;color:var(--r500)">Frist: ${new Date(s.frist).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>`:''}</div>
         <div class="si"><h3>${s.title}${s.completed?' <span style="font-size:.7rem;color:var(--g400);font-weight:400">(abgeschlossen)</span>':''}</h3>${s.desc?'<p>'+s.desc+'</p>':''}${s.image?'<br><img src="'+s.image+'" class="shift-img" alt="">':''}</div>
-         <div class="sa"><button onclick="toggleShiftComplete(${i})" style="background:${s.completed?'#bbf7d0':'var(--g100)'};color:${s.completed?'#166534':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;padding:.3rem .6rem;font-family:inherit;width:auto;height:auto">${s.completed?'✅ Erledigt':'⬜ Offen'}</button>
+         <div class="sa"><button onclick="toggleShiftComplete(${i})" style="background:${s.completed?'var(--sg)':'var(--g100)'};color:${s.completed?'var(--st)':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;padding:.3rem .6rem;font-family:inherit;width:auto;height:auto">${s.completed?'✅ Erledigt':'⬜ Offen'}</button>
           <button onclick="openStats(${i})" title="Statistik" style="padding:.3rem .6rem;background:var(--g100);color:var(--g700);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit;width:auto;height:auto">📊</button>
           <button onclick="editShift(${i})" title="Bearbeiten">✏️</button><button onclick="cancelShift(${i})" title="Absagen">🚫</button></div>`;
       list.appendChild(d);
@@ -2132,7 +2161,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
               </label>
               ${si.role==='Schrankenwärter'?`
                 <input type="number" step="0.5" value="${si.actualHours||''}" placeholder="Std." onchange="spSigninSet('${si.id}','actualHours',this.value)" style="width:65px;padding:.2rem .35rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.78rem;font-family:inherit">
-                <button onclick="spSigninSet('${si.id}','hoursConfirmed',true)" style="padding:.2rem .5rem;background:${si.hoursConfirmed?'#bbf7d0':'var(--g100)'};color:${si.hoursConfirmed?'#166534':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit;font-weight:600;white-space:nowrap">${si.hoursConfirmed?'✓ Bestätigt':'Bestätigen'}</button>
+                <button onclick="spSigninSet('${si.id}','hoursConfirmed',true)" style="padding:.2rem .5rem;background:${si.hoursConfirmed?'var(--sg)':'var(--g100)'};color:${si.hoursConfirmed?'var(--st)':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit;font-weight:600;white-space:nowrap">${si.hoursConfirmed?'✓ Bestätigt':'Bestätigen'}</button>
               `:''}
             </div>
           </div>`;
@@ -2244,6 +2273,143 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     spRenderPlans();
   }
 
+  // ─── Activity / Attendance ───
+  let attendance = []; try{const s=localStorage.getItem('dvn_attendance');if(s)attendance=JSON.parse(s)}catch(e){}
+  function saveAttendanceData(){
+    try{localStorage.setItem('dvn_attendance',JSON.stringify(attendance))}catch(e){}
+    syncBroadcast('attendance');
+  }
+  // Activity sub-nav
+  document.querySelectorAll('#actSubNav button[data-actab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#actSubNav button[data-actab]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('actShiftsView').style.display=btn.dataset.actab==='shifts'?'block':'none';
+      document.getElementById('actStatsView').style.display=btn.dataset.actab==='stats'?'block':'none';
+      if(btn.dataset.actab==='shifts') renderActivity();
+      else renderActivityStats();
+    });
+  });
+  function renderActivity(){
+    const c=document.getElementById('actShiftsView');
+    if(!c) return;
+    if(shifts.length===0){ c.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Keine Schichten vorhanden.</div>'; return; }
+    const open=shifts.filter(s=>!s.completed);
+    const closed=shifts.filter(s=>s.completed);
+    let html='';
+    if(open.length){
+      html+='<div style="font-weight:700;font-size:.85rem;color:var(--g600);margin-bottom:.5rem;padding:.35rem 0;border-bottom:2px solid var(--g200)">📅 Offene Schichten</div>';
+      open.forEach((s,i)=>{
+        const idx=shifts.indexOf(s);
+        const count=attendance.filter(a=>a.shiftIdx===idx).length;
+        html+=`<div class="sc" style="cursor:pointer" onclick="renderActivityAttendance(${idx})">
+          <div class="stb"><div class="l1">${s.time}</div><div class="l2">${s.date||''}</div></div>
+          <div class="si"><h3>${s.title}</h3><span style="font-size:.75rem;color:var(--g400)">${count} erfasst</span></div>
+        </div>`;
+      });
+    }
+    if(closed.length){
+      html+='<div style="font-weight:700;font-size:.85rem;color:var(--g400);margin:.75rem 0 .5rem;padding:.35rem 0;border-bottom:2px solid var(--g200)">✅ Abgeschlossene Schichten</div>';
+      closed.forEach((s,i)=>{
+        const idx=shifts.indexOf(s);
+        const count=attendance.filter(a=>a.shiftIdx===idx).length;
+        html+=`<div class="sc" style="cursor:pointer" onclick="renderActivityAttendance(${idx})">
+          <div class="stb"><div class="l1">${s.time}</div><div class="l2">${s.date||''}</div></div>
+          <div class="si"><h3>${s.title}</h3><span style="font-size:.75rem;color:var(--g400)">${count} erfasst</span></div>
+        </div>`;
+      });
+    }
+    c.innerHTML=html;
+  }
+  function renderActivityAttendance(shiftIdx){
+    const c=document.getElementById('actShiftsView');
+    if(!c) return;
+    const s=shifts[shiftIdx];
+    if(!s){ renderActivity(); return; }
+    const allStaff=getAllAccounts();
+    let html=`<button onclick="renderActivity()" style="padding:.35rem .8rem;background:var(--g100);color:var(--g600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;margin-bottom:.75rem;font-family:inherit">← Zurück</button>
+      <div class="sub-title">📋 Anwesenheit · ${s.title} (${s.date||s.time})</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:center;font-size:.82rem">
+        <div style="font-weight:600;color:var(--g500);padding:.35rem .5rem">Name</div>
+        <div style="font-weight:600;color:var(--g500);text-align:center;padding:.35rem .5rem">Anwesend</div>`;
+    allStaff.forEach(a=>{
+      const entry=attendance.find(e=>e.shiftIdx===shiftIdx&&e.username===a.username);
+      const present=entry?entry.present:false;
+      const checked=present?'checked':'';
+      html+=`<div style="padding:.35rem .5rem;border-top:1px solid var(--g200);font-size:.85rem">${a.username}</div>
+        <div style="display:flex;justify-content:center;padding:.35rem .5rem;border-top:1px solid var(--g200)">
+          <input type="checkbox" ${checked} onchange="toggleAttendance(${shiftIdx},'${a.username}',this.checked)" style="width:18px;height:18px;accent-color:var(--r500);cursor:pointer">
+        </div>`;
+    });
+    html+=`</div>
+      <div style="margin-top:.75rem;padding:.5rem .75rem;background:var(--g50);border-radius:var(--rs);font-size:.78rem;color:var(--g500)">✅ ${allStaff.filter(a=>attendance.find(e=>e.shiftIdx===shiftIdx&&e.username===a.username)?.present).length} / ${allStaff.length} anwesend</div>`;
+    c.innerHTML=html;
+  }
+  function toggleAttendance(shiftIdx,username,present){
+    const existing=attendance.findIndex(e=>e.shiftIdx===shiftIdx&&e.username===username);
+    if(existing>=0){
+      if(present) attendance[existing].present=true;
+      else attendance.splice(existing,1);
+    } else if(present){
+      attendance.push({shiftIdx,username,date:new Date().toISOString().slice(0,10),present:true});
+    }
+    saveAttendanceData();
+    renderActivityAttendance(shiftIdx);
+    if(typeof staffListRender==='function') staffListRender();
+  }
+  function getLastAttendance(username){
+    const entries=attendance.filter(e=>e.username===username&&e.present).sort((a,b)=>b.date.localeCompare(a.date));
+    return entries.length?entries[0].date:null;
+  }
+  function getAttendanceCountThisMonth(username){
+    const ym=new Date().toISOString().slice(0,7);
+    return attendance.filter(e=>e.username===username&&e.present&&e.date.startsWith(ym)).length;
+  }
+  function renderActivityStats(){
+    const c=document.getElementById('actStatsView');
+    if(!c) return;
+    const now=new Date();
+    const ym=now.toISOString().slice(0,7);
+    const months=[];
+    for(let i=0;i<6;i++){
+      const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+      months.push(d.toISOString().slice(0,7));
+    }
+    let html=`<div class="sub-title">📊 Monatsstatistik</div>
+      <select id="statsMonthSelect" onchange="renderActivityStats()" style="margin-bottom:.75rem;padding:.45rem .8rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit">
+        ${months.map(m=>`<option value="${m}" ${m===ym?'selected':''}>${new Date(m+'-01').toLocaleDateString('de-DE',{month:'long',year:'numeric'})}</option>`).join('')}
+      </select>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:.5rem;font-size:.82rem">
+        <div style="font-weight:600;color:var(--g500);padding:.35rem .5rem">Name</div>
+        <div style="font-weight:600;color:var(--g500);text-align:center;padding:.35rem .5rem">Angemeldet</div>
+        <div style="font-weight:600;color:var(--g500);text-align:center;padding:.35rem .5rem">Anwesend</div>
+        <div style="font-weight:600;color:var(--g500);text-align:center;padding:.35rem .5rem">Quote</div>`;
+    const selMonth=document.getElementById('statsMonthSelect')?.value||ym;
+    const allStaff=getAllAccounts().filter(a=>!getDeletedAccounts().includes(a.username));
+    allStaff.forEach(a=>{
+      const signedIn=signins.filter(si=>{
+        const plan=shiftPlans.find(p=>p.id===si.shiftPlanId);
+        if(!plan) return false;
+        const shift=shifts[plan.shiftIdx];
+        if(!shift) return false;
+        const shiftMonth=shift.date?shift.date.slice(0,7):'';
+        return si.username===a.username && shiftMonth===selMonth;
+      }).length;
+      const present=attendance.filter(e=>{
+        const shift=shifts[e.shiftIdx];
+        if(!shift) return false;
+        return e.username===a.username && e.present && (shift.date||'').startsWith(selMonth);
+      }).length;
+      const q=signedIn>0?Math.round(present/signedIn*100):0;
+      html+=`<div style="padding:.35rem .5rem;border-top:1px solid var(--g200);font-size:.85rem">${a.username}</div>
+        <div style="text-align:center;padding:.35rem .5rem;border-top:1px solid var(--g200);font-size:.85rem;color:var(--g600)">${signedIn}</div>
+        <div style="text-align:center;padding:.35rem .5rem;border-top:1px solid var(--g200);font-size:.85rem;color:var(--g600)">${present}</div>
+        <div style="text-align:center;padding:.35rem .5rem;border-top:1px solid var(--g200);font-size:.85rem;font-weight:600;color:${q>=80?'var(--st)':q>=50?'var(--r500)':'var(--g600)'}">${q}%</div>`;
+    });
+    html+='</div>';
+    c.innerHTML=html;
+  }
+
   // ─── Account Management ───
   function getCustomAccounts(){
     try{const d=localStorage.getItem('dvn_custom_accounts');return d?JSON.parse(d):[]}catch(e){return []}
@@ -2261,6 +2427,33 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
   function getAllAccounts(){
     return [...ACCOUNTS,...getCustomAccounts()].filter(a=>!getDeletedAccounts().includes(a.username));
+  }
+  function getAccountOverride(username,key){
+    try{
+      const overrides=JSON.parse(localStorage.getItem('dvn_perm_overrides'));
+      if(overrides && overrides[username] && overrides[username][key]!==undefined) return overrides[username][key];
+    }catch(e){}
+    const found=getAllAccounts().find(a=>a.username===username);
+    return found?!!found[key]:false;
+  }
+  function setAccountOverride(username,key,val){
+    let overrides={};
+    try{overrides=JSON.parse(localStorage.getItem('dvn_perm_overrides'))||{}}catch(e){}
+    if(!overrides[username]) overrides[username]={};
+    overrides[username][key]=val;
+    try{localStorage.setItem('dvn_perm_overrides',JSON.stringify(overrides))}catch(e){}
+    syncBroadcast('perm_overrides');
+  }
+  function accManageToggle(username,key){
+    const list=getCustomAccounts();
+    const acct=list.find(a=>a.username===username);
+    const current=getAccountOverride(username,key);
+    if(acct){
+      acct[key]=!acct[key];
+      saveCustomAccounts(list);
+    }
+    setAccountOverride(username,key,!current);
+    accManageRender();
   }
   function accManageDelete(username){
     if(!confirm('Account "'+username+'" wirklich löschen?')) return;
@@ -2281,6 +2474,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem">
           <div style="font-weight:600;font-size:.85rem;min-width:120px">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(${a.rang})</span></div>
           <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">
+            ${['logs','bewerbungen','shiftplan','strafen','accounts'].map(k=>{
+              const val=getAccountOverride(a.username,k);
+              return `<label style="display:flex;align-items:center;gap:.25rem;font-size:.72rem;cursor:pointer;padding:.15rem .35rem;background:${val?'var(--sg)':'var(--g50)'};border-radius:4px">
+                <input type="checkbox" ${val?'checked':''} onchange="accManageToggle('${a.username}','${k}')" style="width:14px;height:14px;accent-color:var(--r500)"> ${k}
+              </label>`;
+            }).join('')}
             ${!isSelf?`<button onclick="accManageDelete('${a.username}')" style="padding:.2rem .5rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem">✕</button>`:''}
           </div>
         </div>`;
@@ -2355,6 +2554,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;flex:1">
           <strong style="font-size:.85rem;min-width:100px">${a.username}</strong>
           <span style="font-size:.72rem;color:var(--g400)">(${a.rang}${hasOTP?' · ⏳ OTP aktiv':' ✓ aktiv'})</span>
+          ${getLinkedAccount('roblox')?`<span style="font-size:.7rem;color:var(--g400)">🎮 ${getLinkedAccount('roblox')}</span>`:''}
+          ${getLinkedAccount('discord')?`<span style="font-size:.7rem;color:var(--g400)">💬 ${getLinkedAccount('discord')}</span>`:''}
+          <span style="font-size:.7rem;color:var(--g400);margin-left:.25rem">📋 Letzte: ${getLastAttendance(a.username)||'—'}</span>
+          <span style="font-size:.7rem;font-weight:600;color:var(--st);background:var(--sg);padding:.1rem .4rem;border-radius:4px">${getAttendanceCountThisMonth(a.username)}× diesen Monat</span>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;width:100%">
           <label style="font-size:.75rem;color:var(--g500)">Rolle:</label>
@@ -2367,7 +2570,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Stellwerke:</span>
-          ${['AK','NS','BHBF','STB'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.stellwerke.includes(s))?'#bbf7d0':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="stellwerke" value="${s}" ${(cfg.role==='HR'||cfg.stellwerke.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListSave('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
+          ${['AK','NS','BHBF','STB'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.stellwerke.includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="stellwerke" value="${s}" ${(cfg.role==='HR'||cfg.stellwerke.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListSave('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Strecken:</span>
@@ -2738,7 +2941,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
                 </label>
                 ${si.role==='Schrankenwärter'?`
                   <input type="number" step="0.5" value="${si.actualHours||''}" placeholder="Std." onchange="spSigninSet('${si.id}','actualHours',this.value)" style="width:65px;padding:.2rem .35rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.78rem;font-family:inherit">
-                  <button onclick="spSigninSet('${si.id}','hoursConfirmed',true)" style="padding:.2rem .5rem;background:${si.hoursConfirmed?'#bbf7d0':'var(--g100)'};color:${si.hoursConfirmed?'#166534':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit;font-weight:600;white-space:nowrap">${si.hoursConfirmed?'✓ Bestätigt':'Bestätigen'}</button>
+                  <button onclick="spSigninSet('${si.id}','hoursConfirmed',true)" style="padding:.2rem .5rem;background:${si.hoursConfirmed?'var(--sg)':'var(--g100)'};color:${si.hoursConfirmed?'var(--st)':'var(--g700)'};border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit;font-weight:600;white-space:nowrap">${si.hoursConfirmed?'✓ Bestätigt':'Bestätigen'}</button>
                 `:''}
               </div>
             </div>`;
@@ -3033,18 +3236,33 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!loggedInAccount){ c.innerHTML=''; return; }
     const roblox=getLinkedAccount('roblox');
     const discord=getLinkedAccount('discord');
+    const rCode=sessionStorage.getItem('dvn_verify_roblox_code_'+loggedInAccount.username)||'';
+    const rUser=sessionStorage.getItem('dvn_verify_roblox_user_'+loggedInAccount.username)||'';
     c.innerHTML=`
       <div class="sub-title">🔗 Verknüpfte Konten</div>
       <div style="margin-bottom:.5rem;font-size:.85rem">
-        <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
+        <div style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;flex-wrap:wrap">
           <span style="min-width:80px">🎮 Roblox</span>
-          <input type="text" id="linkRoblox" value="${roblox}" placeholder="Benutzername" style="flex:1;padding:.4rem .6rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.82rem;font-family:inherit">
-        </label>
-        <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
+          ${roblox?`<span style="color:var(--g600)">✅ ${roblox}</span>
+            <button onclick="unlinkAccount('roblox')" style="padding:.25rem .6rem;background:var(--g100);color:var(--g600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.75rem;font-family:inherit">Trennen</button>`
+            :rCode?`<div style="flex:1;min-width:200px">
+              <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+                <input type="text" id="verifyRobloxUser" value="${rUser}" placeholder="Roblox-Benutzername" style="flex:1;min-width:120px;padding:.4rem .6rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.82rem;font-family:inherit">
+                <button onclick="robloxVerifyCheck()" style="padding:.35rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit">✅ Prüfen</button>
+                <button onclick="cancelRobloxVerify()" style="padding:.35rem .6rem;background:var(--g100);color:var(--g600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.75rem;font-family:inherit">✕</button>
+              </div>
+              <div style="margin-top:.35rem;font-size:.75rem;color:var(--r500);background:var(--r50);padding:.35rem .5rem;border-radius:4px">
+                Setze diesen Code als deinen Roblox-Status: <strong>${rCode}</strong><br>
+                <span style="color:var(--g400)">(Roblox → Einstellungen → Profil → Status)</span>
+              </div>
+            </div>`
+            :`<button onclick="robloxVerifyStart()" style="padding:.35rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit">🔗 Mit Roblox verbinden</button>`}
+        </div>
+        <div style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;flex-wrap:wrap">
           <span style="min-width:80px">💬 Discord</span>
-          <input type="text" id="linkDiscord" value="${discord}" placeholder="Name#0000" style="flex:1;padding:.4rem .6rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.82rem;font-family:inherit">
-        </label>
-        <button onclick="saveLinkedAccounts()" style="margin-top:.35rem;padding:.35rem 1rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.8rem;font-family:inherit">💾 Speichern</button>
+          <input type="text" id="linkDiscord" value="${discord}" placeholder="Name#0000 (manuelle Eingabe)" style="flex:1;min-width:120px;padding:.4rem .6rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.82rem;font-family:inherit">
+          <button onclick="saveDiscordLink()" style="padding:.35rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit">💾</button>
+        </div>
       </div>`;
   }
   function getLinkedAccount(platform){
@@ -3059,14 +3277,56 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }catch(e){}
     return '';
   }
-  function saveLinkedAccounts(){
+  function saveDiscordLink(){
     if(!loggedInAccount) return;
-    const roblox=document.getElementById('linkRoblox').value.trim();
-    const discord=document.getElementById('linkDiscord').value.trim();
-    try{localStorage.setItem('dvn_link_roblox_'+loggedInAccount.username,roblox)}catch(e){}
-    try{localStorage.setItem('dvn_link_discord_'+loggedInAccount.username,discord)}catch(e){}
+    const val=document.getElementById('linkDiscord').value.trim();
+    try{localStorage.setItem('dvn_link_discord_'+loggedInAccount.username,val)}catch(e){}
     try{localStorage.removeItem('dvn_account_links_'+loggedInAccount.username)}catch(e){}
-    showNotification('🔗 Verknüpfte Konten gespeichert.','success');
+    if(val) showNotification('💬 Discord: '+val+' gespeichert.','success');
+    renderLinkedAccounts();
+  }
+  function unlinkAccount(platform){
+    if(!loggedInAccount||!confirm(platform+' Verknüpfung wirklich trennen?')) return;
+    try{localStorage.removeItem('dvn_link_'+platform+'_'+loggedInAccount.username)}catch(e){}
+    renderLinkedAccounts();
+  }
+  function robloxVerifyStart(){
+    if(!loggedInAccount) return;
+    const code='DVN-'+Math.random().toString(36).slice(2,7).toUpperCase();
+    sessionStorage.setItem('dvn_verify_roblox_code_'+loggedInAccount.username,code);
+    sessionStorage.setItem('dvn_verify_roblox_user_'+loggedInAccount.username,'');
+    renderLinkedAccounts();
+  }
+  function cancelRobloxVerify(){
+    if(!loggedInAccount) return;
+    sessionStorage.removeItem('dvn_verify_roblox_code_'+loggedInAccount.username);
+    sessionStorage.removeItem('dvn_verify_roblox_user_'+loggedInAccount.username);
+    renderLinkedAccounts();
+  }
+  function robloxVerifyCheck(){
+    if(!loggedInAccount) return;
+    const username=document.getElementById('verifyRobloxUser').value.trim();
+    if(!username){ showNotification('Bitte Roblox-Benutzernamen eingeben.','error'); return; }
+    const code=sessionStorage.getItem('dvn_verify_roblox_code_'+loggedInAccount.username);
+    if(!code){ showNotification('Kein Verifikationscode gefunden. Bitte starte neu.','error'); return; }
+    fetch('https://users.roblox.com/v1/usernames/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usernames:[username],excludeBannedUsers:true})})
+      .then(r=>r.json()).then(d=>{
+        if(!d.data||!d.data[0]){ showNotification('❌ Roblox-Benutzer "'+username+'" nicht gefunden.','error'); return; }
+        const userId=d.data[0].id;
+        fetch('https://users.roblox.com/v1/users/'+userId+'/status').then(r=>r.json()).then(s=>{
+          if((s.status||'').toUpperCase().includes(code)){
+            try{localStorage.setItem('dvn_link_roblox_'+loggedInAccount.username,username)}catch(e){}
+            try{localStorage.removeItem('dvn_account_links_'+loggedInAccount.username)}catch(e){}
+            sessionStorage.removeItem('dvn_verify_roblox_code_'+loggedInAccount.username);
+            sessionStorage.removeItem('dvn_verify_roblox_user_'+loggedInAccount.username);
+            showNotification('✅ Roblox-Konto "'+username+'" erfolgreich verifiziert!','success');
+            renderLinkedAccounts();
+            if(typeof staffListRender==='function') staffListRender();
+          } else {
+            showNotification('❌ Code nicht im Status gefunden. Setze "'+code+'" als deinen Roblox-Status (Einstellungen → Profil → Status) und versuche es erneut.','error');
+          }
+        }).catch(()=>showNotification('❌ Fehler beim Abrufen des Roblox-Status.','error'));
+      }).catch(()=>showNotification('❌ Fehler bei der Roblox-API.','error'));
   }
 
   // ─── Dark Mode ───
