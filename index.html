@@ -2574,15 +2574,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Strecken:</span>
-          ${['BG-AK','AK-MSB','BHBF-SHBF'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.strecken.includes(s))?'#bbf7d0':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="strecken" value="${s}" ${(cfg.role==='HR'||cfg.strecken.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListSave('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
+          ${['BG-AK','AK-MSB','BHBF-SHBF'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.strecken.includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="strecken" value="${s}" ${(cfg.role==='HR'||cfg.strecken.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListSave('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Fahrzeuge:</span>
-          ${['BR 429','BR 648','BR 628'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.fahrzeuge.includes(s))?'#bbf7d0':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="fahrzeuge" value="${s}" ${(cfg.role==='HR'||cfg.fahrzeuge.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListSave('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
+          ${['BR 429','BR 648','BR 628'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.fahrzeuge.includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="fahrzeuge" value="${s}" ${(cfg.role==='HR'||cfg.fahrzeuge.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListSave('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Zusatz:</span>
-          ${['Praxisvermittler','Ausbilder','Shift-Host'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${cfg.extras.includes(s)?'#bbf7d0':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="extras" value="${s}" ${cfg.extras.includes(s)?'checked':''} onchange="staffListSave('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
+          ${['Praxisvermittler','Ausbilder','Shift-Host'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${cfg.extras.includes(s)?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="extras" value="${s}" ${cfg.extras.includes(s)?'checked':''} onchange="staffListSave('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
         </div>
         <div style="display:flex;gap:.35rem;margin-top:.3rem">
           <button onclick="staffListOTP('${a.username}')" style="padding:.25rem .6rem;background:linear-gradient(135deg,var(--r500),var(--r600));color:white;border:none;border-radius:var(--rs);font-size:.75rem;cursor:pointer;font-family:inherit">🔑 OTP</button>
@@ -3252,8 +3252,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
                 <button onclick="cancelRobloxVerify()" style="padding:.35rem .6rem;background:var(--g100);color:var(--g600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.75rem;font-family:inherit">✕</button>
               </div>
               <div style="margin-top:.35rem;font-size:.75rem;color:var(--r500);background:var(--r50);padding:.35rem .5rem;border-radius:4px">
-                Setze diesen Code als deinen Roblox-Status: <strong>${rCode}</strong><br>
-                <span style="color:var(--g400)">(Roblox → Einstellungen → Profil → Status)</span>
+                Setze diesen Code in deine Roblox-Bio: <strong>${rCode}</strong><br>
+                <span style="color:var(--g400)">(Roblox → Einstellungen → Profil → Beschreibung)</span>
               </div>
             </div>`
             :`<button onclick="robloxVerifyStart()" style="padding:.35rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit">🔗 Mit Roblox verbinden</button>`}
@@ -3313,8 +3313,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       .then(r=>r.json()).then(d=>{
         if(!d.data||!d.data[0]){ showNotification('❌ Roblox-Benutzer "'+username+'" nicht gefunden.','error'); return; }
         const userId=d.data[0].id;
-        fetch('https://users.roblox.com/v1/users/'+userId+'/status').then(r=>r.json()).then(s=>{
-          if((s.status||'').toUpperCase().includes(code)){
+        fetch('https://users.roblox.com/v1/users/'+userId).then(r=>r.json()).then(p=>{
+          if((p.description||'').toUpperCase().includes(code)){
             try{localStorage.setItem('dvn_link_roblox_'+loggedInAccount.username,username)}catch(e){}
             try{localStorage.removeItem('dvn_account_links_'+loggedInAccount.username)}catch(e){}
             sessionStorage.removeItem('dvn_verify_roblox_code_'+loggedInAccount.username);
@@ -3323,9 +3323,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
             renderLinkedAccounts();
             if(typeof staffListRender==='function') staffListRender();
           } else {
-            showNotification('❌ Code nicht im Status gefunden. Setze "'+code+'" als deinen Roblox-Status (Einstellungen → Profil → Status) und versuche es erneut.','error');
+            showNotification('❌ Code nicht in der Bio gefunden. Schreibe "'+code+'" in deine Roblox-Bio (Einstellungen → Profil → Beschreibung) und versuche es erneut.','error');
           }
-        }).catch(()=>showNotification('❌ Fehler beim Abrufen des Roblox-Status.','error'));
+        }).catch(()=>showNotification('❌ Fehler beim Abrufen des Roblox-Profils.','error'));
       }).catch(()=>showNotification('❌ Fehler bei der Roblox-API.','error'));
   }
 
