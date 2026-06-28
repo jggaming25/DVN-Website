@@ -791,10 +791,9 @@
           <input type="text" id="accOtpUser" placeholder="Benutzername">
           <select id="accOtpRang" style="padding:.5rem;border:2px solid var(--g200);border-radius:var(--rs);font-family:inherit">
             <option value="">— Rang —</option>
-            <option value="Admin">Admin</option>
+            <option value="HR">HR</option>
             <option value="FDL">FDL</option>
             <option value="TF">TF</option>
-            <option value="HR">HR</option>
           </select>
         </div>
         <button onclick="accGenerateOTP()" style="padding:.5rem 1.2rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">🔑 Account mit OTP anlegen</button>
@@ -861,10 +860,10 @@ Bei Fragen wenden Sie sich bitte per Ticket auf unserem Discord Server an uns!.
 Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn</a>`;
 
   const ACCOUNTS = [
-    { username: 'jggaming2518', password: 'dvn1:5c2ecr', logs: true,  bewerbungen: true,  shiftplan: true,  strafen: true,  accounts: true,  rang: 'Admin' },
-    { username: 'leon',         password: 'dvn1:rtfc13', logs: true,  bewerbungen: true,  shiftplan: true,  strafen: true,  accounts: true,  rang: 'Admin' },
-    { username: 'felix',        password: 'dvn1:1icrlpv', logs: true,  bewerbungen: true,  shiftplan: true, strafen: true, accounts: true, rang: 'Admin' },
-    // Hier weitere Accounts hinzufügen (rang: 'Admin'|'FDL'|'TF', logs, bewerbungen, shiftplan, strafen, accounts: true/false)
+    { username: 'jggaming2518', password: 'dvn1:5c2ecr', rang: 'HR' },
+    { username: 'leon',         password: 'dvn1:rtfc13', rang: 'HR' },
+    { username: 'felix',        password: 'dvn1:1icrlpv', rang: 'HR' },
+    // Hier weitere Accounts hinzufügen (rang: 'HR'|'FDL'|'TF')
   ];
 
   function hashPassword(pw){
@@ -887,6 +886,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     staff_news: true,
     public_news: true,
     app_changes: true,
+    desktop_notify: false,
   };
 
   // ─── Dutys (aus DVN Organisationsplan, Stand 25.06.2026) ───
@@ -1370,23 +1370,25 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const userDisp=document.getElementById('userNameDisplay');
     const internBtn=document.getElementById('internNavBtn');
     if(loggedIn){
-      if(adminBtn) adminBtn.style.display='flex';
+      const rang=loggedInAccount?loggedInAccount.rang:'';
+      const isHR=rang==='HR';
+      if(adminBtn) adminBtn.style.display=isHR?'flex':'none';
       userMenu.style.display='flex';
       loginBtn.style.display='none';
       userDisp.textContent=loggedInUser;
       const d2=document.getElementById('userNameDisplay2');
       if(d2) d2.textContent=loggedInUser;
       const logTabBtn=document.getElementById('logTabBtn');
-      if(logTabBtn) logTabBtn.style.display='';
+      if(logTabBtn) logTabBtn.style.display=isHR&&getAccountOverride(loggedInUser,'logs')?'':'none';
       if(internBtn) internBtn.style.display='flex';
       const spAdminTab=document.getElementById('spAdminTabBtn');
-      if(spAdminTab) spAdminTab.style.display='';
+      if(spAdminTab) spAdminTab.style.display=isHR&&getAccountOverride(loggedInUser,'shiftplan')?'':'none';
       const accountsTab=document.getElementById('accountsTabBtn');
-      if(accountsTab) accountsTab.style.display='';
+      if(accountsTab) accountsTab.style.display=isHR&&getAccountOverride(loggedInUser,'accounts')?'':'none';
       const staffListTab=document.getElementById('staffListTabBtn');
-      if(staffListTab) staffListTab.style.display='';
+      if(staffListTab) staffListTab.style.display=isHR?'':'none';
       const strafenAdminTab=document.getElementById('strafenAdminTabBtn');
-      if(strafenAdminTab) strafenAdminTab.style.display='';
+      if(strafenAdminTab) strafenAdminTab.style.display=isHR&&getAccountOverride(loggedInUser,'strafen')?'':'none';
       const bell=document.getElementById('notifBell'); if(bell) bell.style.display='flex';
       const rangEl=document.getElementById('accountRang');
       if(rangEl) rangEl.textContent=loggedInAccount?loggedInAccount.rang:'';
@@ -1685,6 +1687,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const addShiftWithImage=(imgDataUrl)=>{
       shifts.push({title,date,time,desc,frist,image:imgDataUrl||'',completed:false,stats:{reliability:'',avgDelay:'',emergencyBrakes:''}});
       addLogEntry('Schicht erstellt', title+' ('+time+(date?' am '+date:'')+')');
+      sendDesktopNotification('📅 Neue Schicht', title+' ('+time+(date?' am '+date:'')+')');
       try{localStorage.setItem('dvn_shifts',JSON.stringify(shifts))}catch(e){}
       syncBroadcast('shifts'); document.getElementById('sTitle').value=''; document.getElementById('sDate').value='';
       document.getElementById('sTime').value=''; document.getElementById('sDesc').value='';
@@ -1872,7 +1875,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const list=document.getElementById('staffNewsList');
     const badge=document.getElementById('internBadge');
     if(!list) return;
-    const forStaff=loggedInAccount&&loggedInAccount.rang!=='Admin';
+    const forStaff=loggedInAccount&&loggedInAccount.rang!=='HR';
     const rangMatch=loggedInAccount?loggedInAccount.rang:'';
     const showNews=staffNewsItems.filter(n=>!n.rang||n.rang===rangMatch||forStaff);
     if(badge) badge.textContent=showNews.length+' Beiträge';
@@ -3126,6 +3129,17 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     updateNotifBadge();
   }
 
+  function sendDesktopNotification(title, body){
+    if(!notificationPrefs.desktop_notify) return;
+    if(!('Notification' in window)) return;
+    if(Notification.permission==='granted'){
+      new Notification(title, {body, icon:'/favicon.ico'});
+    } else if(Notification.permission!=='denied'){
+      Notification.requestPermission().then(perm=>{
+        if(perm==='granted') new Notification(title, {body, icon:'/favicon.ico'});
+      });
+    }
+  }
   function showNotification(text,type){
     const box=document.getElementById('notificationBox');
     if(!box) return;
@@ -3224,6 +3238,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
         <input type="checkbox" ${isDarkMode()?'checked':''} onchange="toggleDarkMode()" style="width:17px;height:17px;accent-color:var(--r500)">
         🌙 Dark Mode
+      </label>
+      <label style="display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:.85rem">
+        <input type="checkbox" ${notificationPrefs.desktop_notify?'checked':''} onchange="toggleNotifyDesktop()" style="width:17px;height:17px;accent-color:var(--r500)">
+        🖥️ Desktop-Benachrichtigungen
       </label>`;
   }
 
@@ -3317,6 +3335,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }
     syncBroadcast('strafen');
     if(isSelf) showNotification('⚠️ Dir wurde eine Strafe eingetragen: '+totalHours+'h – '+reason,'error');
+    if(isSelf) sendDesktopNotification('⚠️ Strafe eingetragen', totalHours+'h – '+reason);
     showNotification('✅ Strafe eingetragen','success');
     addLogEntry('Strafe eingetragen', name+' ('+totalHours+'h)');
     document.getElementById('strafenDiscordName').value='';
@@ -3447,6 +3466,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }
   }
 
+  function toggleNotifyDesktop(){
+    notificationPrefs.desktop_notify=!notificationPrefs.desktop_notify;
+    saveNotifyPrefs();
+    renderNotifications();
+    if(notificationPrefs.desktop_notify && 'Notification' in window && Notification.permission!=='granted' && Notification.permission!=='denied'){
+      Notification.requestPermission();
+    }
+  }
   function toggleNotify(key){
     notificationPrefs[key]=!notificationPrefs[key];
     saveNotifyPrefs();
@@ -3492,10 +3519,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         try{localStorage.setItem('dvn_news',JSON.stringify(newsItems))}catch(e){}
         syncBroadcast('news'); clearNewsForm(); renderNews(); renderAdminNewsList();
         if(notificationPrefs.public_news!==false) showNotification(editingNewsIdx!==null?'✏️ News aktualisiert: '+title:'🌍 Neue öffentliche News: '+title,'info');
+        sendDesktopNotification('🌍 Neue öffentliche News', title);
       } else {
         addStaffNews(title,text,loggedInUser||'Admin','');
         clearNewsForm(); renderAdminNewsList();
         if(notificationPrefs.staff_news!==false) showNotification('🔒 Neue Staff-News: '+title,'info');
+        sendDesktopNotification('🔒 Neue Staff-News', title);
       }
     };
     if(fileInput&&fileInput.files[0]){
