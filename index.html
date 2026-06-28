@@ -3132,12 +3132,16 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function sendDesktopNotification(title, body){
     if(!notificationPrefs.desktop_notify) return;
     if(!('Notification' in window)) return;
-    if(Notification.permission==='granted'){
-      new Notification(title, {body, icon:'/favicon.ico'});
-    } else if(Notification.permission!=='denied'){
-      Notification.requestPermission().then(perm=>{
-        if(perm==='granted') new Notification(title, {body, icon:'/favicon.ico'});
-      });
+    try{
+      if(Notification.permission==='granted'){
+        new Notification(title, {body});
+      } else if(Notification.permission==='default'){
+        Notification.requestPermission().then(perm=>{
+          if(perm==='granted') new Notification(title, {body});
+        });
+      }
+    } catch(e){
+      console.warn('Desktop-Notification fehlgeschlagen:', e);
     }
   }
   function showNotification(text,type){
@@ -3470,8 +3474,17 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     notificationPrefs.desktop_notify=!notificationPrefs.desktop_notify;
     saveNotifyPrefs();
     renderNotifications();
-    if(notificationPrefs.desktop_notify && 'Notification' in window && Notification.permission!=='granted' && Notification.permission!=='denied'){
-      Notification.requestPermission();
+    if(!notificationPrefs.desktop_notify) return;
+    if(!('Notification' in window)){ showNotification('⚠️ Desktop-Benachrichtigungen werden von diesem Browser nicht unterstützt.', 'error'); return; }
+    if(Notification.permission==='default'){
+      Notification.requestPermission().then(perm=>{
+        if(perm==='granted') showNotification('✅ Desktop-Benachrichtigungen aktiviert!', 'success');
+        else showNotification('⚠️ Desktop-Benachrichtigungen blockiert. Erlaube sie in den Browser-Einstellungen.', 'error');
+      });
+    } else if(Notification.permission==='denied'){
+      showNotification('⚠️ Desktop-Benachrichtigungen sind blockiert. Erlaube sie in den Browser-Einstellungen (Seiteninfo → Berechtigungen → Benachrichtigungen).', 'error');
+    } else {
+      showNotification('✅ Desktop-Benachrichtigungen aktiviert!', 'success');
     }
   }
   function toggleNotify(key){
