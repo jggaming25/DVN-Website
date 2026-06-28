@@ -878,7 +878,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   const ACCOUNTS = [
     { username: 'jggaming2518', password: 'dvn1:5c2ecr', rang: 'HR' },
     { username: 'leon',         password: 'dvn1:rtfc13', rang: 'HR' },
-    { username: 'felix',        password: 'dvn1:1icrlpv', rang: 'HR' },
+    
     
     // Hier weitere Accounts hinzufügen (rang: 'HR'|'FDL'|'TF')
   ];
@@ -1125,11 +1125,16 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       // Firebase-Listener für alle Datentypen – aktualisiert alle Clients in Echtzeit
       fbSeedLocalData();
       const fbTypes = ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins','attendance','perm_overrides','pw_overrides','custom_accounts','deleted_accounts'];
+      // Array types: Firebase stores arrays as objects {0:...,1:...} → normalize back to arrays
+      const arrayTypes = new Set(['shifts','applications','news','staff_news','shiftplans','logs','strafen','signins','attendance','custom_accounts','deleted_accounts']);
       fbTypes.forEach(type => {
         const path = 'dvn_'+type;
         fbDatabase.ref(path).on('value', snapshot => {
-          const val = snapshot.val();
+          let val = snapshot.val();
           if(val !== null){
+            if(arrayTypes.has(type) && typeof val==='object' && !Array.isArray(val)){
+              val = Object.keys(val).sort((a,b)=>Number(a)-Number(b)).map(k=>val[k]);
+            }
             try{ localStorage.setItem(path, JSON.stringify(val)); }catch(e){}
             broadcastHandler(type, val);
           }
@@ -1154,6 +1159,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function fbWrite(path, data){
     if(!fbConnected || !fbDatabase) return;
     try{ fbDatabase.ref(path).set(data); }catch(e){}
+  }
+  function fbUpdate(path, data){
+    if(!fbConnected || !fbDatabase) return;
+    try{ fbDatabase.ref(path).update(data); }catch(e){}
   }
 
   // ─── Tab-Sync (BroadcastChannel + Firebase) ───
@@ -1272,7 +1281,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       case 'custom_accounts':
         try{localStorage.setItem('dvn_custom_accounts',JSON.stringify(data))}catch(e){}
         if(loggedIn){
+          const oldRang=loggedInAccount?loggedInAccount.rang:'';
+          const updatedMe=data&&Array.isArray(data)&&loggedInAccount?data.find(a=>a.username===loggedInAccount.username):null;
           updateUI();
+          if(updatedMe && updatedMe.rang!==oldRang){
+            loggedInAccount.rang=updatedMe.rang;
+            showNotification('🔁 Dein Rang wurde auf '+updatedMe.rang+' geändert.','info');
+            document.querySelector('nav button[data-page="willkommen"]')?.click();
+          }
           if(document.querySelector('#apanel-accounts.active')){ accManageRender(); '' }
           if(document.querySelector('#apanel-stafflist.active')) staffListRender();
         }
@@ -2542,6 +2558,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     overrides[username][key]=val;
     try{localStorage.setItem('dvn_perm_overrides',JSON.stringify(overrides))}catch(e){}
     syncBroadcast('perm_overrides');
+    fbUpdate('dvn_perm_overrides/'+username+'/'+key, val);
   }
   function accManageToggle(username,key){
     const list=getCustomAccounts();
@@ -2598,11 +2615,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem;${sel?'outline:2px solid var(--r400);background:var(--r50)':''}">
           <div style="display:flex;align-items:center;gap:.5rem;min-width:120px">
             <input type="checkbox" ${sel?'checked':''} onchange="accManageSelToggle('${a.username}')" style="width:15px;height:15px;accent-color:var(--r500);flex-shrink:0">
-            <span style="font-weight:600;font-size:.85rem">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(</span><select onchange="accManageSetRang('${a.username}',this.value)" style="font-size:.72rem;padding:.1rem .2rem;border:1px solid var(--g200);border-radius:4px;font-family:inherit;background:var(--w)">
-              <option value="HR" ${a.rang==='HR'?'selected':''}>HR</option>
-              <option value="FDL" ${a.rang==='FDL'?'selected':''}>FDL</option>
-              <option value="TF" ${a.rang==='TF'?'selected':''}>TF</option>
-            </select><span style="font-weight:400;font-size:.72rem;color:var(--g400)">)</span></span>
+            <span style="font-weight:600;font-size:.85rem">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(${a.rang})</span></span>
           </div>
           <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">
             ${['logs','bewerbungen','shiftplan','strafen','accounts'].map(k=>{
@@ -2642,19 +2655,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(countEl) countEl.textContent=count+' ausgewählt';
     if(bar) bar.style.display=count?'flex':'none';
     if(delBar) delBar.style.display=count?'flex':'none';
-  }
-  function accManageSetRang(username,newRang){
-    const list=getCustomAccounts();
-    const acct=list.find(a=>a.username===username);
-    if(acct){
-      acct.rang=newRang;
-      saveCustomAccounts(list);
-      showNotification('✅ Rang von '+username+' auf '+newRang+' geändert.','success');
-    }
-    if(loggedInAccount && loggedInAccount.username===username){
-      loggedInAccount.rang=newRang;
-      updateUI();
-    }
   }
   function accManageBulkToggle(key){
     const users=[...accManageSelections];
@@ -2713,6 +2713,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       try{localStorage.removeItem('dvn_account_config_'+username)}catch(e){}
     }catch(e){}
     syncBroadcast('account_configs');
+    fbUpdate('dvn_account_configs/'+username, cfg);
   }
   function migrateAccountConfig(username,cfg){
     try{
@@ -2738,6 +2739,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }catch(e){}
     syncBroadcast('config');
     syncBroadcast('pw_overrides');
+    fbUpdate('dvn_pw_overrides/'+username, hp);
   }
   // ─── Password Age Tracking ───
   function getPasswordSetAt(username){
@@ -2834,6 +2836,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }
     cfg.extras=[...card.querySelectorAll('[data-cfg="extras"]:checked')].map(cb=>cb.value);
     saveAccountConfig(username,cfg);
+    const list=getCustomAccounts();
+    const acct=list.find(a=>a.username===username);
+    if(role && acct && acct.rang!==role){
+      acct.rang=role;
+      saveCustomAccounts(list);
+    }
     if(loggedInAccount && username===loggedInAccount.username) sendDesktopNotification('📋 Lizenzen aktualisiert', 'Deine Lizenzen wurden geändert.');
     showNotification('✅ Lizenzen für '+username+' gespeichert.','success');
   }
@@ -3537,6 +3545,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       try{localStorage.removeItem('dvn_link_discord_'+loggedInAccount.username)}catch(e){}
     }catch(e){}
     syncBroadcast('discord_links');
+    fbUpdate('dvn_discord_links/'+loggedInAccount.username, val||'');
     if(val) showNotification('💬 Discord: '+val+' gespeichert.','success');
     else showNotification('Discord-Verknüpfung entfernt.','success');
     renderLinkedAccounts();
