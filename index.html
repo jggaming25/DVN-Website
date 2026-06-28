@@ -2506,7 +2506,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   // ─── Ticket System ───
   function getTickets(){
-    try{const d=localStorage.getItem('dvn_tickets');return d?JSON.parse(d):[]}catch(e){return []}
+    try{const d=localStorage.getItem('dvn_tickets');const t=d?JSON.parse(d):[];t.forEach(x=>{if(!x.messages)x.messages=[]});return t}catch(e){return []}
   }
   function saveTickets(tickets){
     try{localStorage.setItem('dvn_tickets',JSON.stringify(tickets))}catch(e){}
@@ -2555,7 +2555,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const catLabels={support:'Support',bug:'Bug Report',complaint:'Beschwerde',other:'Sonstiges'};
     const statusLabels={open:'🟢 Offen',claimed:'🟡 In Bearbeitung',closed:'🔴 Geschlossen'};
     el.innerHTML=tickets.map(t=>{
-      const msgCount=t.messages.length;
+      const msgCount=(t.messages||[]).length;
       return `<div class="sp-plan-card" style="cursor:pointer;flex-wrap:wrap" onclick="ticketOpenDetail('${t.id}')">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.35rem;width:100%">
           <div><strong style="font-size:.85rem">${t.title}</strong> <span style="font-size:.72rem;color:var(--g400)">(${catLabels[t.cat]||t.cat})</span></div>
@@ -2584,7 +2584,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const catLabels={support:'Support',bug:'Bug Report',complaint:'Beschwerde',other:'Sonstiges'};
     const statusLabels={open:'🟢 Offen',claimed:'🟡 In Bearbeitung',closed:'🔴 Geschlossen'};
     el.innerHTML=tickets.map(t=>{
-      const msgCount=t.messages.length;
+      const msgCount=(t.messages||[]).length;
       return `<div class="sp-plan-card" style="cursor:pointer;flex-wrap:wrap" onclick="ticketOpenDetail('${t.id}')">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.35rem;width:100%">
           <div><strong style="font-size:.85rem">${t.title}</strong> <span style="font-size:.72rem;color:var(--g400)">(${catLabels[t.cat]||t.cat})</span></div>
@@ -2638,7 +2638,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Messages
     const msgsEl=document.getElementById('ticketDetailMessages');
     msgsEl.innerHTML='';
-    if(t.messages.length===0){
+    if(!t.messages||t.messages.length===0){
       msgsEl.innerHTML='<div style="text-align:center;padding:1rem;color:var(--g400);font-size:.82rem">Noch keine Antworten.</div>';
     } else {
       t.messages.forEach(m=>{
