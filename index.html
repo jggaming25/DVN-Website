@@ -2662,18 +2662,19 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function accEinmalRender(){
     const el=document.getElementById('accEinmalList');
     if(!el) return;
-    const allAccounts=getAllAccounts();
-    const otpAccounts=allAccounts.filter(a=>!!getOTP(a.username));
-    if(otpAccounts.length===0){
-      el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Keine Accounts mit Einmal-Passwort.</div>';
+    // Show all custom accounts (created via OTP), not just those with active OTP
+    const customAccounts=getCustomAccounts().filter(a=>!getDeletedAccounts().includes(a.username));
+    if(customAccounts.length===0){
+      el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Keine Einmal-Accounts vorhanden. Lege neue unter Konfiguration an.</div>';
       return;
     }
-    el.innerHTML=otpAccounts.map(a=>{
-      const otpHash=getOTP(a.username);
+    el.innerHTML=customAccounts.map(a=>{
+      const hasOTP=!!getOTP(a.username);
       return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.5rem;align-items:center">
         <div style="flex:1;min-width:150px">
           <strong style="font-size:.85rem">${a.username}</strong>
           <span style="font-size:.72rem;color:var(--g400)"> (${a.rang})</span>
+          ${hasOTP?'':' <span style="font-size:.7rem;color:var(--g400)">(Passwort gesetzt)</span>'}
         </div>
         <div style="display:flex;gap:.35rem;flex-wrap:wrap;align-items:center">
           <button onclick="accEinmalResetOTP('${a.username}')" style="padding:.3rem .7rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit">🔑 Neues OTP</button>
