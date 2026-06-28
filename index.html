@@ -312,6 +312,7 @@
     <button data-page="stellen"><span class="ni">📋</span> Stellen</button>
     <button data-page="shifts"><span class="ni">⏰</span> Shifts</button>
     <button data-page="news"><span class="ni">📰</span> News</button>
+    <button data-page="support" id="supportNavBtn" style="display:none"><span class="ni">🎫</span> Support</button>
     <button data-page="intern" id="internNavBtn" style="display:none"><span class="ni">📁</span> Intern</button>
     <button data-page="admin" id="adminNavBtn" style="display:none"><span class="ni">⚙️</span> Admin</button>
     <button id="loginNavBtn" onclick="openLogin()"><span class="ni">🔐</span> Login</button>
@@ -587,6 +588,16 @@
   </div>
 </section>
 
+<!-- ═══════════ SUPPORT / TICKETS ═══════════ -->
+<section id="support" class="page">
+  <div class="card">
+    <div class="ch"><div class="ci">🎫</div><h2>Support-<span>Center</span></h2></div>
+    <p style="font-size:.88rem;color:var(--g500);margin-bottom:1rem">Hier kannst du Tickets erstellen und den Status deiner Anfragen verfolgen.</p>
+    <button onclick="ticketOpenCreateModal()" style="padding:.5rem 1.2rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit;margin-bottom:1rem">➕ Neues Ticket</button>
+    <div id="ticketMyList"></div>
+  </div>
+</section>
+
 <!-- ═══════════ INTERN ═══════════ -->
 <section id="intern" class="page">
   <div class="card">
@@ -642,6 +653,7 @@
       <button data-apanel="shiftplan" id="spAdminTabBtn" style="display:none">📋 Shift Plan</button>
       <button data-apanel="strafenadmin" id="strafenAdminTabBtn" style="display:none">⚠️ Strafen</button>
       <button data-apanel="accounts" id="accountsTabBtn" style="display:none">👥 Accounts</button>
+      <button data-apanel="tickets" id="ticketsAdminTabBtn" style="display:none">🎫 Tickets</button>
       <button data-apanel="stafflist" id="staffListTabBtn" style="display:none">📋 Staff List</button>
       <button data-apanel="log" id="logTabBtn" style="display:none">📜 Log</button>
       <button data-apanel="activity" id="activityTabBtn">📋 Activity</button>
@@ -816,6 +828,27 @@
       </div>
     </div>
 
+    <!-- Admin: Tickets -->
+    <div class="admin-panel" id="apanel-tickets">
+      <div class="sub-title">🎫 Ticket-Verwaltung</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem">
+        <select id="ticketAdminFilter" onchange="ticketAdminRender()" style="padding:.4rem .7rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit">
+          <option value="all">Alle</option>
+          <option value="open">Offen</option>
+          <option value="claimed">In Bearbeitung</option>
+          <option value="closed">Geschlossen</option>
+        </select>
+        <select id="ticketAdminCatFilter" onchange="ticketAdminRender()" style="padding:.4rem .7rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.8rem;font-family:inherit">
+          <option value="all">Alle Kategorien</option>
+          <option value="support">Support</option>
+          <option value="bug">Bug Report</option>
+          <option value="complaint">Beschwerde</option>
+          <option value="other">Sonstiges</option>
+        </select>
+      </div>
+      <div id="ticketAdminList"></div>
+    </div>
+
     <!-- Admin: Staff List -->
     <div class="admin-panel" id="apanel-stafflist">
       <div class="sub-title">📋 Staff List</div>
@@ -860,6 +893,49 @@
       <em>Keine Angabe nach §5 DDG erforderlich.</em>
     </p>
     <button onclick="document.getElementById('impressumModal').classList.remove('open')" style="margin-top:1rem;padding:.5rem 1.5rem;background:var(--g200);border:none;border-radius:var(--rs);cursor:pointer;font-family:inherit">Schließen</button>
+  </div>
+</div>
+
+<!-- ═══════ TICKET CREATE MODAL ═══════ -->
+<div class="modal-overlay" id="ticketCreateModal">
+  <div class="modal" style="max-width:500px">
+    <div style="display:flex;justify-content:space-between;align-items:start">
+      <h2>🎫 Neues Ticket</h2>
+      <button onclick="closeModal('ticketCreateModal')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--g400);padding:0;line-height:1;font-family:inherit">✕</button>
+    </div>
+    <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:.3rem">Kategorie</label>
+    <select id="ticketCreateCat" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit;margin-bottom:.85rem">
+      <option value="support">Support (Allgemeine Hilfe)</option>
+      <option value="bug">Bug Report</option>
+      <option value="complaint">Beschwerde</option>
+      <option value="other">Sonstiges</option>
+    </select>
+    <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:.3rem">Betreff</label>
+    <input type="text" id="ticketCreateTitle" placeholder="Kurze Zusammenfassung" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit;margin-bottom:.85rem;box-sizing:border-box">
+    <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:.3rem">Beschreibung</label>
+    <textarea id="ticketCreateDesc" placeholder="Beschreibe dein Anliegen möglichst genau..." style="width:100%;min-height:120px;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit;margin-bottom:1rem;box-sizing:border-box;resize:vertical"></textarea>
+    <button onclick="ticketCreate()" style="width:100%;padding:.6rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.9rem;cursor:pointer;font-family:inherit">📨 Ticket einreichen</button>
+  </div>
+</div>
+
+<!-- ═══════ TICKET DETAIL MODAL ═══════ -->
+<div class="modal-overlay" id="ticketDetailModal">
+  <div class="modal" style="max-width:650px">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem">
+      <div>
+        <h2 id="ticketDetailTitle" style="margin-bottom:.25rem"></h2>
+        <span id="ticketDetailMeta" style="font-size:.78rem;color:var(--g500)"></span>
+      </div>
+      <button onclick="closeModal('ticketDetailModal')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--g400);padding:0;line-height:1;font-family:inherit">✕</button>
+    </div>
+    <div id="ticketDetailActions" style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.75rem"></div>
+    <div id="ticketDetailDesc" style="padding:.75rem;background:var(--g50);border-radius:var(--rs);margin-bottom:.75rem;font-size:.85rem;line-height:1.5;border:1px solid var(--g100)"></div>
+    <div style="font-size:.82rem;font-weight:600;color:var(--g600);margin-bottom:.5rem">💬 Verlauf</div>
+    <div id="ticketDetailMessages" style="max-height:300px;overflow-y:auto;margin-bottom:.75rem;display:flex;flex-direction:column;gap:.5rem"></div>
+    <div style="display:flex;gap:.5rem">
+      <textarea id="ticketDetailReply" placeholder="Antwort eingeben..." style="flex:1;padding:.5rem .8rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit;min-height:50px;resize:vertical;box-sizing:border-box"></textarea>
+      <button onclick="ticketReply()" style="padding:.5rem 1rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit;align-self:flex-end">Senden</button>
+    </div>
   </div>
 </div>
 
@@ -1124,9 +1200,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       fbConnected = true;
       // Firebase-Listener für alle Datentypen – aktualisiert alle Clients in Echtzeit
       fbSeedLocalData();
-      const fbTypes = ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins','attendance','perm_overrides','pw_overrides','custom_accounts','deleted_accounts'];
+      const fbTypes = ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins','attendance','perm_overrides','pw_overrides','custom_accounts','deleted_accounts','account_configs','discord_links','tickets'];
       // Array types: Firebase stores arrays as objects {0:...,1:...} → normalize back to arrays
-      const arrayTypes = new Set(['shifts','applications','news','staff_news','shiftplans','logs','strafen','signins','attendance','custom_accounts','deleted_accounts']);
+      const arrayTypes = new Set(['shifts','applications','news','staff_news','shiftplans','logs','strafen','signins','attendance','custom_accounts','deleted_accounts','tickets']);
       fbTypes.forEach(type => {
         const path = 'dvn_'+type;
         fbDatabase.ref(path).on('value', snapshot => {
@@ -1145,7 +1221,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function fbSeedLocalData(){
     // Einmalig: Seedt lokale localStorage-Daten nach Firebase, falls Firebase noch leer ist
-    ['dvn_shifts','dvn_applications','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_stellen_open','dvn_logs','dvn_strafen','dvn_signins','dvn_attendance','dvn_perm_overrides','dvn_pw_overrides','dvn_custom_accounts','dvn_deleted_accounts','dvn_account_configs','dvn_discord_links'].forEach(path=>{
+    ['dvn_shifts','dvn_applications','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_stellen_open','dvn_logs','dvn_strafen','dvn_signins','dvn_attendance','dvn_perm_overrides','dvn_pw_overrides','dvn_custom_accounts','dvn_deleted_accounts','dvn_account_configs','dvn_discord_links','dvn_tickets'].forEach(path=>{
       fbDatabase.ref(path).once('value', snapshot => {
         if(snapshot.val() !== null) return; // Firebase hat bereits Daten
         try{
@@ -1187,13 +1263,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         case 'deleted_accounts': data = JSON.parse(localStorage.getItem('dvn_deleted_accounts')); break;
         case 'account_configs': data = JSON.parse(localStorage.getItem('dvn_account_configs')); break;
         case 'discord_links': data = JSON.parse(localStorage.getItem('dvn_discord_links')); break;
+        case 'tickets':      data = JSON.parse(localStorage.getItem('dvn_tickets')); break;
         case 'config':       data = true; break;
         case 'notifhistory': data = true; break;
       }
     } catch(e){}
     syncCh.postMessage({ type, data });
     // Auch an Firebase senden
-    if(data !== null && data !== true && ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins','attendance','perm_overrides','pw_overrides','custom_accounts','deleted_accounts','account_configs','discord_links'].includes(type)){
+    if(data !== null && data !== true && ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins','attendance','perm_overrides','pw_overrides','custom_accounts','deleted_accounts','tickets'].includes(type)){
       fbWrite('dvn_'+type, data);
     }
   }
@@ -1266,7 +1343,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           if(document.getElementById('actShiftsView')?.style.display!=='none') renderActivity();
           else renderActivityStats();
         }
-        if(loggedIn && document.querySelector('#apanel-stafflist.active')) staffListRender();
+        if(loggedIn && document.querySelector('#stafflist.page.active')) staffListRender();
         break;
       case 'perm_overrides':
         try{localStorage.setItem('dvn_perm_overrides',JSON.stringify(data))}catch(e){}
@@ -1303,11 +1380,18 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         break;
       case 'account_configs':
         try{localStorage.setItem('dvn_account_configs',JSON.stringify(data))}catch(e){}
-        if(loggedIn && document.querySelector('#apanel-stafflist.active')) staffListRender();
+        if(loggedIn && document.querySelector('#stafflist.page.active')) staffListRender();
         break;
       case 'discord_links':
         try{localStorage.setItem('dvn_discord_links',JSON.stringify(data))}catch(e){}
-        if(loggedIn && document.querySelector('#apanel-stafflist.active')) staffListRender();
+        if(loggedIn && document.querySelector('#stafflist.page.active')) staffListRender();
+        break;
+      case 'tickets':
+        try{localStorage.setItem('dvn_tickets',JSON.stringify(data))}catch(e){}
+        if(loggedIn){
+          if(document.querySelector('#support.page.active')) ticketMyRender();
+          if(document.querySelector('#apanel-tickets.active')) ticketAdminRender();
+        }
         break;
     }
   }
@@ -1322,7 +1406,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   // ─── Navigation ───
   document.querySelectorAll('nav button[data-page]').forEach(btn => {
     btn.addEventListener('click', () => {
-      if ((btn.dataset.page === 'admin' || btn.dataset.page === 'intern') && !loggedIn) return;
+      if ((btn.dataset.page === 'admin' || btn.dataset.page === 'intern' || btn.dataset.page === 'support') && !loggedIn) return;
       if (btn.dataset.page === 'admin' && loggedInAccount && loggedInAccount.rang !== 'HR') return;
       document.querySelectorAll('nav button[data-page], .page').forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
@@ -1358,6 +1442,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           if(storedTab==='strafenadmin') renderStrafen();
           if(storedTab==='accounts') accManageRender();
           if(storedTab==='stafflist') staffListRender();
+          if(storedTab==='tickets') ticketAdminRender();
           if(storedTab==='activity') renderActivity();
           renderAdminPanels();
         } else {
@@ -1369,6 +1454,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           renderAdminShifts();
           renderAdminNewsList();
         }
+      }
+      if (btn.dataset.page === 'support') {
+        ticketMyRender();
       }
       if (btn.dataset.page === 'intern') {
         document.querySelectorAll('#internSubNav button[data-intern]').forEach(b => b.classList.remove('active'));
@@ -1454,6 +1542,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       if(bewTabBtn) bewTabBtn.style.display=isHR?'':'none';
       const logTabBtn=document.getElementById('logTabBtn');
       if(logTabBtn) logTabBtn.style.display=isHR&&getAccountOverride(loggedInUser,'logs')?'':'none';
+      const supportBtn=document.getElementById('supportNavBtn');
+      if(supportBtn) supportBtn.style.display='flex';
       if(internBtn) internBtn.style.display='flex';
       const spAdminTab=document.getElementById('spAdminTabBtn');
       if(spAdminTab) spAdminTab.style.display=isHR&&getAccountOverride(loggedInUser,'shiftplan')?'':'none';
@@ -1461,6 +1551,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       if(accountsTab) accountsTab.style.display=isHR&&getAccountOverride(loggedInUser,'accounts')?'':'none';
       const staffListTab=document.getElementById('staffListTabBtn');
       if(staffListTab) staffListTab.style.display=isHR?'':'none';
+      const ticketsAdminTab=document.getElementById('ticketsAdminTabBtn');
+      if(ticketsAdminTab) ticketsAdminTab.style.display=isHR?'':'none';
       const strafenAdminTab=document.getElementById('strafenAdminTabBtn');
       if(strafenAdminTab) strafenAdminTab.style.display=isHR&&getAccountOverride(loggedInUser,'strafen')?'':'none';
       const bell=document.getElementById('notifBell'); if(bell) bell.style.display='flex';
@@ -1471,6 +1563,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       if(adminBtn) adminBtn.style.display='none';
       userMenu.style.display='none';
       loginBtn.style.display='flex';
+      const supportBtn=document.getElementById('supportNavBtn');
+      if(supportBtn) supportBtn.style.display='none';
       if(internBtn) internBtn.style.display='none';
       const bell=document.getElementById('notifBell'); if(bell) bell.style.display='none';
       if(document.getElementById('admin').classList.contains('active')){
@@ -2385,6 +2479,216 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     spRenderPlans();
   }
 
+  // ─── Ticket System ───
+  function getTickets(){
+    try{const d=localStorage.getItem('dvn_tickets');return d?JSON.parse(d):[]}catch(e){return []}
+  }
+  function saveTickets(tickets){
+    try{localStorage.setItem('dvn_tickets',JSON.stringify(tickets))}catch(e){}
+    syncBroadcast('tickets');
+  }
+  function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+  function ticketOpenCreateModal(){
+    document.getElementById('ticketCreateTitle').value='';
+    document.getElementById('ticketCreateDesc').value='';
+    document.getElementById('ticketCreateCat').value='support';
+    document.getElementById('ticketCreateModal').classList.add('open');
+  }
+  function ticketCreate(){
+    const cat=document.getElementById('ticketCreateCat').value;
+    const title=document.getElementById('ticketCreateTitle').value.trim();
+    const desc=document.getElementById('ticketCreateDesc').value.trim();
+    if(!title||!desc){ showNotification('Bitte Betreff und Beschreibung ausfüllen.','error'); return; }
+    const tickets=getTickets();
+    const ticket={
+      id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+      author:loggedInUser,
+      cat,
+      title,
+      desc,
+      status:'open',
+      claimedBy:null,
+      created:Date.now(),
+      messages:[]
+    };
+    tickets.unshift(ticket);
+    saveTickets(tickets);
+    closeModal('ticketCreateModal');
+    showNotification('✅ Ticket wurde erstellt.','success');
+    ticketMyRender();
+  }
+
+  function ticketMyRender(){
+    const el=document.getElementById('ticketMyList');
+    if(!el) return;
+    const tickets=getTickets().filter(t=>t.author===loggedInUser);
+    if(tickets.length===0){
+      el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Du hast noch keine Tickets erstellt.</div>';
+      return;
+    }
+    const catLabels={support:'Support',bug:'Bug Report',complaint:'Beschwerde',other:'Sonstiges'};
+    const statusLabels={open:'🟢 Offen',claimed:'🟡 In Bearbeitung',closed:'🔴 Geschlossen'};
+    el.innerHTML=tickets.map(t=>{
+      const msgCount=t.messages.length;
+      return `<div class="sp-plan-card" style="cursor:pointer;flex-wrap:wrap" onclick="ticketOpenDetail('${t.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.35rem;width:100%">
+          <div><strong style="font-size:.85rem">${t.title}</strong> <span style="font-size:.72rem;color:var(--g400)">(${catLabels[t.cat]||t.cat})</span></div>
+          <div style="display:flex;gap:.4rem;align-items:center">
+            <span style="font-size:.72rem;padding:.15rem .45rem;background:${t.status==='open'?'var(--sg)':t.status==='claimed'?'#fef3c7':'var(--g50)'};border-radius:4px;font-weight:600">${statusLabels[t.status]||t.status}</span>
+            <span style="font-size:.7rem;color:var(--g400)">${msgCount} Antwort${msgCount!==1?'en':''}</span>
+            <span style="font-size:.7rem;color:var(--g400)">${new Date(t.created).toLocaleDateString('de-DE')}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function ticketAdminRender(){
+    const el=document.getElementById('ticketAdminList');
+    if(!el) return;
+    const statusFilter=document.getElementById('ticketAdminFilter').value;
+    const catFilter=document.getElementById('ticketAdminCatFilter').value;
+    let tickets=getTickets();
+    if(statusFilter!=='all') tickets=tickets.filter(t=>t.status===statusFilter);
+    if(catFilter!=='all') tickets=tickets.filter(t=>t.cat===catFilter);
+    if(tickets.length===0){
+      el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Keine Tickets gefunden.</div>';
+      return;
+    }
+    const catLabels={support:'Support',bug:'Bug Report',complaint:'Beschwerde',other:'Sonstiges'};
+    const statusLabels={open:'🟢 Offen',claimed:'🟡 In Bearbeitung',closed:'🔴 Geschlossen'};
+    el.innerHTML=tickets.map(t=>{
+      const msgCount=t.messages.length;
+      return `<div class="sp-plan-card" style="cursor:pointer;flex-wrap:wrap" onclick="ticketOpenDetail('${t.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.35rem;width:100%">
+          <div><strong style="font-size:.85rem">${t.title}</strong> <span style="font-size:.72rem;color:var(--g400)">(${catLabels[t.cat]||t.cat})</span></div>
+          <div style="font-size:.75rem;color:var(--g500)">${t.author}</div>
+        </div>
+        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;width:100%">
+          <span style="font-size:.72rem;padding:.15rem .45rem;background:${t.status==='open'?'var(--sg)':t.status==='claimed'?'#fef3c7':'var(--g50)'};border-radius:4px;font-weight:600">${statusLabels[t.status]||t.status}</span>
+          ${t.claimedBy?`<span style="font-size:.72rem;color:var(--g400)">👤 ${t.claimedBy}</span>`:''}
+          <span style="font-size:.7rem;color:var(--g400)">${msgCount} Antwort${msgCount!==1?'en':''}</span>
+          <span style="font-size:.7rem;color:var(--g400)">${new Date(t.created).toLocaleDateString('de-DE')}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function ticketOpenDetail(id){
+    const tickets=getTickets();
+    const t=tickets.find(x=>x.id===id);
+    if(!t) return;
+    const isOwner=t.author===loggedInUser;
+    const isHR=loggedInAccount&&loggedInAccount.rang==='HR';
+    document.getElementById('ticketDetailTitle').textContent=t.title;
+    const catLabels={support:'Support',bug:'Bug Report',complaint:'Beschwerde',other:'Sonstiges'};
+    const statusLabels={open:'🟢 Offen',claimed:'🟡 In Bearbeitung',closed:'🔴 Geschlossen'};
+    document.getElementById('ticketDetailMeta').textContent=`${catLabels[t.cat]||t.cat} · ${statusLabels[t.status]||t.status}${t.claimedBy?' · Bearbeiter: '+t.claimedBy:''} · ${new Date(t.created).toLocaleDateString('de-DE')}`;
+    document.getElementById('ticketDetailDesc').textContent=t.desc;
+    // Actions
+    const actionsEl=document.getElementById('ticketDetailActions');
+    actionsEl.innerHTML='';
+    if(isHR && t.status==='open'){
+      const claimBtn=document.createElement('button');
+      claimBtn.textContent='🙋 Claimen';
+      claimBtn.onclick=()=>{ ticketClaim(t.id); };
+      claimBtn.style.cssText='padding:.35rem .8rem;background:var(--sg);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
+      actionsEl.appendChild(claimBtn);
+    }
+    if(isHR && t.status==='claimed' && t.claimedBy===loggedInUser){
+      const closeBtn=document.createElement('button');
+      closeBtn.textContent='✅ Schließen';
+      closeBtn.onclick=()=>{ ticketClose(t.id); };
+      closeBtn.style.cssText='padding:.35rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
+      actionsEl.appendChild(closeBtn);
+    }
+    if(isHR && t.status==='closed'){
+      const reopenBtn=document.createElement('button');
+      reopenBtn.textContent='🔓 Wieder öffnen';
+      reopenBtn.onclick=()=>{ ticketReopen(t.id); };
+      reopenBtn.style.cssText='padding:.35rem .8rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
+      actionsEl.appendChild(reopenBtn);
+    }
+    // Messages
+    const msgsEl=document.getElementById('ticketDetailMessages');
+    msgsEl.innerHTML='';
+    if(t.messages.length===0){
+      msgsEl.innerHTML='<div style="text-align:center;padding:1rem;color:var(--g400);font-size:.82rem">Noch keine Antworten.</div>';
+    } else {
+      t.messages.forEach(m=>{
+        const isMe=m.author===loggedInUser;
+        const div=document.createElement('div');
+        div.style.cssText=`padding:.5rem .75rem;border-radius:var(--rs);font-size:.82rem;line-height:1.4;max-width:85%;${isMe?'align-self:flex-end;background:var(--r100)':'align-self:flex-start;background:var(--g50);border:1px solid var(--g100)'}`;
+        div.innerHTML=`<div style="font-weight:600;font-size:.75rem;margin-bottom:.2rem">${m.author} <span style="font-weight:400;color:var(--g400)">${new Date(m.timestamp).toLocaleString('de-DE')}</span></div><div>${m.text}</div>`;
+        msgsEl.appendChild(div);
+      });
+    }
+    // Show reply field (hidden for closed tickets)
+    const replyField=document.getElementById('ticketDetailReply');
+    const replyBtn=replyField.nextElementSibling;
+    const canReply=t.status!=='closed' && (isOwner || isHR);
+    replyField.style.display=canReply?'':'none';
+    replyBtn.style.display=canReply?'':'none';
+    replyField.value='';
+    replyField.dataset.ticketId=t.id;
+    document.getElementById('ticketDetailModal').classList.add('open');
+  }
+
+  function ticketClaim(id){
+    const tickets=getTickets();
+    const t=tickets.find(x=>x.id===id);
+    if(!t||t.status!=='open') return;
+    t.status='claimed';
+    t.claimedBy=loggedInUser;
+    t.messages.push({author:loggedInUser,text:'🔧 Ticket wurde von '+loggedInUser+' übernommen.',timestamp:Date.now()});
+    saveTickets(tickets);
+    ticketOpenDetail(id);
+    ticketAdminRender();
+    ticketMyRender();
+  }
+
+  function ticketReply(){
+    const replyField=document.getElementById('ticketDetailReply');
+    const id=replyField.dataset.ticketId;
+    const text=replyField.value.trim();
+    if(!id||!text) return;
+    const tickets=getTickets();
+    const t=tickets.find(x=>x.id===id);
+    if(!t) return;
+    t.messages.push({author:loggedInUser,text,timestamp:Date.now()});
+    saveTickets(tickets);
+    ticketOpenDetail(id);
+    replyField.value='';
+    ticketAdminRender();
+    ticketMyRender();
+  }
+
+  function ticketClose(id){
+    const tickets=getTickets();
+    const t=tickets.find(x=>x.id===id);
+    if(!t) return;
+    t.status='closed';
+    t.messages.push({author:loggedInUser,text:'✅ Ticket wurde geschlossen.',timestamp:Date.now()});
+    saveTickets(tickets);
+    closeModal('ticketDetailModal');
+    ticketAdminRender();
+    ticketMyRender();
+  }
+
+  function ticketReopen(id){
+    const tickets=getTickets();
+    const t=tickets.find(x=>x.id===id);
+    if(!t) return;
+    t.status='open';
+    t.claimedBy=null;
+    t.messages.push({author:loggedInUser,text:'🔓 Ticket wurde wieder geöffnet.',timestamp:Date.now()});
+    saveTickets(tickets);
+    closeModal('ticketDetailModal');
+    ticketAdminRender();
+    ticketMyRender();
+  }
+
   // ─── Activity / Attendance ───
   let attendance = []; try{const s=localStorage.getItem('dvn_attendance');if(s)attendance=JSON.parse(s)}catch(e){}
   function saveAttendanceData(){
@@ -2776,11 +3080,66 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     showNotification('✅ Account "'+user+'" wurde angelegt. Der Benutzer kann sich jetzt mit dem festgelegten Passwort anmelden.','success');
   }
   // ─── Staff List ───
+  let staffListDirty = new Set();
+  function staffListMarkDirty(username){
+    staffListDirty.add(username);
+    const bar=document.getElementById('staffListSaveBar');
+    if(bar) bar.style.display='flex';
+  }
+  function staffListDiscard(){
+    staffListDirty.clear();
+    staffListRender();
+  }
+  function staffListSaveAll(){
+    if(staffListDirty.size===0) return;
+    const isHR=loggedInAccount && loggedInAccount.rang==='HR';
+    const list=getCustomAccounts();
+    let changedRanks=[];
+    staffListDirty.forEach(username=>{
+      const card=document.querySelector('#staffListContainer [data-acc="'+username+'"]');
+      if(!card) return;
+      const cfg=getAccountConfig(username);
+      const role=card.querySelector('[data-cfg="role"]').value;
+      cfg.role=role;
+      if(role==='HR'){
+        cfg.stellwerke=['AK','NS','BHBF','STB'];
+        cfg.strecken=['BG-AK','AK-MSB','BHBF-SHBF'];
+        cfg.fahrzeuge=['BR 429','BR 648','BR 628'];
+      } else {
+        cfg.stellwerke=[...card.querySelectorAll('[data-cfg="stellwerke"]:checked')].map(cb=>cb.value);
+        cfg.strecken=[...card.querySelectorAll('[data-cfg="strecken"]:checked')].map(cb=>cb.value);
+        cfg.fahrzeuge=[...card.querySelectorAll('[data-cfg="fahrzeuge"]:checked')].map(cb=>cb.value);
+      }
+      cfg.extras=[...card.querySelectorAll('[data-cfg="extras"]:checked')].map(cb=>cb.value);
+      saveAccountConfig(username,cfg);
+      if(isHR && role){
+        const acct=list.find(a=>a.username===username);
+        if(acct && acct.rang!==role){
+          acct.rang=role;
+          changedRanks.push(username+' → '+role);
+          if(loggedInAccount && loggedInAccount.username===username){
+            loggedInAccount.rang=role;
+          }
+        }
+      }
+    });
+    if(changedRanks.length>0) saveCustomAccounts(list);
+    staffListDirty.clear();
+    const bar=document.getElementById('staffListSaveBar');
+    if(bar) bar.style.display='none';
+    if(changedRanks.length>0) showNotification('✅ Ränge geändert: '+changedRanks.join(', '),'success');
+    showNotification('✅ Änderungen für '+staffListDirty.size+' Mitarbeiter gespeichert.','success');
+  }
   function staffListRender(){
     const el=document.getElementById('staffListContainer');
     if(!el) return;
     const allAccounts=getAllAccounts();
-    el.innerHTML=allAccounts.map(a=>{
+    const isHR=loggedInAccount && loggedInAccount.rang==='HR';
+    el.innerHTML=`<div id="staffListSaveBar" style="display:none;align-items:center;gap:.5rem;padding:.5rem;background:var(--g50);border-radius:var(--rs);border:1px dashed var(--r400);margin-bottom:.5rem">
+      <span style="font-size:.82rem;font-weight:600;color:var(--r600)">⚠️ Ungespeicherte Änderungen</span>
+      <button onclick="staffListSaveAll()" style="padding:.35rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.82rem;font-family:inherit">💾 Speichern</button>
+      <button onclick="staffListDiscard()" style="padding:.35rem .8rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.82rem;font-family:inherit">Verwerfen</button>
+    </div>`+allAccounts.map(a=>{
       const cfg=getAccountConfig(a.username);
       return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.4rem" data-acc="${a.username}">
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;flex:1">
@@ -2792,7 +3151,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;width:100%">
           <label style="font-size:.75rem;color:var(--g500)">Rolle:</label>
-          <select onchange="staffListSave('${a.username}')" data-cfg="role" style="padding:.25rem .4rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.78rem;font-family:inherit">
+          <select onchange="staffListMarkDirty('${a.username}')" data-cfg="role" style="padding:.25rem .4rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.78rem;font-family:inherit">
             <option value="">—</option>
             <option value="FDL" ${cfg.role==='FDL'?'selected':''}>FDL</option>
             <option value="TF" ${cfg.role==='TF'?'selected':''}>TF</option>
@@ -2801,49 +3160,24 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Stellwerke:</span>
-          ${['AK','NS','BHBF','STB'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.stellwerke.includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="stellwerke" value="${s}" ${(cfg.role==='HR'||cfg.stellwerke.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListSave('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
+          ${['AK','NS','BHBF','STB'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.stellwerke.includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="stellwerke" value="${s}" ${(cfg.role==='HR'||cfg.stellwerke.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListMarkDirty('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Strecken:</span>
-          ${['BG-AK','AK-MSB','BHBF-SHBF'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.strecken.includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="strecken" value="${s}" ${(cfg.role==='HR'||cfg.strecken.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListSave('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
+          ${['BG-AK','AK-MSB','BHBF-SHBF'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.strecken.includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="strecken" value="${s}" ${(cfg.role==='HR'||cfg.strecken.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListMarkDirty('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Fahrzeuge:</span>
-          ${['BR 429','BR 648','BR 628'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.fahrzeuge.includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="fahrzeuge" value="${s}" ${(cfg.role==='HR'||cfg.fahrzeuge.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListSave('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
+          ${['BR 429','BR 648','BR 628'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.fahrzeuge.includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="fahrzeuge" value="${s}" ${(cfg.role==='HR'||cfg.fahrzeuge.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListMarkDirty('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Zusatz:</span>
-          ${['Praxisvermittler','Ausbilder','Shift-Host'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${cfg.extras.includes(s)?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="extras" value="${s}" ${cfg.extras.includes(s)?'checked':''} onchange="staffListSave('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
+          ${['Praxisvermittler','Ausbilder','Shift-Host'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${cfg.extras.includes(s)?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="extras" value="${s}" ${cfg.extras.includes(s)?'checked':''} onchange="staffListMarkDirty('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
         </div>
         <div style="display:flex;gap:.35rem;margin-top:.3rem"></div>
       </div>`;
     }).join('');
-  }
-  function staffListSave(username){
-    const card=document.querySelector('#staffListContainer [data-acc="'+username+'"]');
-    if(!card) return;
-    const cfg=getAccountConfig(username);
-    const role=card.querySelector('[data-cfg="role"]').value;
-    cfg.role=role;
-    if(role==='HR'){
-      cfg.stellwerke=['AK','NS','BHBF','STB'];
-      cfg.strecken=['BG-AK','AK-MSB','BHBF-SHBF'];
-      cfg.fahrzeuge=['BR 429','BR 648','BR 628'];
-    } else {
-      cfg.stellwerke=[...card.querySelectorAll('[data-cfg="stellwerke"]:checked')].map(cb=>cb.value);
-      cfg.strecken=[...card.querySelectorAll('[data-cfg="strecken"]:checked')].map(cb=>cb.value);
-      cfg.fahrzeuge=[...card.querySelectorAll('[data-cfg="fahrzeuge"]:checked')].map(cb=>cb.value);
-    }
-    cfg.extras=[...card.querySelectorAll('[data-cfg="extras"]:checked')].map(cb=>cb.value);
-    saveAccountConfig(username,cfg);
-    const list=getCustomAccounts();
-    const acct=list.find(a=>a.username===username);
-    if(role && acct && acct.rang!==role){
-      acct.rang=role;
-      saveCustomAccounts(list);
-    }
-    if(loggedInAccount && username===loggedInAccount.username) sendDesktopNotification('📋 Lizenzen aktualisiert', 'Deine Lizenzen wurden geändert.');
-    showNotification('✅ Lizenzen für '+username+' gespeichert.','success');
+    staffListDirty.clear();
   }
   // ─── Set Password (after OTP login) — removed ───
   // ─── Set-password modal removed ───
