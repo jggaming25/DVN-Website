@@ -709,6 +709,7 @@
         </select>
         <button id="spNewBtn" onclick="spNew()" style="padding:.5rem 1.2rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">➕ Neuen Plan erstellen</button>
         <button id="spSaveBtn" onclick="spSave()" style="padding:.5rem 1.2rem;background:#065f46;color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">💾 Speichern</button>
+        <button id="spNotifyBtn" onclick="spNotifyAll()" style="padding:.5rem 1.2rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">🔔 Benachrichtigung</button>
       </div>
       <div id="spPlansList" style="margin-bottom:1rem"></div>
       <div id="spEditor" style="display:none">
@@ -1587,6 +1588,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     addLogEntry('Bewerbung '+logStatus, a.data.vorname+' '+a.data.nachname+' ('+(STELLEN.find(s=>s.id===a.stelleId)?.title||'?')+') wurde '+logStatus+(note?' – Grund: '+note:''));
     try{localStorage.setItem('dvn_applications',JSON.stringify(applications))}catch(e){}
     syncBroadcast('applications'); renderAdminPanels();
+    sendDesktopNotification('📝 Bewerbung '+logStatus, a.data.vorname+' '+a.data.nachname+' wurde '+(action==='accepted'?'✅ angenommen':'❌ abgelehnt'));
 
     // Discord-Benachrichtigung mit Erwähnung
     const st=STELLEN.find(s=>s.id===a.stelleId);
@@ -1619,6 +1621,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     addLogEntry('Stelle '+status, STELLEN[i].title+' wurde '+status);
     try { const map={}; STELLEN.forEach(s=>{ map[s.id]=s.open; }); localStorage.setItem('dvn_stellen_open',JSON.stringify(map)); } catch(e) {}
     syncBroadcast('stellen_open'); renderStellen(); renderAdminPanels();
+    sendDesktopNotification('📝 Bewerbung '+status, STELLEN[i].title+' wurde '+status);
   }
 
   // ─── Shifts ───
@@ -1911,6 +1914,21 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     document.getElementById('spSaveBtn').style.display='none';
     document.getElementById('spEditor').style.display='none';
     spRenderPlans();
+  }
+
+  function spNotifyAll(){
+    const cooldownKey='dvn_sp_notify_cooldown';
+    const last=localStorage.getItem(cooldownKey);
+    const now=Date.now();
+    if(last && now - Number(last) < 300000){
+      const rest=Math.ceil((300000-(now-Number(last)))/1000);
+      showNotification('⏳ Bitte warte '+rest+'s vor der nächsten Benachrichtigung.','error');
+      return;
+    }
+    try{localStorage.setItem(cooldownKey,String(now))}catch(e){}
+    const planTitle=document.getElementById('spEditorTitle')?.textContent||'Schichtplan';
+    sendDesktopNotification('📋 Schichtplan geändert', planTitle+' – Bitte prüfe den aktuellen Plan.');
+    showNotification('✅ Benachrichtigung an alle Nutzer gesendet.','success');
   }
 
   function spRenderPlans(){
@@ -2454,6 +2472,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       saveCustomAccounts(list);
     }
     setAccountOverride(username,key,!current);
+    if(loggedInAccount && username===loggedInAccount.username){
+      const label={'logs':'Logs','bewerbungen':'Bewerbungen','shiftplan':'Shiftplan','strafen':'Strafen','accounts':'Accounts'}[key]||key;
+      const status=!current?'erteilt':'entzogen';
+      showNotification('🔑 Berechtigung "'+label+'" '+status,'info');
+      sendDesktopNotification('🔑 Berechtigung geändert', label+' '+status);
+    }
     accManageRender();
   }
   function accManageDelete(username){
@@ -2607,6 +2631,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }
     cfg.extras=[...card.querySelectorAll('[data-cfg="extras"]:checked')].map(cb=>cb.value);
     saveAccountConfig(username,cfg);
+    if(loggedInAccount && username===loggedInAccount.username) sendDesktopNotification('📋 Lizenzen aktualisiert', 'Deine Lizenzen wurden geändert.');
     showNotification('✅ Lizenzen für '+username+' gespeichert.','success');
   }
   function staffListOTP(username){
@@ -3134,10 +3159,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!('Notification' in window)) return;
     try{
       if(Notification.permission==='granted'){
-        new Notification(title, {body});
+        new Notification(title, {body, icon:'images/dvn_logo.png'});
       } else if(Notification.permission==='default'){
         Notification.requestPermission().then(perm=>{
-          if(perm==='granted') new Notification(title, {body});
+          if(perm==='granted') new Notification(title, {body, icon:'images/dvn_logo.png'});
         });
       }
     } catch(e){
@@ -3363,6 +3388,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const nameLower = s.discordName.toLowerCase();
       if(loggedInAccount && nameLower === loggedInAccount.username.toLowerCase()){
         showNotification('✅ Dir wurden '+diff.toFixed(1)+'h abgebaut – Rest: '+Math.max(0,Number(s.totalHours)-newAbgebaut).toFixed(1)+'h','success');
+        sendDesktopNotification('✅ Stunden abgebaut', diff.toFixed(1)+'h abgebaut – Rest: '+Math.max(0,Number(s.totalHours)-newAbgebaut).toFixed(1)+'h');
         try{localStorage.setItem('dvn_last_strafe_'+loggedInAccount.username,s.id)}catch(e){}
       } else if(loggedInAccount){
         const nid=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
