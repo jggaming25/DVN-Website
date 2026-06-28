@@ -364,7 +364,7 @@
 
 <!-- ═══════ BEWERBUNGS-FORMULAR MODAL ═══════ -->
 <div class="modal-overlay" id="bewerbModal">
-  <div class="modal form-modal" id="bewerbFormContainer" style="max-width:560px;max-height:85vh;overflow-y:auto">
+  <div class="modal form-modal" id="bewerbFormContainer" style="max-width:780px;max-height:85vh;overflow-y:auto">
     <h2 id="bewerbModalTitle">Bewerbung</h2>
     <p id="bewerbModalSub" style="margin-bottom:1.25rem">Formular ausfüllen.</p>
     <div id="bewerbFormFields"></div>
@@ -920,7 +920,7 @@
 
 <!-- ═══════ TICKET DETAIL MODAL ═══════ -->
 <div class="modal-overlay" id="ticketDetailModal">
-  <div class="modal" style="max-width:680px">
+  <div class="modal" style="max-width:820px">
     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem">
       <div>
         <h2 id="ticketDetailTitle" style="margin-bottom:.25rem"></h2>
@@ -957,6 +957,7 @@
     </div>
     <!-- Email for transcript (shown on close) -->
     <div id="ticketEmailArea" style="display:none;align-items:center;gap:.5rem;margin-top:.5rem;flex-wrap:wrap">
+      <input type="hidden" id="ticketCloseTarget">
       <input type="email" id="ticketCloseEmail" placeholder="E-Mail für Transscript (optional)" style="flex:1;min-width:180px;padding:.4rem .7rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.82rem;font-family:inherit">
       <button onclick="ticketCloseWithEmail()" style="padding:.4rem .9rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.82rem;cursor:pointer;font-family:inherit">✅ Schließen & Senden</button>
       <button onclick="ticketCloseWithoutEmail()" style="padding:.4rem .9rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.82rem;font-family:inherit">Nur schließen</button>
@@ -1096,18 +1097,19 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       fields: [
         // ─── Persönliche Daten ───
         { type:'text',     label:'Discord Username',                        name:'discord',       required:true, placeholder:'z.B. user#1234' },
+        { type:'text',     label:'Roblox Username',                        name:'roblox',       required:true, placeholder:'z.B. @spielerxy' },
         { type:'select',   label:'Wie alt sind Sie?',                   name:'alter',         options:['Unter 14','14 oder älter'], required:true },
 
         // ─── Signalkunde (Bild 1) ───
         { type:'select',   label:'Frage 1: Was bedeutet das Signal? (Das nächste Signal zeigt …)', name:'frage1', image:'images/1_5.png', options:[
-          'HP1 -> Freie Fahrt, sie können fahren!',
-          'HP2 -> Langsamfahrt!',
-          'HP0 -> Sie müssen anhalten!',
-          'HP0 -> Freie Fahrt, sie können fahren!'
+          'Das nächste Signal zeigt HP1 -> Freie fahrt sie können Fahren!',
+          'Das nächste Signal zeigt HP2 -> Langsamfahrt!',
+          'Das nächste Signal zeigt HP0 -> Sie müssen anhalten!',
+          'Das nächste Signal zeigt HP0 -> Freie fahrt sie können Fahren!'
         ], required:true },
 
         // ─── Signalkunde (Bild 2) ───
-        { type:'select',   label:'Frage 2: Was bedeutet dieses Signal?', name:'frage2', image:'images/2_5.png', options:[
+        { type:'select',   label:'Frage 2: Was bedeutet dieses Signal?', name:'frage2', image:'images/5_5.png', options:[
           'Sh2 -> Schutzhalt',
           'Sh0 -> Halt',
           'Hp0 -> Halt',
@@ -1115,7 +1117,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         ], required:true },
 
         // ─── Signalkunde (Bild 3) ───
-        { type:'select',   label:'Frage 3: Was bedeutet dieses Signal?', name:'frage3', image:'images/3_5.png', options:[
+        { type:'select',   label:'Frage 3: Was bedeutet dieses Signal?', name:'frage3', image:'images/4_5.png', options:[
           'Hp1 -> Halt',
           'Hp1 -> Fahrt',
           'Hp0 -> Halt',
@@ -1124,7 +1126,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         ], required:true },
 
         // ─── Signalkunde (Bild 4) ───
-        { type:'select',   label:'Frage 4: Was bedeutet dieses Signal?', name:'frage4', image:'images/4_5.png', options:[
+        { type:'select',   label:'Frage 4: Was bedeutet dieses Signal?', name:'frage4', image:'images/3_5.png', options:[
           'Hp2 -> Fahrt',
           'Hp1 -> Halt',
           'Hp3 -> Fahrt',
@@ -1133,12 +1135,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         ], required:true },
 
         // ─── Signalkunde (Bild 5 – Multiple Choice, 2 Antworten) ───
-        { type:'text',     label:'Frage 5: Was bedeutet das Signal? (2 Antworten, durch Komma trennen)', name:'frage5', image:'images/5_5.png', required:true, placeholder:'z.B. HP2 -> Langsamfahrt, Ich muss vor dem Signal anhalten' },
-        { type:'checkbox', label:'Frage 5a: Hp0 -> Fahrt',              name:'f5_hp0',        required:false },
-        { type:'checkbox', label:'Frage 5b: Hp2 -> Langsamfahrt',       name:'f5_hp2',        required:false },
-        { type:'checkbox', label:'Frage 5c: Hp1 -> Halt',               name:'f5_hp1',        required:false },
-        { type:'checkbox', label:'Frage 5d: Ich darf mit maximal 40 km/h fahren', name:'f5_40', required:false },
-        { type:'checkbox', label:'Frage 5e: Ich muss vor dem Signal anhalten',    name:'f5_halt', required:false },
+        { type:'checkbox', label:'Hp0 -> Fahrt',              name:'f5_hp0',        image:'images/2_5.png', required:false },
+        { type:'checkbox', label:'Hp2 -> Langsamfahrt',       name:'f5_hp2',        required:false },
+        { type:'checkbox', label:'Hp1 -> Halt',               name:'f5_hp1',        required:false },
+        { type:'checkbox', label:'Ich darf mit maximal 40 km/h fahren', name:'f5_40', required:false },
+        { type:'checkbox', label:'Ich muss vor dem Signal anhalten',    name:'f5_halt', required:false },
 
         // ─── Fachfragen (Eingabe) ───
         { type:'textarea', label:'Wann wird VR0 gestellt?',             name:'vr0',           required:true },
@@ -1649,18 +1650,19 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     document.getElementById('bewerbModalTitle').textContent='📝 Bewerbung: '+st.title;
     document.getElementById('bewerbError').style.display='none';
     const c=document.getElementById('bewerbFormFields');
-    c.innerHTML=st.fields.map(f=>{
+    c.innerHTML=st.fields.map((f,idx)=>{
       const req=f.required?' <span class="req" style="color:var(--r500)">*</span>':'';
       const fid='bf_'+f.name;
-      if(f.type==='checkbox') return `<div class="ff checkbox" style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem"><input type="checkbox" id="${fid}" name="${f.name}" style="width:18px;height:18px;accent-color:var(--r500)"><label for="${fid}" style="margin:0;cursor:pointer;font-size:.85rem">${f.label}${req}</label></div>`;
-      if(f.type==='select') {
-        const img=f.image?`<img src="${f.image}" style="max-width:100%;max-height:180px;display:block;margin-bottom:.5rem;border-radius:6px;border:1px solid var(--g200)">`:'';
-        return `${img}<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><select id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit"><option value="">— Bitte wählen —</option>${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
-      }
-      if(f.type==='textarea') return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><textarea id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit;min-height:80px;resize:vertical"></textarea></div>`;
-      if(f.type==='file') return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><input type="file" id="${fid}" name="${f.name}" accept="${f.accept||'.pdf,.doc,.docx'}" style="width:100%;padding:.4rem"></div>`;
+      const img=f.image?`<img src="${f.image}" style="max-width:100%;max-height:200px;display:block;margin-bottom:.5rem;border-radius:6px;border:1px solid var(--g200);object-fit:contain">`:'';
+      const prevField=idx>0?st.fields[idx-1]:null;
+      const sameGroup=prevField&&f.name.startsWith('f5_')&&prevField.name.startsWith('f5_');
+      const divider=!sameGroup&&idx>0?'<div style="border-top:1px dashed var(--g300);margin:.6rem 0 .75rem 0"></div>':'';
+      if(f.type==='checkbox') return `${divider}${img}<div class="ff checkbox" style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem"><input type="checkbox" id="${fid}" name="${f.name}" style="width:18px;height:18px;accent-color:var(--r500)"><label for="${fid}" style="margin:0;cursor:pointer;font-size:.85rem">${f.label}${req}</label></div>`;
+      if(f.type==='select') return `${divider}${img}<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><select id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit"><option value="">— Bitte wählen —</option>${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
+      if(f.type==='textarea') return `${divider}${img}<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><textarea id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit;min-height:80px;resize:vertical"></textarea></div>`;
+      if(f.type==='file') return `${divider}${img}<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><input type="file" id="${fid}" name="${f.name}" accept="${f.accept||'.pdf,.doc,.docx'}" style="width:100%;padding:.4rem"></div>`;
       const placeholder=f.placeholder?' placeholder="'+f.placeholder+'"':'';
-      return `<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><input type="${f.type}" id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit" ${f.type==='tel'?'pattern="[0-9\\s\\+\\-]+"':''}${placeholder}></div>`;
+      return `${divider}${img}<div style="margin-bottom:.75rem"><label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem">${f.label}${req}</label><input type="${f.type}" id="${fid}" name="${f.name}" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit" ${f.type==='tel'?'pattern="[0-9\\s\\+\\-]+"':''}${placeholder}></div>`;
     }).join('');
     document.getElementById('bewerbModal').classList.add('open');
   }
@@ -1691,6 +1693,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       else el.style.borderColor='';
     });
     if(!valid){ document.getElementById('bewerbError').style.display='block'; return; }
+    // Validate Frage 5: at least 2 checkboxes must be checked
+    const f5Checks=['f5_hp0','f5_hp2','f5_hp1','f5_40','f5_halt'].filter(n=>data[n]).length;
+    if(f5Checks<2){ showNotification('Bitte wähle bei Frage 5 mindestens 2 Antworten aus.','error'); return; }
     document.getElementById('bewerbError').style.display='none';
     await Promise.all(fileReads);
     applications.push({ id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), stelleId:currentStelle.id, data, datum:new Date().toLocaleDateString('de-DE'), status:'pending', adminNote:'', adminNoteBy:'' });
@@ -1727,7 +1732,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const search=(document.getElementById('bewSearch')?.value||'').toLowerCase();
     let filtered=applications;
     if(bewFilter!=='all') filtered=filtered.filter(a=>a.status===bewFilter);
-    if(search) filtered=filtered.filter(a=>(a.data.discord||'').toLowerCase().includes(search)||(a.data.vorname||'').toLowerCase().includes(search)||(a.data.nachname||'').toLowerCase().includes(search));
+    if(search) filtered=filtered.filter(a=>{const n=a.data.vorname&&a.data.nachname?a.data.vorname+' '+a.data.nachname:a.data.discord||a.data.roblox||'';return n.toLowerCase().includes(search)||(a.data.discord||'').toLowerCase().includes(search);});
     if(filtered.length===0) bl.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">'+(bewFilter!=='all'||search?'Keine Bewerbungen gefunden.':'Noch keine Bewerbungen eingegangen.')+'</div>';
     else bl.innerHTML='<div class="ab-list">'+filtered.map((a)=>{
       const realIdx=applications.indexOf(a);
@@ -1739,7 +1744,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       }).join('');
       return `<div class="ab-item">
         <div class="ab-head">
-          <span class="ab-name">${a.data.vorname||'?'} ${a.data.nachname||'?'}</span>
+          <span class="ab-name">${a.data.discord||a.data.roblox||'?'}</span>
           <span class="ab-date">${a.datum} · ${st?st.title:'?'}</span>
           <span class="ab-status ${a.status}">${a.status==='pending'?'Ausstehend':a.status==='accepted'?'Angenommen':'Abgelehnt'}</span>
         </div>
@@ -1777,10 +1782,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const a=applications[idx]; if(!a) return;
     a.status=action; if(note){ a.adminNote=note; a.adminNoteBy=loggedInUser; }
     const logStatus=action==='accepted'?'angenommen':'abgelehnt';
-    addLogEntry('Bewerbung '+logStatus, a.data.vorname+' '+a.data.nachname+' ('+(STELLEN.find(s=>s.id===a.stelleId)?.title||'?')+') wurde '+logStatus+(note?' – Grund: '+note:''));
+    const name=a.data.vorname&&a.data.nachname?a.data.vorname+' '+a.data.nachname:a.data.discord||a.data.roblox||'Unbekannt';
+    addLogEntry('Bewerbung '+logStatus, name+' ('+(STELLEN.find(s=>s.id===a.stelleId)?.title||'?')+') wurde '+logStatus+(note?' – Grund: '+note:''));
     try{localStorage.setItem('dvn_applications',JSON.stringify(applications))}catch(e){}
     syncBroadcast('applications'); renderAdminPanels();
-    sendDesktopNotification('📝 Bewerbung '+logStatus, a.data.vorname+' '+a.data.nachname+' wurde '+(action==='accepted'?'✅ angenommen':'❌ abgelehnt'));
+    sendDesktopNotification('📝 Bewerbung '+logStatus, name+' wurde '+(action==='accepted'?'✅ angenommen':'❌ abgelehnt'));
 
     // Discord-Benachrichtigung mit Erwähnung
     const st=STELLEN.find(s=>s.id===a.stelleId);
@@ -1788,10 +1794,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const color=action==='accepted'?0x22c55e:0xef4444;
     const mention=a.data.discord_id ? '<@'+a.data.discord_id+'>' : '';
     const desc=mention
-      ? mention+' – Die Bewerbung von **'+a.data.vorname+' '+a.data.nachname+'** wurde **'+statusText.toLowerCase()+'**.'
-      : 'Die Bewerbung von **'+a.data.vorname+' '+a.data.nachname+'** wurde **'+statusText.toLowerCase()+'**.';
+      ? mention+' – Die Bewerbung von **'+name+'** wurde **'+statusText.toLowerCase()+'**.'
+      : 'Die Bewerbung von **'+name+'** wurde **'+statusText.toLowerCase()+'**.';
     const fields=[
-      {name:'Bewerber', value:a.data.vorname+' '+a.data.nachname, inline:true},
+      {name:'Bewerber', value:name, inline:true},
       {name:'Position', value:st?st.title:'?', inline:true},
       {name:'E-Mail', value:a.data.email||'—', inline:true},
       {name:'Datum', value:a.datum, inline:true},
@@ -2547,7 +2553,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function ticketMyRender(){
     const el=document.getElementById('ticketMyList');
     if(!el) return;
-    const tickets=getTickets().filter(t=>t.author===loggedInUser);
+    const tickets=getTickets().filter(t=>t.author===loggedInUser).filter(t=>t.status!=='closed'||(t.closedAt&&Date.now()-t.closedAt<86400000));
     if(tickets.length===0){
       el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Du hast noch keine Tickets erstellt.</div>';
       return;
@@ -2611,6 +2617,17 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const statusLabels={open:'🟢 Offen',claimed:'🟡 In Bearbeitung',closed:'🔴 Geschlossen'};
     document.getElementById('ticketDetailMeta').textContent=`${catLabels[t.cat]||t.cat} · ${statusLabels[t.status]||t.status}${t.claimedBy?' · Bearbeiter: '+t.claimedBy:''} · ${new Date(t.created).toLocaleDateString('de-DE')}`;
     document.getElementById('ticketDetailDesc').textContent=t.desc;
+    // Hide email area on open
+    document.getElementById('ticketEmailArea').style.display='none';
+    document.getElementById('ticketCloseEmail').value='';
+    // Show assigned HR list
+    const hrListEl=document.getElementById('ticketDetailHRList');
+    if(t.assignedHR&&t.assignedHR.length>0){
+      hrListEl.textContent='👥 Zugewiesene HR: '+t.assignedHR.join(', ');
+      hrListEl.style.display='block';
+    } else {
+      hrListEl.style.display='none';
+    }
     // Actions
     const actionsEl=document.getElementById('ticketDetailActions');
     actionsEl.innerHTML='';
@@ -2624,9 +2641,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(isHR && t.status==='claimed' && t.claimedBy===loggedInUser){
       const closeBtn=document.createElement('button');
       closeBtn.textContent='✅ Schließen';
-      closeBtn.onclick=()=>{ ticketClose(t.id); };
+      closeBtn.onclick=()=>{ ticketCloseBegin(t.id); };
       closeBtn.style.cssText='padding:.35rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
       actionsEl.appendChild(closeBtn);
+      const addHRBtn=document.createElement('button');
+      addHRBtn.textContent='👥 HR hinzufügen';
+      addHRBtn.onclick=()=>{ ticketAddHR(t.id); };
+      addHRBtn.style.cssText='padding:.35rem .8rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
+      actionsEl.appendChild(addHRBtn);
     }
     if(isHR && t.status==='closed'){
       const reopenBtn=document.createElement('button');
@@ -2645,7 +2667,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         const isMe=m.author===loggedInUser;
         const div=document.createElement('div');
         div.style.cssText=`padding:.5rem .75rem;border-radius:var(--rs);font-size:.82rem;line-height:1.4;max-width:85%;${isMe?'align-self:flex-end;background:var(--r100)':'align-self:flex-start;background:var(--g50);border:1px solid var(--g100)'}`;
-        div.innerHTML=`<div style="font-weight:600;font-size:.75rem;margin-bottom:.2rem">${m.author} <span style="font-weight:400;color:var(--g400)">${new Date(m.timestamp).toLocaleString('de-DE')}</span></div><div>${m.text}</div>`;
+        if(m.type==='file'&&m.fileData){
+          div.innerHTML=`<div style="font-weight:600;font-size:.75rem;margin-bottom:.2rem">${m.author} <span style="font-weight:400;color:var(--g400)">${new Date(m.timestamp).toLocaleString('de-DE')}</span></div>${m.fileData.startsWith('data:video/')?`<video controls style="max-width:100%;max-height:300px;border-radius:4px"><source src="${m.fileData}"></video>`:`<img src="${m.fileData}" style="max-width:100%;max-height:300px;border-radius:4px;cursor:pointer" onclick="window.open('${m.fileData}')" alt="${m.fileName||''}">`}`;
+        } else {
+          div.innerHTML=`<div style="font-weight:600;font-size:.75rem;margin-bottom:.2rem">${m.author} <span style="font-weight:400;color:var(--g400)">${new Date(m.timestamp).toLocaleString('de-DE')}</span></div><div>${m.text}</div>`;
+        }
         msgsEl.appendChild(div);
       });
     }
@@ -2655,8 +2681,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const canReply=t.status!=='closed' && (isOwner || isHR);
     replyField.style.display=canReply?'':'none';
     replyBtn.style.display=canReply?'':'none';
+    document.getElementById('ticketFileUpload').closest('label').style.display=canReply?'':'none';
     replyField.value='';
     replyField.dataset.ticketId=t.id;
+    // Show textbausteine for HR on open/claimed tickets
+    const tbEl=document.getElementById('ticketTextbausteine');
+    tbEl.style.display=(isHR && t.status!=='closed')?'block':'none';
     document.getElementById('ticketDetailModal').classList.add('open');
   }
 
@@ -2702,6 +2732,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
 
   function ticketReopen(id){
+    const isHR=loggedInAccount&&loggedInAccount.rang==='HR';
+    if(!isHR) return;
     const tickets=getTickets();
     const t=tickets.find(x=>x.id===id);
     if(!t) return;
@@ -2712,6 +2744,86 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     closeModal('ticketDetailModal');
     ticketAdminRender();
     ticketMyRender();
+  }
+  function ticketInsertTemplate(text){
+    const el=document.getElementById('ticketDetailReply');
+    if(el) el.value+=text;
+  }
+  function ticketUploadFile(){
+    const input=document.getElementById('ticketFileUpload');
+    if(!input||!input.files||!input.files[0]) return;
+    const file=input.files[0];
+    const isVideo=file.type.startsWith('video/');
+    if(isVideo&&file.size>10*1024*1024){showNotification('Video zu groß (max 10 MB).','error');return;}
+    if(!isVideo&&file.size>5*1024*1024){showNotification('Bild zu groß (max 5 MB).','error');return;}
+    const reader=new FileReader();
+    reader.onload=function(e){
+      const replyField=document.getElementById('ticketDetailReply');
+      const id=replyField.dataset.ticketId;
+      if(!id) return;
+      const tickets=getTickets();
+      const t=tickets.find(x=>x.id===id);
+      if(!t) return;
+      t.messages.push({author:loggedInUser,text:'',timestamp:Date.now(),type:'file',fileData:e.target.result,fileName:file.name});
+      saveTickets(tickets);
+      ticketOpenDetail(id);
+      ticketAdminRender();
+      ticketMyRender();
+      input.value='';
+    };
+    reader.readAsDataURL(file);
+  }
+  function ticketAddHR(id){
+    const name=prompt('HR-Benutzername zum Hinzufügen:');
+    if(!name||!name.trim()) return;
+    const tickets=getTickets();
+    const t=tickets.find(x=>x.id===id);
+    if(!t) return;
+    if(!t.assignedHR) t.assignedHR=[];
+    if(t.assignedHR.includes(name.trim())){showNotification('Dieser HR ist bereits zugewiesen.','error');return;}
+    t.assignedHR.push(name.trim());
+    t.messages.push({author:loggedInUser,text:'👥 '+name.trim()+' wurde zum Ticket hinzugefügt.',timestamp:Date.now()});
+    saveTickets(tickets);
+    ticketOpenDetail(id);
+    ticketAdminRender();
+    ticketMyRender();
+  }
+  function ticketCloseBegin(id){
+    document.getElementById('ticketCloseTarget').value=id;
+    document.getElementById('ticketEmailArea').style.display='flex';
+  }
+  function ticketCloseWithEmail(){
+    const id=document.getElementById('ticketCloseTarget').value;
+    const email=document.getElementById('ticketCloseEmail').value.trim();
+    const tickets=getTickets();
+    const t=tickets.find(x=>x.id===id);
+    if(!t) return;
+    t.status='closed';
+    t.closedAt=Date.now();
+    if(email) t.email=email;
+    t.messages.push({author:loggedInUser,text:'✅ Ticket wurde geschlossen'+(email?' (Transkript an '+email+')':'')+'.',timestamp:Date.now()});
+    saveTickets(tickets);
+    document.getElementById('ticketEmailArea').style.display='none';
+    document.getElementById('ticketCloseEmail').value='';
+    closeModal('ticketDetailModal');
+    ticketAdminRender();
+    ticketMyRender();
+    showNotification('✅ Ticket geschlossen'+(email?' (Transkript wird gesendet)':''),'success');
+  }
+  function ticketCloseWithoutEmail(){
+    const id=document.getElementById('ticketCloseTarget').value;
+    const tickets=getTickets();
+    const t=tickets.find(x=>x.id===id);
+    if(!t) return;
+    t.status='closed';
+    t.closedAt=Date.now();
+    t.messages.push({author:loggedInUser,text:'✅ Ticket wurde geschlossen.',timestamp:Date.now()});
+    saveTickets(tickets);
+    document.getElementById('ticketEmailArea').style.display='none';
+    closeModal('ticketDetailModal');
+    ticketAdminRender();
+    ticketMyRender();
+    showNotification('✅ Ticket geschlossen.','success');
   }
 
   // ─── Activity / Attendance ───
