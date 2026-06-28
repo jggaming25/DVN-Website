@@ -1332,6 +1332,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       loadNotifHistory();
       closeLogin(); updateUI(); applyDarkMode();
       showSetPasswordModal();
+      setTimeout(swSendConfig,100);
       return;
     }
     // Check password override or account password
@@ -1343,6 +1344,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         try{localStorage.setItem('dvn_session_user',u);localStorage.setItem('dvn_session_pass',hp)}catch(e){}
       }
       addLogEntry('Login', 'Benutzer '+u+' ('+account.rang+') hat sich angemeldet'); closeLogin(); updateUI(); applyDarkMode();
+      setTimeout(swSendConfig,100);
     } else document.getElementById('loginError').style.display='block';
   }
   function toggleDropdown(e){
@@ -1362,6 +1364,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     document.querySelector('nav button[data-page="willkommen"]').classList.add('active');
     document.getElementById('willkommen').classList.add('active');
     updateUI();
+    swSendConfig();
   }
 
   function updateUI() {
@@ -2489,15 +2492,37 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     saveCustomAccounts(custom);
     accManageRender();
   }
+  let accManageSelections = new Set();
   function accManageRender(){
     const el=document.getElementById('accManageList');
     if(!el) return;
     const allAccounts=getAllAccounts();
-    el.innerHTML=`<div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">${allAccounts.length} Accounts</div>
+    el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem">
+      <span style="font-size:.82rem;color:var(--g500)">${allAccounts.length} Accounts</span>
+      <div style="display:flex;gap:.35rem;flex-wrap:wrap;align-items:center">
+        <button onclick="accManageSelAll()" style="padding:.25rem .6rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit">Alle</button>
+        <button onclick="accManageSelNone()" style="padding:.25rem .6rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit">Keine</button>
+        <span id="accManageSelCount" style="font-size:.78rem;color:var(--g500);font-weight:600">0 ausgewählt</span>
+      </div>
+    </div>
+    <div id="accBulkBar" style="display:none;align-items:center;gap:.35rem;flex-wrap:wrap;margin-bottom:.5rem;padding:.5rem;background:var(--g50);border-radius:var(--rs);border:1px dashed var(--g300)">
+      <span style="font-size:.78rem;font-weight:600;color:var(--g600)">Massenbearbeitung:</span>
+      ${['logs','bewerbungen','shiftplan','strafen','accounts'].map(k=>
+        `<button onclick="accManageBulkToggle('${k}')" style="padding:.25rem .6rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit">${k}</button>`
+      ).join('')}
+      <button onclick="accManageSelClear()" style="padding:.25rem .6rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit">✕ Auswahl löschen</button>
+    </div>
+    <div id="accBulkBarDelete" style="display:none;margin-bottom:.5rem;padding:.5rem;background:#fef2f2;border-radius:var(--rs);border:1px dashed var(--r300)">
+      <button onclick="accManageBulkDelete()" style="padding:.25rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit">🗑️ Ausgewählte löschen</button>
+    </div>
       ${allAccounts.map(a=>{
         const isSelf=loggedInAccount && a.username===loggedInAccount.username;
-        return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem">
-          <div style="font-weight:600;font-size:.85rem;min-width:120px">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(${a.rang})</span></div>
+        const sel=accManageSelections.has(a.username);
+        return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem;${sel?'outline:2px solid var(--r400);background:var(--r50)':''}">
+          <div style="display:flex;align-items:center;gap:.5rem;min-width:120px">
+            <input type="checkbox" ${sel?'checked':''} onchange="accManageSelToggle('${a.username}')" style="width:15px;height:15px;accent-color:var(--r500);flex-shrink:0">
+            <span style="font-weight:600;font-size:.85rem">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(${a.rang})</span></span>
+          </div>
           <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">
             ${['logs','bewerbungen','shiftplan','strafen','accounts'].map(k=>{
               const val=getAccountOverride(a.username,k);
@@ -2509,6 +2534,62 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           </div>
         </div>`;
       }).join('')}`;
+    accManageSelUpdateUI();
+  }
+  function accManageSelToggle(user){
+    if(accManageSelections.has(user)) accManageSelections.delete(user);
+    else accManageSelections.add(user);
+    accManageRender();
+  }
+  function accManageSelAll(){
+    getAllAccounts().forEach(a=>accManageSelections.add(a.username));
+    accManageRender();
+  }
+  function accManageSelNone(){
+    accManageSelections.clear();
+    accManageRender();
+  }
+  function accManageSelClear(){
+    accManageSelections.clear();
+    accManageRender();
+  }
+  function accManageSelUpdateUI(){
+    const count=accManageSelections.size;
+    const bar=document.getElementById('accBulkBar');
+    const delBar=document.getElementById('accBulkBarDelete');
+    const countEl=document.getElementById('accManageSelCount');
+    if(countEl) countEl.textContent=count+' ausgewählt';
+    if(bar) bar.style.display=count?'flex':'none';
+    if(delBar) delBar.style.display=count?'flex':'none';
+  }
+  function accManageBulkToggle(key){
+    const users=[...accManageSelections];
+    if(users.length===0) return;
+    // Count current true for this key among selected
+    const trueCount=users.filter(u=>getAccountOverride(u,key)).length;
+    // If more than half are true, set all to false; otherwise set all to true
+    const val=trueCount<=users.length/2;
+    users.forEach(u=>{
+      const list=getCustomAccounts();
+      const acct=list.find(a=>a.username===u);
+      if(acct) acct[key]=val;
+      setAccountOverride(u,key,val);
+    });
+    accManageRender();
+  }
+  function accManageBulkDelete(){
+    const users=[...accManageSelections];
+    if(users.length===0) return;
+    if(!confirm(users.length+' Account(s) wirklich löschen?')) return;
+    const deleted=getDeletedAccounts();
+    users.forEach(u=>{
+      if(!deleted.includes(u)) deleted.push(u);
+      accManageSelections.delete(u);
+    });
+    saveDeletedAccounts(deleted);
+    const custom=getCustomAccounts().filter(a=>!users.includes(a.username));
+    saveCustomAccounts(custom);
+    accManageRender();
   }
   // ─── Account Sub-Navigation ───
   document.querySelectorAll('#accSubNav button[data-accsub]').forEach(btn => {
@@ -2920,6 +3001,28 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     si[field]=value;
     try{localStorage.setItem('dvn_signins',JSON.stringify(signins))}catch(e){}
     syncBroadcast('signins');
+    // When TF sign-in is confirmed/unconfirmed, auto-populate/remove plan entries
+    if(field==='confirmed' && si.role==='TF'){
+      const plan=shiftPlans.find(p=>p.id===si.shiftPlanId);
+      if(plan){
+        if(!plan.entries) plan.entries={};
+        if(!plan.entries.TF) plan.entries.TF=[];
+        if(value===true && si.duty){
+          const existing=plan.entries.TF.find(e=>e.name===si.username);
+          if(existing){
+            existing.duty=si.duty;
+          } else {
+            plan.entries.TF.push({name:si.username, duty:si.duty, note:''});
+          }
+        } else if(value===false){
+          plan.entries.TF=plan.entries.TF.filter(e=>e.name!==si.username);
+        }
+        try{localStorage.setItem('dvn_shiftplans',JSON.stringify(shiftPlans))}catch(e){}
+        syncBroadcast('shiftplans');
+        const tfContainer=document.getElementById('sp_TF');
+        if(tfContainer) spRenderEntries('TF');
+      }
+    }
     // When Schrankenwärter hours are confirmed, apply to strafen
     if(field==='hoursConfirmed' && value===true && si.role==='Schrankenwärter' && si.actualHours){
       const hours=parseFloat(si.actualHours);
@@ -3154,20 +3257,47 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     updateNotifBadge();
   }
 
+  let notifQueue = [];
+  let notifTimer = null;
   function sendDesktopNotification(title, body){
     if(!notificationPrefs.desktop_notify) return;
     if(!('Notification' in window)) return;
-    try{
-      if(Notification.permission==='granted'){
-        new Notification(title, {body, icon:'images/dvn_logo.png'});
-      } else if(Notification.permission==='default'){
-        Notification.requestPermission().then(perm=>{
-          if(perm==='granted') new Notification(title, {body, icon:'images/dvn_logo.png'});
-        });
+    notifQueue.push({title, body});
+    if(notifTimer) clearTimeout(notifTimer);
+    notifTimer = setTimeout(() => {
+      const queue = notifQueue.slice();
+      notifQueue = [];
+      notifTimer = null;
+      if(queue.length === 0) return;
+      let finalTitle, finalBody;
+      if(queue.length === 1){
+        finalTitle = queue[0].title;
+        finalBody = queue[0].body;
+      } else {
+        // Group: count occurrences per title
+        const groups = {};
+        queue.forEach(n => { groups[n.title] = (groups[n.title]||0) + 1; });
+        const entries = Object.entries(groups);
+        if(entries.length === 1){
+          finalTitle = entries[0][0];
+          finalBody = entries[0][1] + '× ' + (queue[0].body || '');
+        } else {
+          finalTitle = '📋 ' + queue.length + ' Benachrichtigungen';
+          finalBody = entries.map(([t, c]) => t + (c > 1 ? ' ('+c+'×)' : '')).join('\n');
+        }
       }
-    } catch(e){
-      console.warn('Desktop-Notification fehlgeschlagen:', e);
-    }
+      try{
+        if(Notification.permission==='granted'){
+          new Notification(finalTitle, {body: finalBody||'', icon:'images/dvn_logo.png'});
+        } else if(Notification.permission==='default'){
+          Notification.requestPermission().then(perm=>{
+            if(perm==='granted') new Notification(finalTitle, {body: finalBody||'', icon:'images/dvn_logo.png'});
+          });
+        }
+      } catch(e){
+        console.warn('Desktop-Notification fehlgeschlagen:', e);
+      }
+    }, 2000);
   }
   function showNotification(text,type){
     const box=document.getElementById('notificationBox');
@@ -3323,6 +3453,29 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const toggle=document.getElementById('darkModeToggle');
     if(toggle) toggle.textContent=on?'☀️ Hell':'🌙 Dunkel';
   }
+
+  // ─── Service Worker für Hintergrund-Benachrichtigungen ───
+  function swRegister(){
+    if(!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.register('sw.js').then(reg=>{
+      reg.addEventListener('updatefound',()=>{
+        const sw=reg.installing;
+        if(sw) sw.addEventListener('statechange',()=>{
+          if(sw.state==='activated') swSendConfig();
+        });
+      });
+      if(reg.active) swSendConfig();
+    }).catch(()=>{});
+  }
+  function swSendConfig(){
+    if(!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.controller?.postMessage({
+      type:'config',
+      user:loggedInUser||'',
+      enabled:!!(loggedInUser && notificationPrefs.desktop_notify)
+    });
+  }
+
   function toggleDarkMode(){
     const on=!isDarkMode();
     if(loggedInAccount) try{localStorage.setItem('dvn_darkmode_'+loggedInAccount.username,JSON.stringify(on))}catch(e){}
@@ -3512,6 +3665,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     } else {
       showNotification('✅ Desktop-Benachrichtigungen aktiviert!', 'success');
     }
+    swSendConfig();
   }
   function toggleNotify(key){
     notificationPrefs[key]=!notificationPrefs[key];
@@ -3631,6 +3785,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }catch(e){}
   checkPendingTFSuggestions();
   fbInit(); // Firebase-Init starten (schlägt still fehl, wenn keine Config)
+  swRegister();
   document.getElementById('fyear').textContent = new Date().getFullYear();
 
   function showImpressum(){ document.getElementById('impressumModal').classList.add('open'); }
