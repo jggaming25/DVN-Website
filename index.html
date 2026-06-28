@@ -47,11 +47,11 @@
   @keyframes ni{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
   .card{background:var(--w);border-radius:var(--rl);box-shadow:var(--sm);padding:1.8rem;margin-bottom:1.5rem;border:1px solid var(--g200);transition:box-shadow .3s}
   .card:hover{box-shadow:var(--md)}
-  .ch{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:2px solid var(--r100)}
-  .ch .ci{width:34px;height:34px;background:linear-gradient(135deg,var(--r100),var(--r200));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+  .ch{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:2px solid var(--g200)}
+  .ch .ci{width:34px;height:34px;background:var(--g100);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
   .ch h2{font-size:1.15rem;font-weight:700}
-  .ch h2 span{color:var(--r500)}
-  .ch .badge{margin-left:auto;background:var(--r100);color:var(--r600);padding:.15rem .7rem;border-radius:20px;font-size:.72rem;font-weight:600;white-space:nowrap}
+  .ch h2 span{color:var(--g700)}
+  .ch .badge{margin-left:auto;background:var(--g100);color:var(--g600);padding:.15rem .7rem;border-radius:20px;font-size:.72rem;font-weight:600;white-space:nowrap}
   .sub-title{font-size:.85rem;color:var(--g500);margin-bottom:.75rem}
 
   /* ─── LOGIN MODAL ─── */
@@ -387,6 +387,29 @@
     <div id="accLinkedAccounts" style="margin-bottom:.75rem"></div>
     <div class="sub-title">Benachrichtigungen</div>
     <div id="accNotifySettings"></div>
+    <div id="accPwdSection" class="sub-title" style="margin-top:1rem;cursor:pointer" onclick="togglePwdChange()">
+      🔑 Passwort ändern <span id="accPwdToggle" style="font-size:.75rem;color:var(--g400)">▼</span>
+    </div>
+    <div id="accPwdForm" style="display:none;margin-top:.5rem">
+      <div id="accPwdStatus" style="font-size:.78rem;margin-bottom:.5rem"></div>
+      <label>Aktuelles Passwort</label>
+      <div style="position:relative;margin-bottom:.65rem">
+        <input type="password" id="accPwdCurrent" placeholder="••••••" style="padding-right:2.5rem;width:100%;box-sizing:border-box;padding:.5rem .75rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit">
+        <button type="button" onclick="togglePwVisibility('accPwdCurrent','togAccCur')" id="togAccCur" style="position:absolute;right:6px;top:6px;background:none;border:none;cursor:pointer;font-size:.9rem;padding:3px;color:var(--g400);line-height:1;font-family:inherit">👁</button>
+      </div>
+      <label>Neues Passwort</label>
+      <div style="position:relative;margin-bottom:.65rem">
+        <input type="password" id="accPwdNew" placeholder="••••••" style="padding-right:2.5rem;width:100%;box-sizing:border-box;padding:.5rem .75rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit">
+        <button type="button" onclick="togglePwVisibility('accPwdNew','togAccNew')" id="togAccNew" style="position:absolute;right:6px;top:6px;background:none;border:none;cursor:pointer;font-size:.9rem;padding:3px;color:var(--g400);line-height:1;font-family:inherit">👁</button>
+      </div>
+      <label>Neues Passwort wiederholen</label>
+      <div style="position:relative;margin-bottom:.65rem">
+        <input type="password" id="accPwdConfirm" placeholder="••••••" onkeydown="if(event.key==='Enter')doChangePassword()" style="padding-right:2.5rem;width:100%;box-sizing:border-box;padding:.5rem .75rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit">
+        <button type="button" onclick="togglePwVisibility('accPwdConfirm','togAccCon')" id="togAccCon" style="position:absolute;right:6px;top:6px;background:none;border:none;cursor:pointer;font-size:.9rem;padding:3px;color:var(--g400);line-height:1;font-family:inherit">👁</button>
+      </div>
+      <div id="accPwdError" class="error" style="display:none;margin-bottom:.5rem">Die Passwörter stimmen nicht überein.</div>
+      <button onclick="doChangePassword()" style="padding:.4rem 1rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.82rem;cursor:pointer;font-family:inherit">Passwort speichern</button>
+    </div>
     <div class="btn-row" style="margin-top:1rem">
       <button class="btn-secondary" onclick="closeAccountSettings()">Schließen</button>
     </div>
@@ -1117,7 +1140,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function fbSeedLocalData(){
     // Einmalig: Seedt lokale localStorage-Daten nach Firebase, falls Firebase noch leer ist
-    ['dvn_shifts','dvn_applications','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_stellen_open','dvn_logs','dvn_strafen','dvn_signins','dvn_attendance','dvn_perm_overrides','dvn_pw_overrides','dvn_custom_accounts','dvn_deleted_accounts'].forEach(path=>{
+    ['dvn_shifts','dvn_applications','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_stellen_open','dvn_logs','dvn_strafen','dvn_signins','dvn_attendance','dvn_perm_overrides','dvn_pw_overrides','dvn_custom_accounts','dvn_deleted_accounts','dvn_account_configs','dvn_discord_links'].forEach(path=>{
       fbDatabase.ref(path).once('value', snapshot => {
         if(snapshot.val() !== null) return; // Firebase hat bereits Daten
         try{
@@ -1153,13 +1176,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         case 'pw_overrides': data = JSON.parse(localStorage.getItem('dvn_pw_overrides')||'{}'); break;
         case 'custom_accounts': data = JSON.parse(localStorage.getItem('dvn_custom_accounts')); break;
         case 'deleted_accounts': data = JSON.parse(localStorage.getItem('dvn_deleted_accounts')); break;
+        case 'account_configs': data = JSON.parse(localStorage.getItem('dvn_account_configs')); break;
+        case 'discord_links': data = JSON.parse(localStorage.getItem('dvn_discord_links')); break;
         case 'config':       data = true; break;
         case 'notifhistory': data = true; break;
       }
     } catch(e){}
     syncCh.postMessage({ type, data });
     // Auch an Firebase senden
-    if(data !== null && data !== true && ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins','attendance','perm_overrides','pw_overrides','custom_accounts','deleted_accounts'].includes(type)){
+    if(data !== null && data !== true && ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins','attendance','perm_overrides','pw_overrides','custom_accounts','deleted_accounts','account_configs','discord_links'].includes(type)){
       fbWrite('dvn_'+type, data);
     }
   }
@@ -1260,6 +1285,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           if(document.querySelector('#apanel-stafflist.active')) staffListRender();
         }
         break;
+      case 'account_configs':
+        try{localStorage.setItem('dvn_account_configs',JSON.stringify(data))}catch(e){}
+        if(loggedIn && document.querySelector('#apanel-stafflist.active')) staffListRender();
+        break;
+      case 'discord_links':
+        try{localStorage.setItem('dvn_discord_links',JSON.stringify(data))}catch(e){}
+        if(loggedIn && document.querySelector('#apanel-stafflist.active')) staffListRender();
+        break;
     }
   }
 
@@ -1274,6 +1307,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   document.querySelectorAll('nav button[data-page]').forEach(btn => {
     btn.addEventListener('click', () => {
       if ((btn.dataset.page === 'admin' || btn.dataset.page === 'intern') && !loggedIn) return;
+      if (btn.dataset.page === 'admin' && loggedInAccount && loggedInAccount.rang !== 'HR') return;
       document.querySelectorAll('nav button[data-page], .page').forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(btn.dataset.page).classList.add('active');
@@ -1400,6 +1434,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       userDisp.textContent=loggedInUser;
       const d2=document.getElementById('userNameDisplay2');
       if(d2) d2.textContent=loggedInUser;
+      const bewTabBtn=document.getElementById('bewerbungenTabBtn');
+      if(bewTabBtn) bewTabBtn.style.display=isHR?'':'none';
       const logTabBtn=document.getElementById('logTabBtn');
       if(logTabBtn) logTabBtn.style.display=isHR&&getAccountOverride(loggedInUser,'logs')?'':'none';
       if(internBtn) internBtn.style.display='flex';
@@ -1947,9 +1983,28 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       return;
     }
     try{localStorage.setItem(cooldownKey,String(now))}catch(e){}
-    const planTitle=document.getElementById('spEditorTitle')?.textContent||'Schichtplan';
-    sendDesktopNotification('📋 Schichtplan geändert', planTitle+' – Bitte prüfe den aktuellen Plan.');
-    showNotification('✅ Benachrichtigung an alle Nutzer gesendet.','success');
+    const plan=shiftPlans.find(p=>p.id===editingSpId);
+    if(!plan){ showNotification('Kein Plan zum Benachrichtigen ausgewählt.','error'); return; }
+    // Collect unique names from all entries
+    const names=new Set();
+    const entries=plan.entries||{};
+    Object.values(entries).forEach(arr=>{
+      if(Array.isArray(arr)) arr.forEach(e=>{ if(e.name&&e.name.trim()) names.add(e.name.trim()); });
+    });
+    if(names.size===0){ showNotification('Keine eingetragenen Personen im Plan.','error'); return; }
+    const planTitle=plan.shiftTitle||'Schichtplan';
+    const msg='📋 '+planTitle+' – Es gibt eine Aktualisierung. Bitte prüfe den Plan.';
+    let count=0;
+    names.forEach(name=>{
+      try{
+        const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+name)||'[]');
+        hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:msg,type:'shiftplan',time:new Date().toLocaleString('de-DE'),read:false});
+        localStorage.setItem('dvn_notifhist_'+name,JSON.stringify(hist));
+        count++;
+      }catch(e){}
+    });
+    syncBroadcast('notifhistory');
+    showNotification('✅ Benachrichtigung an '+count+' eingetragene Person(en) gesendet.','success');
   }
 
   function spRenderPlans(){
@@ -2543,7 +2598,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.35rem;${sel?'outline:2px solid var(--r400);background:var(--r50)':''}">
           <div style="display:flex;align-items:center;gap:.5rem;min-width:120px">
             <input type="checkbox" ${sel?'checked':''} onchange="accManageSelToggle('${a.username}')" style="width:15px;height:15px;accent-color:var(--r500);flex-shrink:0">
-            <span style="font-weight:600;font-size:.85rem">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(${a.rang})</span></span>
+            <span style="font-weight:600;font-size:.85rem">${a.username} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(</span><select onchange="accManageSetRang('${a.username}',this.value)" style="font-size:.72rem;padding:.1rem .2rem;border:1px solid var(--g200);border-radius:4px;font-family:inherit;background:var(--w)">
+              <option value="HR" ${a.rang==='HR'?'selected':''}>HR</option>
+              <option value="FDL" ${a.rang==='FDL'?'selected':''}>FDL</option>
+              <option value="TF" ${a.rang==='TF'?'selected':''}>TF</option>
+            </select><span style="font-weight:400;font-size:.72rem;color:var(--g400)">)</span></span>
           </div>
           <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">
             ${['logs','bewerbungen','shiftplan','strafen','accounts'].map(k=>{
@@ -2583,6 +2642,19 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(countEl) countEl.textContent=count+' ausgewählt';
     if(bar) bar.style.display=count?'flex':'none';
     if(delBar) delBar.style.display=count?'flex':'none';
+  }
+  function accManageSetRang(username,newRang){
+    const list=getCustomAccounts();
+    const acct=list.find(a=>a.username===username);
+    if(acct){
+      acct.rang=newRang;
+      saveCustomAccounts(list);
+      showNotification('✅ Rang von '+username+' auf '+newRang+' geändert.','success');
+    }
+    if(loggedInAccount && loggedInAccount.username===username){
+      loggedInAccount.rang=newRang;
+      updateUI();
+    }
   }
   function accManageBulkToggle(key){
     const users=[...accManageSelections];
@@ -2624,11 +2696,31 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   });
   // ─── Account Config (Rollen/Lizenzen) ───
   function getAccountConfig(username){
-    try{const d=localStorage.getItem('dvn_account_config_'+username);return d?JSON.parse(d):{role:'',stellwerke:[],strecken:[],fahrzeuge:[],extras:[]}}catch(e){return {role:'',stellwerke:[],strecken:[],fahrzeuge:[],extras:[]}}
+    try{
+      const all=JSON.parse(localStorage.getItem('dvn_account_configs')||'{}');
+      if(all[username]) return all[username];
+    }catch(e){}
+    // Fallback: old individual key
+    try{const d=localStorage.getItem('dvn_account_config_'+username);if(d){const cfg=JSON.parse(d);migrateAccountConfig(username,cfg);return cfg}}catch(e){}
+    return {role:'',stellwerke:[],strecken:[],fahrzeuge:[],extras:[]}
   }
   function saveAccountConfig(username,cfg){
-    try{localStorage.setItem('dvn_account_config_'+username,JSON.stringify(cfg))}catch(e){}
-    syncBroadcast('config');
+    try{
+      const all=JSON.parse(localStorage.getItem('dvn_account_configs')||'{}');
+      all[username]=cfg;
+      localStorage.setItem('dvn_account_configs',JSON.stringify(all));
+      // Clean up old individual key
+      try{localStorage.removeItem('dvn_account_config_'+username)}catch(e){}
+    }catch(e){}
+    syncBroadcast('account_configs');
+  }
+  function migrateAccountConfig(username,cfg){
+    try{
+      const all=JSON.parse(localStorage.getItem('dvn_account_configs')||'{}');
+      all[username]=cfg;
+      localStorage.setItem('dvn_account_configs',JSON.stringify(all));
+      try{localStorage.removeItem('dvn_account_config_'+username)}catch(e){}
+    }catch(e){}
   }
   // ─── OTP helpers — removed ───
   function getPasswordOverride(username){
@@ -2647,6 +2739,24 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     syncBroadcast('config');
     syncBroadcast('pw_overrides');
   }
+  // ─── Password Age Tracking ───
+  function getPasswordSetAt(username){
+    try{const o=JSON.parse(localStorage.getItem('dvn_pwd_set_at')||'{}'); return o[username]||0}catch(e){return 0}
+  }
+  function setPasswordSetAt(username,ts){
+    try{const o=JSON.parse(localStorage.getItem('dvn_pwd_set_at')||'{}'); o[username]=ts||Date.now(); localStorage.setItem('dvn_pwd_set_at',JSON.stringify(o))}catch(e){}
+  }
+  function passwordNeedsReset(username){
+    const setAt=getPasswordSetAt(username);
+    if(!setAt) return false; // first time — no expiry enforced yet
+    return Date.now()-setAt > 5*24*60*60*1000;
+  }
+  function passwordExpiresInDays(username){
+    const setAt=getPasswordSetAt(username);
+    if(!setAt) return null;
+    const remaining = 5*24*60*60*1000 - (Date.now()-setAt);
+    return Math.max(0, Math.ceil(remaining/(24*60*60*1000)));
+  }
   // ─── Account Creation (Accounts > Konfiguration) ───
   function accCreateAccount(){
     const user=document.getElementById('accNewUser').value.trim();
@@ -2659,6 +2769,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const hp=hashPassword(pw);
     list.push({username:user,password:hp,logs:false,bewerbungen:false,shiftplan:false,strafen:false,accounts:false,rang});
     saveCustomAccounts(list);
+    setPasswordSetAt(user,Date.now());
     document.getElementById('accNewUser').value=''; document.getElementById('accNewRang').value=''; document.getElementById('accNewPass').value='';
     showNotification('✅ Account "'+user+'" wurde angelegt. Der Benutzer kann sich jetzt mit dem festgelegten Passwort anmelden.','success');
   }
@@ -2673,7 +2784,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;flex:1">
           <strong style="font-size:.85rem;min-width:100px">${a.username}</strong>
           <span style="font-size:.72rem;color:var(--g400)">(${a.rang} · aktiv)</span>
-          ${getLinkedAccount('discord')?`<span style="font-size:.7rem;color:var(--g400)">💬 ${getLinkedAccount('discord')}</span>`:''}
+          ${getLinkedAccount('discord',a.username)?`<span style="font-size:.7rem;color:var(--g400)">💬 ${getLinkedAccount('discord',a.username)}</span>`:''}
           <span style="font-size:.7rem;color:var(--g400);margin-left:.25rem">📋 Letzte: ${getLastAttendance(a.username)||'—'}</span>
           <span style="font-size:.7rem;font-weight:600;color:var(--st);background:var(--sg);padding:.1rem .4rem;border-radius:4px">${getAttendanceCountThisMonth(a.username)}× diesen Monat</span>
         </div>
@@ -3404,20 +3515,40 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         </div>
       </div>`;
   }
-  function getLinkedAccount(platform){
-    if(!loggedInAccount) return '';
+  function getLinkedAccount(platform, username){
+    const u=username||(loggedInAccount?loggedInAccount.username:'');
+    if(!u) return '';
     try{
-      const val=localStorage.getItem('dvn_link_'+platform+'_'+loggedInAccount.username);
-      if(val!==null) return val;
+      const all=JSON.parse(localStorage.getItem('dvn_discord_links')||'{}');
+      if(all[u]!==undefined) return all[u];
     }catch(e){}
+    // Fallback: old individual key
+    try{const v=localStorage.getItem('dvn_link_'+platform+'_'+u);if(v!==null){migrateDiscordLink(u,v);return v}}catch(e){}
     return '';
   }
   function saveDiscordLink(){
     if(!loggedInAccount) return;
     const val=document.getElementById('linkDiscord').value.trim();
-    try{localStorage.setItem('dvn_link_discord_'+loggedInAccount.username,val)}catch(e){}
+    try{
+      const all=JSON.parse(localStorage.getItem('dvn_discord_links')||'{}');
+      all[loggedInAccount.username]=val;
+      localStorage.setItem('dvn_discord_links',JSON.stringify(all));
+      // Clean up old individual key
+      try{localStorage.removeItem('dvn_link_discord_'+loggedInAccount.username)}catch(e){}
+    }catch(e){}
+    syncBroadcast('discord_links');
     if(val) showNotification('💬 Discord: '+val+' gespeichert.','success');
+    else showNotification('Discord-Verknüpfung entfernt.','success');
     renderLinkedAccounts();
+    if(document.querySelector('#apanel-stafflist.active')) staffListRender();
+  }
+  function migrateDiscordLink(username,val){
+    try{
+      const all=JSON.parse(localStorage.getItem('dvn_discord_links')||'{}');
+      all[username]=val;
+      localStorage.setItem('dvn_discord_links',JSON.stringify(all));
+      try{localStorage.removeItem('dvn_link_discord_'+username)}catch(e){}
+    }catch(e){}
   }
   function unlinkAccount(platform){
     if(!loggedInAccount||!confirm(platform+' Verknüpfung wirklich trennen?')) return;
@@ -3665,9 +3796,62 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     document.getElementById('accModalRang').textContent=loggedInAccount.rang;
     renderLinkedAccounts();
     renderNotifications();
+    updatePwdStatus();
+    document.getElementById('accPwdForm').style.display='none';
+    document.getElementById('accPwdToggle').textContent='▼';
     document.getElementById('accountModal').classList.add('open');
   }
   function closeAccountSettings(){ document.getElementById('accountModal').classList.remove('open'); }
+  function togglePwdChange(){
+    const form=document.getElementById('accPwdForm');
+    const toggle=document.getElementById('accPwdToggle');
+    const show=form.style.display!=='block';
+    form.style.display=show?'block':'none';
+    toggle.textContent=show?'▲':'▼';
+    if(show) updatePwdStatus();
+  }
+  function updatePwdStatus(){
+    const el=document.getElementById('accPwdStatus');
+    const days=passwordExpiresInDays(loggedInUser);
+    if(days===null){
+      el.innerHTML='<span style="color:var(--g400)">Kein Ablaufdatum gesetzt.</span>';
+    } else if(passwordNeedsReset(loggedInUser)){
+      el.innerHTML='<span style="color:var(--r600);font-weight:600">⚠️ Dein Passwort ist abgelaufen — bitte ändern.</span>';
+    } else if(days<=1){
+      el.innerHTML='<span style="color:var(--o500);font-weight:600">⚠️ Passwort läuft heute ab — bitte ändern.</span>';
+    } else {
+      el.innerHTML='<span style="color:var(--g500)">Passwort gültig für '+days+' Tage.</span>';
+    }
+    document.getElementById('accPwdError').style.display='none';
+    document.getElementById('accPwdCurrent').value='';
+    document.getElementById('accPwdNew').value='';
+    document.getElementById('accPwdConfirm').value='';
+  }
+  function doChangePassword(){
+    const cur=document.getElementById('accPwdCurrent').value;
+    const p1=document.getElementById('accPwdNew').value.trim();
+    const p2=document.getElementById('accPwdConfirm').value.trim();
+    if(!p1||p1.length<3){ document.getElementById('accPwdError').textContent='Passwort muss mindestens 3 Zeichen lang sein.'; document.getElementById('accPwdError').style.display='block'; return; }
+    if(p1!==p2){ document.getElementById('accPwdError').textContent='Die Passwörter stimmen nicht überein.'; document.getElementById('accPwdError').style.display='block'; return; }
+    // Verify current password
+    const curHp=hashPassword(cur);
+    const pwOverride=getPasswordOverride(loggedInUser);
+    const valid=pwOverride===curHp || (!pwOverride && loggedInAccount.password===curHp);
+    if(!valid){ document.getElementById('accPwdError').textContent='Aktuelles Passwort ist falsch.'; document.getElementById('accPwdError').style.display='block'; return; }
+    document.getElementById('accPwdError').style.display='none';
+    const newHp=hashPassword(p1);
+    setPasswordOverride(loggedInUser,newHp);
+    // Update custom account entry
+    const custom=getCustomAccounts();
+    const ca=custom.find(a=>a.username===loggedInUser);
+    if(ca){ ca.password=newHp; saveCustomAccounts(custom); }
+    setPasswordSetAt(loggedInUser,Date.now());
+    // Update session
+    try{localStorage.setItem('dvn_session_pass',newHp)}catch(e){}
+    loggedInAccount.password=newHp;
+    updatePwdStatus();
+    showNotification('✅ Passwort erfolgreich geändert.','success');
+  }
 
   // ─── Staff News Type Modal (for admins creating news) ───
   let pendingNewsPublish=null;
@@ -3757,7 +3941,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   // Restore admin tab after page reload
   try{
     const adminTabToOpen=sessionStorage.getItem('dvn_admin_tab');
-    if(adminTabToOpen && loggedIn){
+    if(adminTabToOpen && loggedIn && loggedInAccount && loggedInAccount.rang==='HR'){
       const adminNavBtn=document.querySelector('nav button[data-page="admin"]');
       if(adminNavBtn) adminNavBtn.click();
     }
