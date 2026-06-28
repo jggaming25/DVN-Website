@@ -781,10 +781,15 @@
       <div class="sub-title">Account-Verwaltung</div>
       <div class="admin-nav" id="accSubNav" style="margin-bottom:.75rem">
         <button class="active" data-accsub="verwaltung">Verwaltung</button>
+        <button data-accsub="einmal">Einmal Accounts</button>
         <button data-accsub="konfiguration">Konfiguration</button>
       </div>
       <div id="accSubVerwaltung">
         <div id="accManageList"></div>
+      </div>
+      <div id="accSubEinmal" style="display:none">
+        <div style="font-size:.82rem;color:var(--g500);margin-bottom:.75rem">Alle Accounts mit Einmal-Passwort (OTP). Hier kannst du Passwörter zurücksetzen und Accounts löschen.</div>
+        <div id="accEinmalList"></div>
       </div>
       <div id="accSubKonfiguration" style="display:none">
         <div style="font-size:.82rem;color:var(--g500);margin-bottom:.75rem">Neue Accounts mit Einmal-Passwort anlegen. Das generierte Passwort wird einmalig angezeigt und muss an den Benutzer weitergegeben werden.</div>
@@ -1222,7 +1227,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           if(detail.style.display==='block' && spvShowingIdx!==null) spvShow(spvShowingIdx);
         } break;
       case 'config':
-        if(loggedIn){ updateUI(); renderNotifications(); accManageRender(); }
+        if(loggedIn){
+          updateUI(); renderNotifications(); accManageRender();
+          if(document.querySelector('#accSubEinmal[style*="block"]')) accEinmalRender();
+        }
         break;
       case 'notifhistory':
         if(loggedInAccount) loadNotifHistory();
@@ -2061,7 +2069,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.5rem;margin-bottom:1rem">
         ${tfDuties.map(d=>{
           const plan=shiftPlans.find(p=>p.id===editingSpId);
-          const alreadyAssigned=plan&&plan.entries.TF&&plan.entries.TF.some(e=>e.duty===d.duty);
+          const alreadyAssigned=plan&&plan.entries.TF&&plan.entries.TF.some(e=>e.duty===d.duty && e.name);
           return `<div style="background:var(--w);border:1px solid ${alreadyAssigned?'var(--r300)':'var(--g200)'};border-radius:var(--rs);padding:.4rem .6rem;position:relative;${alreadyAssigned?'box-shadow:0 0 0 2px rgba(239,68,68,.15)':''}">
             <div style="font-weight:600">${d.duty}${alreadyAssigned?' <span style="color:var(--r500);font-size:.7rem">⚠️ bereits vergeben</span>':''}</div>
             <div style="color:var(--g500);font-size:.78rem">Dauer: ${d.dur} · Fahrzeuge: ${d.veh}</div>
@@ -2597,7 +2605,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       document.querySelectorAll('#accSubNav button[data-accsub]').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('accSubVerwaltung').style.display=btn.dataset.accsub==='verwaltung'?'block':'none';
+      document.getElementById('accSubEinmal').style.display=btn.dataset.accsub==='einmal'?'block':'none';
       document.getElementById('accSubKonfiguration').style.display=btn.dataset.accsub==='konfiguration'?'block':'none';
+      if(btn.dataset.accsub==='einmal') accEinmalRender();
     });
   });
   // ─── Account Config (Rollen/Lizenzen) ───
@@ -2647,6 +2657,79 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     storeOTP(user,hp);
     document.getElementById('accOtpUser').value=''; document.getElementById('accOtpRang').value='';
     showNotification('✅ Account angelegt: '+user+' — Einmal-Passwort: '+otp,'success',8000);
+  }
+  // ─── Einmal Accounts (Accounts > Einmal Accounts) ───
+  function accEinmalRender(){
+    const el=document.getElementById('accEinmalList');
+    if(!el) return;
+    const allAccounts=getAllAccounts();
+    const otpAccounts=allAccounts.filter(a=>!!getOTP(a.username));
+    if(otpAccounts.length===0){
+      el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Keine Accounts mit Einmal-Passwort.</div>';
+      return;
+    }
+    el.innerHTML=otpAccounts.map(a=>{
+      const otpHash=getOTP(a.username);
+      return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.5rem;align-items:center">
+        <div style="flex:1;min-width:150px">
+          <strong style="font-size:.85rem">${a.username}</strong>
+          <span style="font-size:.72rem;color:var(--g400)"> (${a.rang})</span>
+        </div>
+        <div style="display:flex;gap:.35rem;flex-wrap:wrap;align-items:center">
+          <button onclick="accEinmalResetOTP('${a.username}')" style="padding:.3rem .7rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit">🔑 Neues OTP</button>
+          <button onclick="accEinmalSetPw('${a.username}')" style="padding:.3rem .7rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit">🔐 Passwort setzen</button>
+          <button onclick="accEinmalDelete('${a.username}')" style="padding:.3rem .7rem;background:#fef2f2;color:var(--r600);border:none;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:inherit">✕ Löschen</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  function accEinmalResetOTP(username){
+    const allAccounts=getAllAccounts();
+    const account=allAccounts.find(a=>a.username===username);
+    if(!account) return;
+    const otp=generateRandomPassword();
+    const hp=hashPassword(otp);
+    storeOTP(username,hp);
+    // Update password in custom accounts list
+    const list=getCustomAccounts();
+    const acct=list.find(a=>a.username===username);
+    if(acct) acct.password=hp;
+    saveCustomAccounts(list);
+    accEinmalRender();
+    showNotification('🔑 Neues OTP für '+username+': '+otp,'success',8000);
+  }
+  function accEinmalSetPw(username){
+    const pw=prompt('Neues Passwort für "'+username+'" eingeben:');
+    if(!pw||pw.trim().length<3) return;
+    const hp=hashPassword(pw.trim());
+    setPasswordOverride(username,hp);
+    // Remove OTP so they can only log in with this password
+    clearOTP(username);
+    try{localStorage.removeItem('dvn_pending_otp_'+username)}catch(e){}
+    // Update password in custom accounts list
+    const list=getCustomAccounts();
+    const acct=list.find(a=>a.username===username);
+    if(acct) acct.password=hp;
+    saveCustomAccounts(list);
+    accEinmalRender();
+    showNotification('✅ Passwort für '+username+' wurde gesetzt.','success');
+  }
+  function accEinmalDelete(username){
+    if(!confirm('Account "'+username+'" wirklich löschen?')) return;
+    const deleted=getDeletedAccounts();
+    if(!deleted.includes(username)) deleted.push(username);
+    saveDeletedAccounts(deleted);
+    const custom=getCustomAccounts().filter(a=>a.username!==username);
+    saveCustomAccounts(custom);
+    clearOTP(username);
+    try{localStorage.removeItem('dvn_pw_'+username)}catch(e){}
+    try{localStorage.removeItem('dvn_pending_otp_'+username)}catch(e){}
+    // Remove perm overrides
+    const overrides=JSON.parse(localStorage.getItem('dvn_perm_overrides')||'{}');
+    if(overrides[username]){ delete overrides[username]; try{localStorage.setItem('dvn_perm_overrides',JSON.stringify(overrides))}catch(e){} syncBroadcast('perm_overrides'); }
+    accEinmalRender();
+    accManageRender();
+    showNotification('🗑️ "'+username+'" wurde gelöscht.','success');
   }
   // ─── Staff List ───
   function staffListRender(){
@@ -3021,6 +3104,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         syncBroadcast('shiftplans');
         const tfContainer=document.getElementById('sp_TF');
         if(tfContainer) spRenderEntries('TF');
+        spRenderDutyRef();
       }
     }
     // When Schrankenwärter hours are confirmed, apply to strafen
