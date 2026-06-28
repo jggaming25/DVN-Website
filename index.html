@@ -983,7 +983,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       open: true,
       fields: [
         // ─── Persönliche Daten ───
-        { type:'text',     label:'Discord @Name',                        name:'discord',       required:true, placeholder:'z.B. user#1234' },
+        { type:'text',     label:'Discord Username',                        name:'discord',       required:true, placeholder:'z.B. user#1234' },
         { type:'select',   label:'Wie alt sind Sie?',                   name:'alter',         options:['Unter 14','14 oder älter'], required:true },
 
         // ─── Signalkunde (Bild 1) ───
@@ -1113,7 +1113,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       fbConnected = true;
       // Firebase-Listener für alle Datentypen – aktualisiert alle Clients in Echtzeit
       fbSeedLocalData();
-      const fbTypes = ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins'];
+      const fbTypes = ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins','attendance','perm_overrides','custom_accounts','deleted_accounts'];
       fbTypes.forEach(type => {
         const path = 'dvn_'+type;
         fbDatabase.ref(path).on('value', snapshot => {
@@ -1129,7 +1129,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function fbSeedLocalData(){
     // Einmalig: Seedt lokale localStorage-Daten nach Firebase, falls Firebase noch leer ist
-    ['dvn_shifts','dvn_applications','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_stellen_open','dvn_logs','dvn_strafen','dvn_signins','dvn_attendance','dvn_perm_overrides'].forEach(path=>{
+    ['dvn_shifts','dvn_applications','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_stellen_open','dvn_logs','dvn_strafen','dvn_signins','dvn_attendance','dvn_perm_overrides','dvn_custom_accounts','dvn_deleted_accounts'].forEach(path=>{
       fbDatabase.ref(path).once('value', snapshot => {
         if(snapshot.val() !== null) return; // Firebase hat bereits Daten
         try{
@@ -1162,13 +1162,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         case 'signins':      data = JSON.parse(localStorage.getItem('dvn_signins')); break;
         case 'attendance':    data = JSON.parse(localStorage.getItem('dvn_attendance')); break;
         case 'perm_overrides': data = JSON.parse(localStorage.getItem('dvn_perm_overrides')); break;
+        case 'custom_accounts': data = JSON.parse(localStorage.getItem('dvn_custom_accounts')); break;
+        case 'deleted_accounts': data = JSON.parse(localStorage.getItem('dvn_deleted_accounts')); break;
         case 'config':       data = true; break;
         case 'notifhistory': data = true; break;
       }
     } catch(e){}
     syncCh.postMessage({ type, data });
     // Auch an Firebase senden
-    if(data !== null && data !== true && ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins','attendance','perm_overrides'].includes(type)){
+    if(data !== null && data !== true && ['shifts','applications','news','staff_news','shiftplans','stellen_open','logs','strafen','signins','attendance','perm_overrides','custom_accounts','deleted_accounts'].includes(type)){
       fbWrite('dvn_'+type, data);
     }
   }
@@ -1248,6 +1250,22 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         if(loggedIn){
           updateUI();
           if(document.querySelector('#apanel-accounts.active')) accManageRender();
+        }
+        break;
+      case 'custom_accounts':
+        try{localStorage.setItem('dvn_custom_accounts',JSON.stringify(data))}catch(e){}
+        if(loggedIn){
+          updateUI();
+          if(document.querySelector('#apanel-accounts.active')){ accManageRender(); if(document.querySelector('#accSubEinmal[style*="block"]')) accEinmalRender(); }
+          if(document.querySelector('#apanel-stafflist.active')) staffListRender();
+        }
+        break;
+      case 'deleted_accounts':
+        try{localStorage.setItem('dvn_deleted_accounts',JSON.stringify(data))}catch(e){}
+        if(loggedIn){
+          updateUI();
+          if(document.querySelector('#apanel-accounts.active')){ accManageRender(); if(document.querySelector('#accSubEinmal[style*="block"]')) accEinmalRender(); }
+          if(document.querySelector('#apanel-stafflist.active')) staffListRender();
         }
         break;
     }
@@ -2400,15 +2418,17 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const c=document.getElementById('actStatsView');
     if(!c) return;
     const now=new Date();
-    const ym=now.toISOString().slice(0,7);
+    const curYear=now.getFullYear(), curMonth=now.getMonth();
+    const ym=curYear+'-'+String(curMonth+1).padStart(2,'0');
     const months=[];
     for(let i=0;i<6;i++){
-      const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-      months.push(d.toISOString().slice(0,7));
+      const m=curMonth-i;
+      const y=curYear;
+      months.push((m<0?y-1:y)+'-'+String((m<0?m+12:m)+1).padStart(2,'0'));
     }
     let html=`<div class="sub-title">📊 Monatsstatistik</div>
       <select id="statsMonthSelect" onchange="renderActivityStats()" style="margin-bottom:.75rem;padding:.45rem .8rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit">
-        ${months.map(m=>`<option value="${m}" ${m===ym?'selected':''}>${new Date(m+'-01').toLocaleDateString('de-DE',{month:'long',year:'numeric'})}</option>`).join('')}
+        ${months.map(m=>{const [ys,ms]=m.split('-');return `<option value="${m}" ${m===ym?'selected':''}>${new Date(+ys,+ms-1).toLocaleDateString('de-DE',{month:'long',year:'numeric'})}</option>`}).join('')}
       </select>
       <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:.5rem;font-size:.82rem">
         <div style="font-weight:600;color:var(--g500);padding:.35rem .5rem">Name</div>
@@ -2448,6 +2468,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function saveCustomAccounts(list){
     try{localStorage.setItem('dvn_custom_accounts',JSON.stringify(list))}catch(e){}
     syncBroadcast('config');
+    syncBroadcast('custom_accounts');
   }
   function getDeletedAccounts(){
     try{const d=localStorage.getItem('dvn_deleted_accounts');return d?JSON.parse(d):[]}catch(e){return []}
@@ -2455,6 +2476,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function saveDeletedAccounts(list){
     try{localStorage.setItem('dvn_deleted_accounts',JSON.stringify(list))}catch(e){}
     syncBroadcast('config');
+    syncBroadcast('deleted_accounts');
   }
   function getAllAccounts(){
     return [...ACCOUNTS,...getCustomAccounts()].filter(a=>!getDeletedAccounts().includes(a.username));
@@ -2630,7 +2652,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     syncBroadcast('config');
   }
   function getOTP(username){
-    try{return localStorage.getItem('dvn_otp_'+username)}catch(e){return null}
+    try{const v=localStorage.getItem('dvn_otp_'+username); if(v!==null) return v}catch(e){}
+    // Fallback: check custom accounts otp field (synced via Firebase across browsers)
+    try{
+      const accounts=JSON.parse(localStorage.getItem('dvn_custom_accounts')||'[]');
+      const acct=accounts.find(a=>a.username===username);
+      if(acct && acct.otp) return acct.otp;
+    }catch(e){}
+    return null;
   }
   function clearOTP(username){
     try{localStorage.removeItem('dvn_otp_'+username)}catch(e){}
@@ -2652,7 +2681,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(list.some(a=>a.username===user)||ACCOUNTS.some(a=>a.username===user)){ showNotification('Account existiert bereits.','error'); return; }
     const otp=generateRandomPassword();
     const hp=hashPassword(otp);
-    list.push({username:user,password:hp,logs:false,bewerbungen:false,shiftplan:false,strafen:false,accounts:false,rang});
+    list.push({username:user,password:hp,otp:hp,logs:false,bewerbungen:false,shiftplan:false,strafen:false,accounts:false,rang});
     saveCustomAccounts(list);
     storeOTP(user,hp);
     document.getElementById('accOtpUser').value=''; document.getElementById('accOtpRang').value='';
@@ -2694,7 +2723,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Update password in custom accounts list
     const list=getCustomAccounts();
     const acct=list.find(a=>a.username===username);
-    if(acct) acct.password=hp;
+    if(acct) { acct.password=hp; acct.otp=hp; }
     saveCustomAccounts(list);
     accEinmalRender();
     showNotification('🔑 Neues OTP für '+username+': '+otp,'success',8000);
@@ -2710,7 +2739,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Update password in custom accounts list
     const list=getCustomAccounts();
     const acct=list.find(a=>a.username===username);
-    if(acct) acct.password=hp;
+    if(acct) { acct.password=hp; delete acct.otp; }
     saveCustomAccounts(list);
     accEinmalRender();
     showNotification('✅ Passwort für '+username+' wurde gesetzt.','success');
@@ -2825,6 +2854,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     setPasswordOverride(loggedInUser,hashPassword(p1));
     clearOTP(loggedInUser);
     try{localStorage.removeItem('dvn_pending_otp_'+loggedInUser)}catch(e){}
+    // Update custom accounts to remove OTP for cross-browser sync
+    const customAccts=getCustomAccounts();
+    const ca=customAccts.find(a=>a.username===loggedInUser);
+    if(ca){ ca.password=hashPassword(p1); delete ca.otp; saveCustomAccounts(customAccts); }
     closeSetPassword();
     showNotification('✅ Passwort erfolgreich geändert.','success');
   }
