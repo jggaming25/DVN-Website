@@ -2559,6 +2559,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     tickets.unshift(ticket);
     saveTickets(tickets);
     closeModal('ticketCreateModal');
+    // Notify all HR users
+    const hrs=getCustomAccounts().filter(a=>a.rang==='HR');
+    hrs.forEach(h=>{
+      try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+h.username)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'🎫 Neues Ticket von '+loggedInUser+': '+title,type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+h.username,JSON.stringify(hist))}catch(e){}
+    });
+    syncBroadcast('notifhistory');
     showNotification('✅ Ticket wurde erstellt.','success');
     ticketMyRender();
   }
@@ -2645,14 +2651,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Actions
     const actionsEl=document.getElementById('ticketDetailActions');
     actionsEl.innerHTML='';
-    if(isHR && t.status==='open' && t.cat!=='support' && t.author!==loggedInUser){
+    if(isHR && t.status==='open' && t.author!==loggedInUser && isAdminPanel){
       const claimBtn=document.createElement('button');
       claimBtn.textContent='🙋 Claimen';
       claimBtn.onclick=()=>{ ticketClaim(t.id); };
       claimBtn.style.cssText='padding:.35rem .8rem;background:var(--sg);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
       actionsEl.appendChild(claimBtn);
     }
-    if(isHR && t.status==='claimed' && t.claimedBy===loggedInUser){
+    if(isHR && t.status==='claimed' && t.claimedBy===loggedInUser && isAdminPanel){
       const closeBtn=document.createElement('button');
       closeBtn.textContent='✅ Schließen';
       closeBtn.onclick=()=>{ ticketCloseBegin(t.id); };
@@ -2664,7 +2670,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       addHRBtn.style.cssText='padding:.35rem .8rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
       actionsEl.appendChild(addHRBtn);
     }
-    if(isHR && t.status==='closed'){
+    if(isHR && t.status==='closed' && isAdminPanel){
       const reopenBtn=document.createElement('button');
       reopenBtn.textContent='🔓 Wieder öffnen';
       reopenBtn.onclick=()=>{ ticketReopen(t.id); };
@@ -2697,7 +2703,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Show reply field (hidden for closed tickets)
     const replyField=document.getElementById('ticketDetailReply');
     const replyBtn=replyField.nextElementSibling;
-    const canReply=t.status!=='closed' && (isOwner || isHR);
+    const canReply=t.status!=='closed' && (isAdminPanel ? (isOwner || isHR) : isOwner);
     replyField.style.display=canReply?'':'none';
     replyBtn.style.display=canReply?'':'none';
     document.getElementById('ticketFileUpload').closest('label').style.display=canReply?'':'none';
@@ -2717,6 +2723,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     t.claimedBy=loggedInUser;
     t.messages.push({author:loggedInUser,text:'🔧 Ticket wurde von '+loggedInUser+' übernommen.',timestamp:Date.now()});
     saveTickets(tickets);
+    // Notify author
+    try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+t.author)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'🔧 Dein Ticket "'+t.title+'" wurde von '+loggedInUser+' übernommen.',type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+t.author,JSON.stringify(hist))}catch(e){}
+    syncBroadcast('notifhistory');
+    showNotification('✅ Ticket übernommen.','success');
     ticketOpenDetail(id);
     ticketAdminRender();
     ticketMyRender();
@@ -2732,6 +2742,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!t) return;
     t.messages.push({author:loggedInUser,text,timestamp:Date.now()});
     saveTickets(tickets);
+    // Notify the other party
+    const target=t.author===loggedInUser?(t.claimedBy||null):t.author;
+    if(target){
+      try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+target)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'💬 Neue Antwort auf "'+t.title+'" von '+loggedInUser,type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+target,JSON.stringify(hist))}catch(e){}
+      syncBroadcast('notifhistory');
+    }
     ticketOpenDetail(id);
     replyField.value='';
     ticketAdminRender();
@@ -2760,6 +2776,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     t.claimedBy=null;
     t.messages.push({author:loggedInUser,text:'🔓 Ticket wurde wieder geöffnet.',timestamp:Date.now()});
     saveTickets(tickets);
+    // Notify author
+    try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+t.author)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'🔓 Dein Ticket "'+t.title+'" wurde wieder geöffnet.',type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+t.author,JSON.stringify(hist))}catch(e){}
+    syncBroadcast('notifhistory');
     closeModal('ticketDetailModal');
     ticketAdminRender();
     ticketMyRender();
@@ -2840,6 +2859,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     saveTickets(tickets);
     document.getElementById('ticketEmailArea').style.display='none';
     document.getElementById('ticketCloseEmail').value='';
+    // Notify author
+    try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+t.author)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'✅ Dein Ticket "'+t.title+'" wurde geschlossen'+(email?' (Transkript folgt)':'')+'.',type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+t.author,JSON.stringify(hist))}catch(e){}
+    syncBroadcast('notifhistory');
     closeModal('ticketDetailModal');
     ticketAdminRender();
     ticketMyRender();
@@ -2855,6 +2877,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     t.messages.push({author:loggedInUser,text:'✅ Ticket wurde geschlossen.',timestamp:Date.now()});
     saveTickets(tickets);
     document.getElementById('ticketEmailArea').style.display='none';
+    // Notify author
+    try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+t.author)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'✅ Dein Ticket "'+t.title+'" wurde geschlossen.',type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+t.author,JSON.stringify(hist))}catch(e){}
+    syncBroadcast('notifhistory');
     closeModal('ticketDetailModal');
     ticketAdminRender();
     ticketMyRender();
@@ -3566,6 +3591,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     signins.push({ id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), shiftPlanId:signinModalPlanId, username:loggedInAccount.username, role:signinModalRole, duty, stellwerke, timeFrom, timeTo, notes, location, timestamp:new Date().toLocaleString('de-DE') });
     try{localStorage.setItem('dvn_signins',JSON.stringify(signins))}catch(e){}
     syncBroadcast('signins');
+    // Notify all HR users about the sign-in
+    const planTitle=shiftPlans.find(p=>p.id===signinModalPlanId)?.shiftTitle||'Schicht';
+    const hrs=getCustomAccounts().filter(a=>a.rang==='HR');
+    hrs.forEach(h=>{
+      try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+h.username)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'📅 '+loggedInAccount.username+' hat sich für "'+planTitle+'" als '+signinModalRole+(duty?' ('+duty+')':'')+' ('+timeFrom+'–'+timeTo+') angemeldet.',type:'shiftplan',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+h.username,JSON.stringify(hist))}catch(e){}
+    });
+    syncBroadcast('notifhistory');
     addLogEntry('Anmeldung', loggedInAccount.username+' als '+signinModalRole+(duty?' ['+duty+']':''));
     showNotification('✅ Angemeldet als '+signinModalRole,'success');
     closeSigninModal();
@@ -3579,6 +3611,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     signins.splice(idx,1);
     try{localStorage.setItem('dvn_signins',JSON.stringify(signins))}catch(e){}
     syncBroadcast('signins');
+    // Notify HR about withdrawal
+    const planTitle=shiftPlans.find(p=>p.id===planId)?.shiftTitle||'Schicht';
+    const hrs=getCustomAccounts().filter(a=>a.rang==='HR');
+    hrs.forEach(h=>{
+      try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+h.username)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'🚫 '+loggedInAccount.username+' hat seine Anmeldung für "'+planTitle+'" zurückgezogen.',type:'shiftplan',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+h.username,JSON.stringify(hist))}catch(e){}
+    });
+    syncBroadcast('notifhistory');
     addLogEntry('Anmeldung zurückgezogen', loggedInAccount.username);
     // Remove user from shift plan entries
     const plan=shiftPlans.find(p=>p.id===planId);
@@ -3983,6 +4022,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       {key:'staff_news',label:'📰 Staff-News'},
       {key:'public_news',label:'🌍 Öffentliche News'},
       {key:'app_changes',label:'📝 Bewerbungs-Änderungen'},
+      {key:'ticket',label:'🎫 Ticket-Benachrichtigungen'},
     ];
     renderLinkedAccounts();
     c.innerHTML=`
