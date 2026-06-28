@@ -920,21 +920,46 @@
 
 <!-- ═══════ TICKET DETAIL MODAL ═══════ -->
 <div class="modal-overlay" id="ticketDetailModal">
-  <div class="modal" style="max-width:650px">
+  <div class="modal" style="max-width:680px">
     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem">
       <div>
         <h2 id="ticketDetailTitle" style="margin-bottom:.25rem"></h2>
         <span id="ticketDetailMeta" style="font-size:.78rem;color:var(--g500)"></span>
+        <div id="ticketDetailHRList" style="font-size:.75rem;color:var(--g500);margin-top:.25rem"></div>
       </div>
       <button onclick="closeModal('ticketDetailModal')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--g400);padding:0;line-height:1;font-family:inherit">✕</button>
     </div>
     <div id="ticketDetailActions" style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.75rem"></div>
-    <div id="ticketDetailDesc" style="padding:.75rem;background:var(--g50);border-radius:var(--rs);margin-bottom:.75rem;font-size:.85rem;line-height:1.5;border:1px solid var(--g100)"></div>
+    <div id="ticketDetailDesc" style="padding:.75rem;background:var(--g50);border-radius:var(--rs);margin-bottom:.75rem;font-size:.85rem;line-height:1.5;border:1px solid var(--g100);white-space:pre-wrap"></div>
     <div style="font-size:.82rem;font-weight:600;color:var(--g600);margin-bottom:.5rem">💬 Verlauf</div>
-    <div id="ticketDetailMessages" style="max-height:300px;overflow-y:auto;margin-bottom:.75rem;display:flex;flex-direction:column;gap:.5rem"></div>
-    <div style="display:flex;gap:.5rem">
-      <textarea id="ticketDetailReply" placeholder="Antwort eingeben..." style="flex:1;padding:.5rem .8rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit;min-height:50px;resize:vertical;box-sizing:border-box"></textarea>
+    <div id="ticketDetailMessages" style="max-height:350px;overflow-y:auto;margin-bottom:.75rem;display:flex;flex-direction:column;gap:.5rem"></div>
+    <!-- HR Textbausteine -->
+    <div id="ticketTextbausteine" style="display:none;margin-bottom:.5rem">
+      <div style="font-size:.75rem;font-weight:600;color:var(--g500);margin-bottom:.3rem">📝 Textbausteine:</div>
+      <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+        <button onclick="ticketInsertTemplate('Vielen Dank für Ihre Meldung. Wir kümmern uns darum.')" style="padding:.2rem .5rem;background:var(--g50);border:1px solid var(--g200);border-radius:4px;cursor:pointer;font-size:.72rem;font-family:inherit">Standardantwort</button>
+        <button onclick="ticketInsertTemplate('Wir benötigen weitere Informationen zu Ihrem Anliegen. Bitte beschreiben Sie das Problem genauer.')" style="padding:.2rem .5rem;background:var(--g50);border:1px solid var(--g200);border-radius:4px;cursor:pointer;font-size:.72rem;font-family:inherit">Rückfrage</button>
+        <button onclick="ticketInsertTemplate('Ihr Anliegen wurde bearbeitet und das Ticket wird geschlossen.')" style="padding:.2rem .5rem;background:var(--g50);border:1px solid var(--g200);border-radius:4px;cursor:pointer;font-size:.72rem;font-family:inherit">Erledigt</button>
+        <button onclick="ticketInsertTemplate('Der Bug wurde zur Kenntnis genommen und wird im nächsten Update behoben.')" style="padding:.2rem .5rem;background:var(--g50);border:1px solid var(--g200);border-radius:4px;cursor:pointer;font-size:.72rem;font-family:inherit">Bug bestätigt</button>
+        <button onclick="ticketInsertTemplate('Ihre Beschwerde wird von der Leitung geprüft. Wir melden uns.')" style="padding:.2rem .5rem;background:var(--g50);border:1px solid var(--g200);border-radius:4px;cursor:pointer;font-size:.72rem;font-family:inherit">Beschwerde</button>
+      </div>
+    </div>
+    <!-- Reply + File Upload -->
+    <div id="ticketReplyArea" style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <div style="flex:1;display:flex;gap:.35rem;flex-wrap:wrap">
+        <textarea id="ticketDetailReply" placeholder="Antwort eingeben..." style="flex:1;min-width:200px;padding:.5rem .8rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit;min-height:50px;resize:vertical;box-sizing:border-box"></textarea>
+        <label style="padding:.5rem .7rem;background:var(--g100);border-radius:var(--rs);cursor:pointer;font-size:.78rem;display:flex;align-items:center;gap:.3rem;font-family:inherit">
+          📎
+          <input type="file" id="ticketFileUpload" accept="image/*,video/mp4,video/webm" style="display:none" onchange="ticketUploadFile()">
+        </label>
+      </div>
       <button onclick="ticketReply()" style="padding:.5rem 1rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit;align-self:flex-end">Senden</button>
+    </div>
+    <!-- Email for transcript (shown on close) -->
+    <div id="ticketEmailArea" style="display:none;align-items:center;gap:.5rem;margin-top:.5rem;flex-wrap:wrap">
+      <input type="email" id="ticketCloseEmail" placeholder="E-Mail für Transscript (optional)" style="flex:1;min-width:180px;padding:.4rem .7rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.82rem;font-family:inherit">
+      <button onclick="ticketCloseWithEmail()" style="padding:.4rem .9rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.82rem;cursor:pointer;font-family:inherit">✅ Schließen & Senden</button>
+      <button onclick="ticketCloseWithoutEmail()" style="padding:.4rem .9rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.82rem;font-family:inherit">Nur schließen</button>
     </div>
   </div>
 </div>
@@ -3093,88 +3118,77 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function staffListSaveAll(){
     if(staffListDirty.size===0) return;
     const isHR=loggedInAccount && loggedInAccount.rang==='HR';
-    const list=getCustomAccounts();
+    let count=0;
     let changedRanks=[];
     staffListDirty.forEach(username=>{
       const card=document.querySelector('#staffListContainer [data-acc="'+username+'"]');
       if(!card) return;
       const cfg=getAccountConfig(username);
-      const role=card.querySelector('[data-cfg="role"]').value;
-      cfg.role=role;
-      if(role==='HR'){
-        cfg.stellwerke=['AK','NS','BHBF','STB'];
-        cfg.strecken=['BG-AK','AK-MSB','BHBF-SHBF'];
-        cfg.fahrzeuge=['BR 429','BR 648','BR 628'];
-      } else {
-        cfg.stellwerke=[...card.querySelectorAll('[data-cfg="stellwerke"]:checked')].map(cb=>cb.value);
-        cfg.strecken=[...card.querySelectorAll('[data-cfg="strecken"]:checked')].map(cb=>cb.value);
-        cfg.fahrzeuge=[...card.querySelectorAll('[data-cfg="fahrzeuge"]:checked')].map(cb=>cb.value);
+      const rang=card.querySelector('[data-cfg="rang"]').value;
+      const list=getCustomAccounts();
+      const acct=list.find(a=>a.username===username);
+      if(isHR && rang && acct && acct.rang!==rang){
+        acct.rang=rang;
+        changedRanks.push(username+' → '+rang);
+        if(loggedInAccount && loggedInAccount.username===username) loggedInAccount.rang=rang;
       }
+      cfg.stellwerke=rang==='HR'?['AK','NS','BHBF','STB']:[...card.querySelectorAll('[data-cfg="stellwerke"]:checked')].map(cb=>cb.value);
+      cfg.strecken=rang==='HR'?['BG-AK','AK-MSB','BHBF-SHBF']:[...card.querySelectorAll('[data-cfg="strecken"]:checked')].map(cb=>cb.value);
+      cfg.fahrzeuge=rang==='HR'?['BR 429','BR 648','BR 628']:[...card.querySelectorAll('[data-cfg="fahrzeuge"]:checked')].map(cb=>cb.value);
       cfg.extras=[...card.querySelectorAll('[data-cfg="extras"]:checked')].map(cb=>cb.value);
       saveAccountConfig(username,cfg);
-      if(isHR && role){
-        const acct=list.find(a=>a.username===username);
-        if(acct && acct.rang!==role){
-          acct.rang=role;
-          changedRanks.push(username+' → '+role);
-          if(loggedInAccount && loggedInAccount.username===username){
-            loggedInAccount.rang=role;
-          }
-        }
-      }
+      count++;
     });
-    if(changedRanks.length>0) saveCustomAccounts(list);
+    if(changedRanks.length>0) saveCustomAccounts(getCustomAccounts());
     staffListDirty.clear();
     const bar=document.getElementById('staffListSaveBar');
     if(bar) bar.style.display='none';
     if(changedRanks.length>0) showNotification('✅ Ränge geändert: '+changedRanks.join(', '),'success');
-    showNotification('✅ Änderungen für '+staffListDirty.size+' Mitarbeiter gespeichert.','success');
+    showNotification('✅ Änderungen für '+count+' Mitarbeiter gespeichert.','success');
   }
   function staffListRender(){
     const el=document.getElementById('staffListContainer');
     if(!el) return;
     const allAccounts=getAllAccounts();
-    const isHR=loggedInAccount && loggedInAccount.rang==='HR';
     el.innerHTML=`<div id="staffListSaveBar" style="display:none;align-items:center;gap:.5rem;padding:.5rem;background:var(--g50);border-radius:var(--rs);border:1px dashed var(--r400);margin-bottom:.5rem">
       <span style="font-size:.82rem;font-weight:600;color:var(--r600)">⚠️ Ungespeicherte Änderungen</span>
       <button onclick="staffListSaveAll()" style="padding:.35rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.82rem;font-family:inherit">💾 Speichern</button>
       <button onclick="staffListDiscard()" style="padding:.35rem .8rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.82rem;font-family:inherit">Verwerfen</button>
     </div>`+allAccounts.map(a=>{
-      const cfg=getAccountConfig(a.username);
+      const rang=a.rang||'';
       return `<div class="sp-plan-card" style="flex-wrap:wrap;gap:.4rem" data-acc="${a.username}">
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;flex:1">
           <strong style="font-size:.85rem;min-width:100px">${a.username}</strong>
-          <span style="font-size:.72rem;color:var(--g400)">(${a.rang} · aktiv)</span>
+          <span style="font-size:.72rem;color:var(--g400)">(${rang} · aktiv)</span>
           ${getLinkedAccount('discord',a.username)?`<span style="font-size:.7rem;color:var(--g400)">💬 ${getLinkedAccount('discord',a.username)}</span>`:''}
           <span style="font-size:.7rem;color:var(--g400);margin-left:.25rem">📋 Letzte: ${getLastAttendance(a.username)||'—'}</span>
           <span style="font-size:.7rem;font-weight:600;color:var(--st);background:var(--sg);padding:.1rem .4rem;border-radius:4px">${getAttendanceCountThisMonth(a.username)}× diesen Monat</span>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;width:100%">
-          <label style="font-size:.75rem;color:var(--g500)">Rolle:</label>
-          <select onchange="staffListMarkDirty('${a.username}')" data-cfg="role" style="padding:.25rem .4rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.78rem;font-family:inherit">
+          <label style="font-size:.75rem;color:var(--g500)">Rang:</label>
+          <select onchange="staffListMarkDirty('${a.username}')" data-cfg="rang" style="padding:.25rem .4rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.78rem;font-family:inherit">
             <option value="">—</option>
-            <option value="FDL" ${cfg.role==='FDL'?'selected':''}>FDL</option>
-            <option value="TF" ${cfg.role==='TF'?'selected':''}>TF</option>
-            <option value="HR" ${cfg.role==='HR'?'selected':''}>HR</option>
+            <option value="FDL" ${rang==='FDL'?'selected':''}>FDL</option>
+            <option value="TF" ${rang==='TF'?'selected':''}>TF</option>
+            <option value="HR" ${rang==='HR'?'selected':''}>HR</option>
           </select>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Stellwerke:</span>
-          ${['AK','NS','BHBF','STB'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.stellwerke.includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="stellwerke" value="${s}" ${(cfg.role==='HR'||cfg.stellwerke.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListMarkDirty('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
+          ${['AK','NS','BHBF','STB'].map(s=>{const cfg=getAccountConfig(a.username)||{};return `<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(rang==='HR'||(cfg.stellwerke||[]).includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="stellwerke" value="${s}" ${(rang==='HR'||(cfg.stellwerke||[]).includes(s))?'checked':''} ${rang==='HR'?'disabled':''} onchange="staffListMarkDirty('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`}).join('')}
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Strecken:</span>
-          ${['BG-AK','AK-MSB','BHBF-SHBF'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.strecken.includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="strecken" value="${s}" ${(cfg.role==='HR'||cfg.strecken.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListMarkDirty('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
+          ${['BG-AK','AK-MSB','BHBF-SHBF'].map(s=>{const cfg=getAccountConfig(a.username)||{};return `<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(rang==='HR'||(cfg.strecken||[]).includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="strecken" value="${s}" ${(rang==='HR'||(cfg.strecken||[]).includes(s))?'checked':''} ${rang==='HR'?'disabled':''} onchange="staffListMarkDirty('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`}).join('')}
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Fahrzeuge:</span>
-          ${['BR 429','BR 648','BR 628'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.role==='HR'||cfg.fahrzeuge.includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="fahrzeuge" value="${s}" ${(cfg.role==='HR'||cfg.fahrzeuge.includes(s))?'checked':''} ${cfg.role==='HR'?'disabled':''} onchange="staffListMarkDirty('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
+          ${['BR 429','BR 648','BR 628'].map(s=>{const cfg=getAccountConfig(a.username)||{};return `<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(rang==='HR'||(cfg.fahrzeuge||[]).includes(s))?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="fahrzeuge" value="${s}" ${(rang==='HR'||(cfg.fahrzeuge||[]).includes(s))?'checked':''} ${rang==='HR'?'disabled':''} onchange="staffListMarkDirty('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`}).join('')}
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;width:100%" class="staff-licenses">
           <span style="font-size:.72rem;color:var(--g500);min-width:80px">Zusatz:</span>
-          ${['Praxisvermittler','Ausbilder','Shift-Host'].map(s=>`<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${cfg.extras.includes(s)?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="extras" value="${s}" ${cfg.extras.includes(s)?'checked':''} onchange="staffListMarkDirty('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`).join('')}
+          ${['Praxisvermittler','Ausbilder','Shift-Host'].map(s=>{const cfg=getAccountConfig(a.username)||{};return `<label style="font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.2rem;padding:.1rem .3rem;background:${(cfg.extras||[]).includes(s)?'var(--sg)':'var(--g50)'};border-radius:4px"><input type="checkbox" data-cfg="extras" value="${s}" ${(cfg.extras||[]).includes(s)?'checked':''} onchange="staffListMarkDirty('${a.username}')" style="width:13px;height:13px;accent-color:var(--r500)"> ${s}</label>`}).join('')}
         </div>
-        <div style="display:flex;gap:.35rem;margin-top:.3rem"></div>
       </div>`;
     }).join('');
     staffListDirty.clear();
