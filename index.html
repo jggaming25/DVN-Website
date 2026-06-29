@@ -41,7 +41,7 @@
   .user-menu .dropdown .dd-head{padding:.6rem 1rem;font-size:.72rem;color:var(--g400);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--g100)}
 
   /* ─── PAGE ─── */
-  .page{display:none;padding:2rem 2rem 3rem;max-width:1200px;margin:0 auto;animation:pi .4s ease}
+  .page{display:none;padding:2rem 2rem 3rem;max-width:2400px;margin:0 auto;animation:pi .4s ease}
   .page.active{display:block}
   @keyframes pi{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   @keyframes ni{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
@@ -57,7 +57,7 @@
   /* ─── LOGIN MODAL ─── */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);z-index:999;align-items:center;justify-content:center}
   .modal-overlay.open{display:flex}
-  .modal{background:var(--w);border-radius:var(--rl);padding:2rem;width:400px;max-width:92vw;box-shadow:var(--lg);animation:mi .3s ease}
+  .modal{background:var(--w);border-radius:var(--rl);padding:2rem;width:800px;max-width:92vw;box-shadow:var(--lg);animation:mi .3s ease}
   @keyframes mi{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
   .modal h2{font-size:1.2rem;margin-bottom:.25rem}
   .modal p{color:var(--g500);font-size:.85rem;margin-bottom:1.25rem}
@@ -364,7 +364,7 @@
 
 <!-- ═══════ BEWERBUNGS-FORMULAR MODAL ═══════ -->
 <div class="modal-overlay" id="bewerbModal">
-  <div class="modal form-modal" id="bewerbFormContainer" style="max-width:780px;max-height:85vh;overflow-y:auto">
+  <div class="modal form-modal" id="bewerbFormContainer" style="max-width:1560px;max-height:85vh;overflow-y:auto">
     <h2 id="bewerbModalTitle">Bewerbung</h2>
     <p id="bewerbModalSub" style="margin-bottom:1.25rem">Formular ausfüllen.</p>
     <div id="bewerbFormFields"></div>
@@ -382,7 +382,7 @@
 
 <!-- ═══════ ACCOUNT SETTINGS MODAL ═══════ -->
 <div class="modal-overlay" id="accountModal">
-  <div class="modal" style="max-width:700px">
+  <div class="modal" style="max-width:1400px">
     <h2>👤 Account-Einstellungen</h2>
     <p style="margin-bottom:.75rem">Benutzer: <strong id="accModalUser"></strong> · Rang: <strong id="accModalRang"></strong></p>
     <div id="accLinkedAccounts" style="margin-bottom:.75rem"></div>
@@ -419,7 +419,7 @@
 
 <!-- ═══════ SIGN-IN MODAL ═══════ -->
 <div class="modal-overlay" id="signinModal">
-  <div class="modal" style="max-width:700px">
+  <div class="modal" style="max-width:1400px">
     <h2>📋 Anmeldung · <span id="signinShiftTitle"></span></h2>
     <p>Melde dich für diese Schicht an.</p>
     <div style="display:flex;justify-content:flex-end;margin-bottom:.5rem">
@@ -465,7 +465,7 @@
 
 <!-- ═══════ STAFF NEWS TYPE MODAL ═══════ -->
 <div class="modal-overlay" id="staffNewsTypeModal" style="z-index:1000">
-  <div class="modal" style="max-width:600px">
+  <div class="modal" style="max-width:1200px">
     <h2>📰 News-Typ wählen</h2>
     <p>Für wen ist dieser Beitrag bestimmt?</p>
     <div style="display:flex;flex-direction:column;gap:.75rem;margin:1.25rem 0">
@@ -882,7 +882,7 @@
 </footer>
 
 <div class="modal-overlay" id="impressumModal">
-  <div class="modal" style="max-width:800px">
+  <div class="modal" style="max-width:1600px">
     <h2>Impressum</h2>
     <p style="margin-top:.75rem;color:var(--g600);font-size:.9rem;line-height:1.6">
       <strong>Deutsches Verkehrsnetz (DVN)</strong><br>
@@ -898,7 +898,7 @@
 
 <!-- ═══════ TICKET CREATE MODAL ═══════ -->
 <div class="modal-overlay" id="ticketCreateModal">
-  <div class="modal" style="max-width:900px">
+  <div class="modal" style="max-width:1800px">
     <div style="display:flex;justify-content:space-between;align-items:start">
       <h2>🎫 Neues Ticket</h2>
       <button onclick="closeModal('ticketCreateModal')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--g400);padding:0;line-height:1;font-family:inherit">✕</button>
@@ -920,7 +920,7 @@
 
 <!-- ═══════ HR AUSWAHL MODAL ═══════ -->
 <div class="modal-overlay" id="hrSelectModal">
-  <div class="modal" style="max-width:600px">
+  <div class="modal" style="max-width:1200px">
     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem">
       <h2>👥 HR auswählen</h2>
       <button onclick="closeModal('hrSelectModal')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--g400);padding:0;line-height:1;font-family:inherit">✕</button>
@@ -931,7 +931,7 @@
 
 <!-- ═══════ TICKET DETAIL MODAL ═══════ -->
 <div class="modal-overlay" id="ticketDetailModal">
-  <div class="modal" style="max-width:1000px">
+  <div class="modal" style="max-width:2000px">
     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem">
       <div>
         <h2 id="ticketDetailTitle" style="margin-bottom:.25rem"></h2>
@@ -2651,24 +2651,26 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Actions
     const actionsEl=document.getElementById('ticketDetailActions');
     actionsEl.innerHTML='';
-    if(isHR && t.status==='open' && t.author!==loggedInUser && isAdminPanel){
-      const claimBtn=document.createElement('button');
-      claimBtn.textContent='🙋 Claimen';
-      claimBtn.onclick=()=>{ ticketClaim(t.id); };
-      claimBtn.style.cssText='padding:.35rem .8rem;background:var(--sg);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
-      actionsEl.appendChild(claimBtn);
-    }
-    if(isHR && t.status==='claimed' && t.claimedBy===loggedInUser && isAdminPanel){
-      const closeBtn=document.createElement('button');
-      closeBtn.textContent='✅ Schließen';
-      closeBtn.onclick=()=>{ ticketCloseBegin(t.id); };
-      closeBtn.style.cssText='padding:.35rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
-      actionsEl.appendChild(closeBtn);
-      const addHRBtn=document.createElement('button');
-      addHRBtn.textContent='👥 HR hinzufügen';
-      addHRBtn.onclick=()=>{ openHRSelection(t.id); };
-      addHRBtn.style.cssText='padding:.35rem .8rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
-      actionsEl.appendChild(addHRBtn);
+    if(isHR && isAdminPanel){
+      if(t.status==='open'){
+        const claimBtn=document.createElement('button');
+        claimBtn.textContent='🙋 Claimen';
+        claimBtn.onclick=()=>{ ticketClaim(t.id); };
+        claimBtn.style.cssText='padding:.35rem .8rem;background:var(--sg);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
+        actionsEl.appendChild(claimBtn);
+      }
+      if(t.status==='claimed'){
+        const closeBtn=document.createElement('button');
+        closeBtn.textContent='✅ Schließen';
+        closeBtn.onclick=()=>{ ticketCloseBegin(t.id); };
+        closeBtn.style.cssText='padding:.35rem .8rem;background:var(--r500);color:var(--w);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
+        actionsEl.appendChild(closeBtn);
+        const addHRBtn=document.createElement('button');
+        addHRBtn.textContent='👥 HR hinzufügen';
+        addHRBtn.onclick=()=>{ openHRSelection(t.id); };
+        addHRBtn.style.cssText='padding:.35rem .8rem;background:var(--g100);border:none;border-radius:var(--rs);cursor:pointer;font-size:.78rem;font-family:inherit';
+        actionsEl.appendChild(addHRBtn);
+      }
     }
     if(isHR && t.status==='closed' && isAdminPanel){
       const reopenBtn=document.createElement('button');
