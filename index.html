@@ -10,8 +10,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-  :root{--r50:#fff5f7;--r100:#ffebee;--r200:#ffcdd2;--r300:#e57373;--r400:#ef5350;--r500:#c62828;--r600:#b71c1c;--r700:#8e0000;--w:#fff;--g50:#f8f9fc;--g100:#f1f3f8;--g200:#e8ecf4;--g300:#d0d5dd;--g400:#98a2b3;--g500:#667085;--g600:#475467;--g700:#344054;--g800:#1d2939;--sg:#bbf7d0;--st:#166534;--sm:0 1px 3px rgba(0,0,0,.06);--md:0 4px 16px rgba(0,0,0,.08);--lg:0 12px 40px rgba(0,0,0,.10);--rs:8px;--rm:12px;--rl:16px}
-  .dark{--r50:#3a2222;--r100:#4a2424;--r200:#6b3030;--r300:#9e4040;--r400:#d45555;--r500:#e06060;--r600:#e87a7a;--r700:#f09494;--w:#111318;--g50:#16181f;--g100:#1e202a;--g200:#303349;--g300:#404458;--g400:#858aa5;--g500:#9ea2bb;--g600:#c5c8da;--g700:#e2e4ef;--g800:#f1f2f9;--sg:#1a3a2a;--st:#6ee7a0;--sm:0 1px 3px rgba(0,0,0,.3);--md:0 4px 16px rgba(0,0,0,.35);--lg:0 12px 40px rgba(0,0,0,.4)}
+  :root{--r50:#fff5f7;--r100:#ffebee;--r200:#ffcdd2;--r300:#e57373;--r400:#ef5350;--r500:#c62828;--r600:#b71c1c;--r700:#8e0000;--w:#fff;--g50:#f8f9fc;--g100:#f1f3f8;--g200:#e8ecf4;--g300:#d0d5dd;--g400:#98a2b3;--g500:#667085;--g600:#475467;--g700:#344054;--g800:#1d2939;--sg:#bbf7d0;--st:#166534;--sm:0 1px 3px rgba(0,0,0,.06);--md:0 4px 16px rgba(0,0,0,.08);--lg:0 12px 40px rgba(0,0,0,.10);--rs:8px;--rm:12px;--rl:16px;--mb:#dbeafe;--mbt:#1e40af}
+  .dark{--r50:#3a2222;--r100:#4a2424;--r200:#6b3030;--r300:#9e4040;--r400:#d45555;--r500:#e06060;--r600:#e87a7a;--r700:#f09494;--w:#111318;--g50:#16181f;--g100:#1e202a;--g200:#303349;--g300:#404458;--g400:#858aa5;--g500:#9ea2bb;--g600:#c5c8da;--g700:#e2e4ef;--g800:#f1f2f9;--sg:#1a3a2a;--st:#6ee7a0;--sm:0 1px 3px rgba(0,0,0,.3);--md:0 4px 16px rgba(0,0,0,.35);--lg:0 12px 40px rgba(0,0,0,.4);--mb:#1e3a5f;--mbt:#93c5fd}
   html{scroll-behavior:smooth}
   body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--g50);color:var(--g800);min-height:100vh;display:flex;flex-direction:column}
   .page-wrap{flex:1}
@@ -1206,6 +1206,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   } catch(e) {}
 
   let loggedIn = false, loggedInUser = null, loggedInAccount = null;
+  let ticketOpenId = null;
   let shifts = []; try{const s=localStorage.getItem('dvn_shifts');if(s)shifts=JSON.parse(s).map(s=>({...s,completed:s.completed||false,stats:s.stats||{reliability:'',avgDelay:'',emergencyBrakes:''}}))}catch(e){}
   let applications = []; try{const a=localStorage.getItem('dvn_applications');if(a)applications=JSON.parse(a)}catch(e){}
   let newsItems = []; try{const n=localStorage.getItem('dvn_news');if(n)newsItems=JSON.parse(n)}catch(e){}
@@ -1429,6 +1430,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         if(loggedIn){
           if(document.querySelector('#support.page.active')) ticketMyRender();
           if(document.querySelector('#apanel-tickets.active')) ticketAdminRender();
+          ticketRefreshDetail();
         }
         break;
     }
@@ -2533,7 +2535,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     try{localStorage.setItem('dvn_tickets',JSON.stringify(tickets))}catch(e){}
     syncBroadcast('tickets');
   }
-  function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('open'); if(id==='ticketDetailModal') ticketOpenId=null; }
 
   function ticketOpenCreateModal(){
     document.getElementById('ticketCreateTitle').value='';
@@ -2627,7 +2629,14 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }).join('');
   }
 
+  function ticketRefreshDetail(){
+    if(!ticketOpenId) return;
+    if(!document.getElementById('ticketDetailModal').classList.contains('open')){ ticketOpenId=null; return; }
+    ticketOpenDetail(ticketOpenId);
+  }
+
   function ticketOpenDetail(id){
+    ticketOpenId=id;
     const tickets=getTickets();
     const t=tickets.find(x=>x.id===id);
     if(!t) return;
@@ -2694,8 +2703,16 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     } else {
       t.messages.forEach(m=>{
         const isMe=m.author===loggedInUser;
+        const isCreator=m.author===t.author;
+        const msgAcc=getAllAccounts().find(a=>a.username===m.author);
+        const isHrMsg=msgAcc&&msgAcc.rang==='HR';
         const div=document.createElement('div');
-        div.style.cssText=`padding:.5rem .75rem;border-radius:var(--rs);font-size:.82rem;line-height:1.4;max-width:85%;${isMe?'align-self:flex-end;background:var(--r100)':'align-self:flex-start;background:var(--g100);border:1px solid var(--g200)'}`;
+        let msgStyle;
+        if(isMe) msgStyle='align-self:flex-end;background:var(--r100)';
+        else if(isCreator) msgStyle='align-self:flex-start;background:var(--r100)';
+        else if(isHrMsg) msgStyle='align-self:flex-start;background:var(--mb);border:1px solid var(--g200)';
+        else msgStyle='align-self:flex-start;background:var(--g100);border:1px solid var(--g200)';
+        div.style.cssText='padding:.5rem .75rem;border-radius:var(--rs);font-size:.82rem;line-height:1.4;max-width:85%;'+msgStyle;
         if(m.type==='file'&&m.fileData){
           div.innerHTML=`<div style="font-weight:600;font-size:.75rem;margin-bottom:.2rem">${m.author} <span style="font-weight:400;color:var(--g400)">${new Date(m.timestamp).toLocaleString('de-DE')}</span></div>${m.fileData.startsWith('data:video/')?`<video controls style="max-width:100%;max-height:300px;border-radius:4px"><source src="${m.fileData}"></video>`:`<img src="${m.fileData}" style="max-width:100%;max-height:300px;border-radius:4px;cursor:pointer" onclick="window.open('${m.fileData}')" alt="${m.fileName||''}">`}`;
         } else {
@@ -2717,6 +2734,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const tbEl=document.getElementById('ticketTextbausteine');
     tbEl.style.display=(isHR && t.status!=='closed' && isAdminPanel)?'block':'none';
     document.getElementById('ticketDetailModal').classList.add('open');
+    // Auto-scroll to bottom
+    setTimeout(()=>{ msgsEl.scrollTop=msgsEl.scrollHeight; }, 50);
   }
 
   function ticketClaim(id){
@@ -2887,8 +2906,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     closeModal('ticketDetailModal');
     ticketAdminRender();
     ticketMyRender();
-    // Open default email client
-    const a=document.createElement('a'); a.href=mailto; a.style.display='none'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    // Open default email client via mailto protocol
+    window.location.href=mailto;
     showNotification('✅ Ticket geschlossen. E-Mail-Programm wird geöffnet.','success');
   }
   function ticketCloseWithoutEmail(){
