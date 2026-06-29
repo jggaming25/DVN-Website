@@ -1,5 +1,5 @@
 const DB_URL = 'https://dvn-website-9ce7a-default-rtdb.firebaseio.com';
-const PATHS = ['dvn_shifts','dvn_strafen','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_applications','dvn_perm_overrides'];
+const PATHS = ['dvn_shifts','dvn_strafen','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_applications','dvn_perm_overrides','dvn_tickets'];
 let cache = {};
 let user = '';
 
@@ -143,6 +143,29 @@ function checkAndNotify(path, oldData, newData) {
         if (newUser[key] !== oldUser[key]) {
           entries.push('🔑 '+(labels[key]||key)+' '+(newUser[key]?'erteilt':'entzogen'));
         }
+      }
+    }
+  } else if (path === 'dvn_tickets') {
+    const oldList = oldData ? (Array.isArray(oldData) ? oldData : Object.values(oldData)) : [];
+    const newList = newData ? (Array.isArray(newData) ? newData : Object.values(newData)) : [];
+    const added = newList.filter(n => !oldList.some(o => o.id === n.id));
+    for (const t of added) {
+      if (t.author === user) {
+        entries.push('🎫 Neues Ticket: '+t.title);
+      }
+    }
+    const changed = newList.filter(n => oldList.some(o => o.id === n.id && JSON.stringify(o) !== JSON.stringify(n)));
+    for (const t of changed) {
+      const old = oldList.find(o => o.id === t.id);
+      if (!old) continue;
+      if (t.status !== old.status && t.author === user) {
+        if (t.status === 'claimed') entries.push('🔧 Ticket übernommen: '+t.title);
+        else if (t.status === 'closed') entries.push('✅ Ticket geschlossen: '+t.title);
+        else if (t.status === 'open') entries.push('🔓 Ticket wieder geöffnet: '+t.title);
+      }
+      if (t.messages && old.messages && t.messages.length > old.messages.length && t.author === user) {
+        const newMsg = t.messages[t.messages.length - 1];
+        if (newMsg.author !== user) entries.push('💬 Neue Antwort zu: '+t.title);
       }
     }
   }
