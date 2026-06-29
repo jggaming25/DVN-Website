@@ -151,21 +151,35 @@ function checkAndNotify(path, oldData, newData) {
     const added = newList.filter(n => !oldList.some(o => o.id === n.id));
     for (const t of added) {
       if (t.author === user) {
-        entries.push('🎫 Neues Ticket: '+t.title);
+        entries.push('🎫 Ticket #'+t.id.slice(0,6)+': '+t.title);
       }
     }
     const changed = newList.filter(n => oldList.some(o => o.id === n.id && JSON.stringify(o) !== JSON.stringify(n)));
     for (const t of changed) {
       const old = oldList.find(o => o.id === t.id);
       if (!old) continue;
-      if (t.status !== old.status && t.author === user) {
-        if (t.status === 'claimed') entries.push('🔧 Ticket übernommen: '+t.title);
-        else if (t.status === 'closed') entries.push('✅ Ticket geschlossen: '+t.title);
-        else if (t.status === 'open') entries.push('🔓 Ticket wieder geöffnet: '+t.title);
-      }
-      if (t.messages && old.messages && t.messages.length > old.messages.length && t.author === user) {
-        const newMsg = t.messages[t.messages.length - 1];
-        if (newMsg.author !== user) entries.push('💬 Neue Antwort zu: '+t.title);
+      if (t.author === user) {
+        if (t.status !== old.status) {
+          if (t.status === 'claimed') entries.push('🔧 Ticket #'+t.id.slice(0,6)+' übernommen: '+t.title);
+          else if (t.status === 'closed') {
+            if (t.email && !old.email) entries.push('✅ Ticket #'+t.id.slice(0,6)+' geschlossen (Transkript gesendet): '+t.title);
+            else entries.push('✅ Ticket #'+t.id.slice(0,6)+' geschlossen: '+t.title);
+          }
+          else if (t.status === 'open') entries.push('🔓 Ticket #'+t.id.slice(0,6)+' wieder geöffnet: '+t.title);
+        }
+        if (t.messages && old.messages && t.messages.length > old.messages.length) {
+          const newMsgs = t.messages.slice(old.messages.length);
+          for (const m of newMsgs) {
+            if (m.author !== user) {
+              entries.push('💬 Ticket #'+t.id.slice(0,6)+' – Neue Antwort von '+m.author+': '+t.title);
+            }
+            if (m.text && m.text.includes('Transkript an')) {
+              entries.push('📧 Ticket #'+t.id.slice(0,6)+' – Transkript gesendet: '+t.title);
+            }
+          }
+        } else if (!old.email && t.email && t.author === user) {
+          entries.push('📧 Ticket #'+t.id.slice(0,6)+' – Transkript gesendet: '+t.title);
+        }
       }
     }
   }
