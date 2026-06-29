@@ -41,7 +41,7 @@
   .user-menu .dropdown .dd-head{padding:.6rem 1rem;font-size:.72rem;color:var(--g400);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--g100)}
 
   /* ─── PAGE ─── */
-  .page{display:none;padding:2rem 2rem 3rem;max-width:2400px;margin:0 auto;animation:pi .4s ease}
+  .page{display:none;padding:2rem 2rem 3rem;max-width:1200px;margin:0 auto;animation:pi .4s ease}
   .page.active{display:block}
   @keyframes pi{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   @keyframes ni{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
@@ -2851,23 +2851,41 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function ticketCloseWithEmail(){
     const id=document.getElementById('ticketCloseTarget').value;
     const email=document.getElementById('ticketCloseEmail').value.trim();
+    if(!email){ showNotification('Bitte E-Mail-Adresse eingeben.','error'); return; }
     const tickets=getTickets();
     const t=tickets.find(x=>x.id===id);
     if(!t) return;
     t.status='closed';
     t.closedAt=Date.now();
-    if(email) t.email=email;
-    t.messages.push({author:loggedInUser,text:'✅ Ticket wurde geschlossen'+(email?' (Transkript an '+email+')':'')+'.',timestamp:Date.now()});
+    t.email=email;
+    t.messages.push({author:loggedInUser,text:'✅ Ticket wurde geschlossen (Transkript an '+email+').',timestamp:Date.now()});
     saveTickets(tickets);
     document.getElementById('ticketEmailArea').style.display='none';
     document.getElementById('ticketCloseEmail').value='';
+    // Build mailto transcript
+    const catLabels={support:'Support',bug:'Bug Report',complaint:'Beschwerde',other:'Sonstiges'};
+    let body='Ticket-Transkript\n';
+    body+='================\n\n';
+    body+='Titel: '+t.title+'\n';
+    body+='Kategorie: '+(catLabels[t.cat]||t.cat)+'\n';
+    body+='Erstellt: '+new Date(t.created).toLocaleString('de-DE')+'\n\n';
+    body+='Beschreibung:\n'+t.desc+'\n\n';
+    body+='--- Verlauf ---\n';
+    (t.messages||[]).forEach(m=>{
+      const time=m.timestamp?new Date(m.timestamp).toLocaleString('de-DE'):'';
+      body+='\n['+time+'] '+m.author+':\n';
+      if(m.text) body+=m.text+'\n';
+      if(m.fileData) body+='[Datei: '+m.fileName+']\n';
+    });
+    const mailto='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent('Ticket-Transkript: '+t.title)+'&body='+encodeURIComponent(body);
     // Notify author
-    try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+t.author)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'✅ Dein Ticket "'+t.title+'" wurde geschlossen'+(email?' (Transkript folgt)':'')+'.',type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+t.author,JSON.stringify(hist))}catch(e){}
+    try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+t.author)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'✅ Dein Ticket "'+t.title+'" wurde geschlossen. Das Transkript wurde per E-Mail gesendet.',type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+t.author,JSON.stringify(hist))}catch(e){}
     syncBroadcast('notifhistory');
     closeModal('ticketDetailModal');
     ticketAdminRender();
     ticketMyRender();
-    showNotification('✅ Ticket geschlossen'+(email?' (Transkript wird gesendet)':''),'success');
+    window.open(mailto);
+    showNotification('✅ Ticket geschlossen. E-Mail-Programm wird geöffnet.','success');
   }
   function ticketCloseWithoutEmail(){
     const id=document.getElementById('ticketCloseTarget').value;
