@@ -2707,12 +2707,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         const msgAcc=getAllAccounts().find(a=>a.username===m.author);
         const isHrMsg=msgAcc&&msgAcc.rang==='HR';
         const div=document.createElement('div');
-        let msgStyle;
-        if(isMe) msgStyle='align-self:flex-end;background:var(--r100)';
-        else if(isCreator) msgStyle='align-self:flex-start;background:var(--r100)';
-        else if(isHrMsg) msgStyle='align-self:flex-start;background:var(--mb);border:1px solid var(--g200)';
-        else msgStyle='align-self:flex-start;background:var(--g100);border:1px solid var(--g200)';
-        div.style.cssText='padding:.5rem .75rem;border-radius:var(--rs);font-size:.82rem;line-height:1.4;max-width:85%;'+msgStyle;
+        let bgColor;
+        if(isCreator) bgColor='background:var(--r100)';
+        else if(isHrMsg) bgColor='background:var(--mb);border:1px solid var(--g200)';
+        else bgColor='background:var(--g100);border:1px solid var(--g200)';
+        div.style.cssText='padding:.5rem .75rem;border-radius:var(--rs);font-size:.82rem;line-height:1.4;max-width:85%;'+(isMe?'align-self:flex-end;':'align-self:flex-start;')+bgColor;
         if(m.type==='file'&&m.fileData){
           div.innerHTML=`<div style="font-weight:600;font-size:.75rem;margin-bottom:.2rem">${m.author} <span style="font-weight:400;color:var(--g400)">${new Date(m.timestamp).toLocaleString('de-DE')}</span></div>${m.fileData.startsWith('data:video/')?`<video controls style="max-width:100%;max-height:300px;border-radius:4px"><source src="${m.fileData}"></video>`:`<img src="${m.fileData}" style="max-width:100%;max-height:300px;border-radius:4px;cursor:pointer" onclick="window.open('${m.fileData}')" alt="${m.fileName||''}">`}`;
         } else {
@@ -2850,7 +2849,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
   function openHRSelection(id){
     const list=document.getElementById('hrSelectList');
-    const hrs=getCustomAccounts().filter(a=>a.rang==='HR');
+    const hrs=getAllAccounts().filter(a=>a.rang==='HR');
     if(hrs.length===0){list.innerHTML='<div style="text-align:center;padding:1rem;color:var(--g400)">Keine HR verfügbar.</div>';return;}
     list.innerHTML=hrs.map(h=>`<div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border:1px solid var(--g200);border-radius:var(--rs);margin-bottom:.35rem;cursor:pointer" onclick="ticketAddHR('${id}','${h.username}')">👤 ${h.username}</div>`).join('');
     document.getElementById('hrSelectModal').classList.add('open');
@@ -2899,16 +2898,38 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       if(m.fileData) body+='[Datei: '+m.fileName+']\n';
     });
     body+='\n\n-- \nMit freundlichen Grüßen\n'+loggedInUser+' | HR of DVN';
-    const mailto='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent('Ticket-Transkript: '+t.title)+'&body='+encodeURIComponent(body);
+    const subject='Ticket-Transkript: '+t.title;
+    const encodedBody=encodeURIComponent(body);
+    const encodedSub=encodeURIComponent(subject);
+    const encodedEmail=encodeURIComponent(email);
+    const mailto='mailto:'+encodedEmail+'?subject='+encodedSub+'&body='+encodedBody;
     // Notify author
     try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+t.author)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'✅ Dein Ticket "'+t.title+'" wurde geschlossen. Das Transkript wurde per E-Mail gesendet.',type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+t.author,JSON.stringify(hist))}catch(e){}
     syncBroadcast('notifhistory');
     closeModal('ticketDetailModal');
     ticketAdminRender();
     ticketMyRender();
-    // Open default email client via mailto protocol
-    window.location.href=mailto;
-    showNotification('✅ Ticket geschlossen. E-Mail-Programm wird geöffnet.','success');
+    // Show email compose modal
+    const overlay=document.createElement('div');
+    overlay.className='modal-overlay open';
+    overlay.id='emailComposeModal';
+    overlay.onclick=e=>{if(e.target===overlay){overlay.remove();}};
+    overlay.innerHTML='<div class="modal" style="max-width:1000px;max-height:90vh;overflow-y:auto">'+
+      '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:.75rem">'+
+        '<h2 style="margin:0">📧 E-Mail senden</h2>'+
+        '<button onclick="document.getElementById(\'emailComposeModal\').remove()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--g400);padding:0;line-height:1;font-family:inherit">✕</button>'+
+      '</div>'+
+      '<div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:1rem;margin-bottom:1rem;font-size:.82rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;font-family:monospace;max-height:400px;overflow-y:auto">An: <strong>'+escHtml(email)+'</strong>\n\nBetreff: <strong>'+escHtml(subject)+'</strong>\n\n'+escHtml(body)+'</div>'+
+      '<p style="font-size:.82rem;color:var(--g500);margin-bottom:1rem">Wähle, wie die E-Mail geöffnet werden soll:</p>'+
+      '<div class="btn-row" style="flex-wrap:wrap">'+
+        '<button class="btn-primary" onclick="window.open(\'https://mail.google.com/mail/?view=cm&fs=1&to='+encodedEmail+'&su='+encodedSub+'&body='+encodedBody+'\',\'_blank\');document.getElementById(\'emailComposeModal\').remove()" style="flex:1;min-width:140px">📧 Gmail öffnen</button>'+
+        '<button class="btn-primary" onclick="window.open(\'https://outlook.live.com/mail/0/deeplink/compose?to='+encodedEmail+'&subject='+encodedSub+'&body='+encodedBody+'\',\'_blank\');document.getElementById(\'emailComposeModal\').remove()" style="flex:1;min-width:140px;background:linear-gradient(135deg,#0078d4,#005a9e)">📧 Outlook.com öffnen</button>'+
+        '<button class="btn-secondary" onclick="navigator.clipboard.writeText(\'An: \'+decodeURIComponent(\''+encodedEmail+'\')+\'\\nBetreff: \'+decodeURIComponent(\''+encodedSub+'\')+\'\\n\\n\'+decodeURIComponent(\''+encodedBody+'\'));showNotification(\'📋 Transkript in Zwischenablage kopiert.\',\'success\')" style="flex:1;min-width:120px">📋 Kopieren</button>'+
+        '<button class="btn-secondary" onclick="window.location.href=\''+mailto.replace(/'/g,"\\'")+'\';document.getElementById(\'emailComposeModal\').remove()" style="flex:1;min-width:120px">💻 System-E-Mail</button>'+
+      '</div>'+
+    '</div>';
+    document.body.appendChild(overlay);
+    showNotification('✅ Ticket geschlossen. E-Mail-Programm wählen.','success');
   }
   function ticketCloseWithoutEmail(){
     const id=document.getElementById('ticketCloseTarget').value;
@@ -3980,6 +4001,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       }
     }, 2000);
   }
+  function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
   function showNotification(text,type){
     const box=document.getElementById('notificationBox');
     if(!box) return;
