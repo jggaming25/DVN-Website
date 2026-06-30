@@ -910,6 +910,8 @@
       <option value="complaint">Beschwerde</option>
       <option value="other">Sonstiges</option>
     </select>
+    <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:.3rem">Dein Name</label>
+    <input type="text" id="ticketCreateName" placeholder="Dein Name oder Benutzername" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit;margin-bottom:.85rem;box-sizing:border-box">
     <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:.3rem">Betreff</label>
     <input type="text" id="ticketCreateTitle" placeholder="Kurze Zusammenfassung" style="width:100%;padding:.6rem .9rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.88rem;font-family:inherit;margin-bottom:.85rem;box-sizing:border-box">
     <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:.3rem">Beschreibung</label>
@@ -2540,18 +2542,28 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     document.getElementById('ticketCreateTitle').value='';
     document.getElementById('ticketCreateDesc').value='';
     document.getElementById('ticketCreateCat').value='support';
+    const nameInput=document.getElementById('ticketCreateName');
+    if(nameInput){
+      nameInput.value=loggedInUser||localStorage.getItem('dvn_ticket_name')||'';
+      nameInput.disabled=!!loggedInUser;
+      nameInput.style.background=loggedInUser?'var(--g50)':'';
+    }
     document.getElementById('ticketCreateModal').classList.add('open');
-    if(!loggedInUser){ showNotification('Bitte melde dich zuerst an.','error'); openLogin(); return; }
   }
   function ticketCreate(){
     const cat=document.getElementById('ticketCreateCat').value;
     const title=document.getElementById('ticketCreateTitle').value.trim();
     const desc=document.getElementById('ticketCreateDesc').value.trim();
+    const nameInput=document.getElementById('ticketCreateName');
+    const ticketName=nameInput?nameInput.value.trim():'';
     if(!title||!desc){ showNotification('Bitte Betreff und Beschreibung ausfüllen.','error'); return; }
+    if(!loggedInUser && !ticketName){ showNotification('Bitte gib deinen Namen ein.','error'); return; }
+    if(!loggedInUser) try{localStorage.setItem('dvn_ticket_name',ticketName)}catch(e){}
+    const author=loggedInUser||ticketName;
     const tickets=getTickets();
     const ticket={
       id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
-      author:loggedInUser,
+      author,
       cat,
       title,
       desc,
@@ -2564,9 +2576,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     saveTickets(tickets);
     closeModal('ticketCreateModal');
     // Notify all HR users
-    const hrs=getCustomAccounts().filter(a=>a.rang==='HR');
+    const hrs=getAllAccounts().filter(a=>a.rang==='HR');
     hrs.forEach(h=>{
-      try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+h.username)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'🎫 Neues Ticket von '+loggedInUser+': '+title,type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+h.username,JSON.stringify(hist))}catch(e){}
+      try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+h.username)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'🎫 Neues Ticket von '+author+': '+title,type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+h.username,JSON.stringify(hist))}catch(e){}
     });
     syncBroadcast('notifhistory');
     showNotification('✅ Ticket wurde erstellt.','success');
@@ -2576,13 +2588,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function ticketMyRender(){
     const el=document.getElementById('ticketMyList');
     if(!el) return;
-    if(!loggedInUser){
-      el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)"><p style="font-size:1rem;margin-bottom:.75rem">🔐 Bitte melde dich an, um Tickets zu erstellen und zu verwalten.</p><button class="btn-primary" onclick="openLogin()" style="padding:.5rem 1.2rem;border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">🔐 Anmelden</button></div>';
-      return;
-    }
-    const tickets=getTickets().filter(t=>t.author===loggedInUser).filter(t=>t.status!=='closed'||(t.closedAt&&Date.now()-t.closedAt<86400000));
+    const myName=loggedInUser||localStorage.getItem('dvn_ticket_name')||'';
+    const tickets=getTickets().filter(t=>t.author===myName).filter(t=>t.status!=='closed'||(t.closedAt&&Date.now()-t.closedAt<86400000));
     if(tickets.length===0){
-      el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Du hast noch keine Tickets erstellt.</div>';
+      el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">'+(!myName?'Erstelle ein Ticket – deine Tickets erscheinen hier.':'Du hast noch keine Tickets erstellt.')+'</div>';
       return;
     }
     const catLabels={support:'Support',bug:'Bug Report',complaint:'Beschwerde',other:'Sonstiges'};
@@ -2644,7 +2653,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const tickets=getTickets();
     const t=tickets.find(x=>x.id===id);
     if(!t) return;
-    const isOwner=t.author===loggedInUser;
+    const myName=loggedInUser||localStorage.getItem('dvn_ticket_name')||'';
+    const isOwner=t.author===myName;
     const isHR=loggedInAccount&&loggedInAccount.rang==='HR';
     const isAdminPanel=document.querySelector('#apanel-tickets.active');
     document.getElementById('ticketDetailTitle').textContent=t.title;
@@ -2706,7 +2716,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       msgsEl.innerHTML='<div style="text-align:center;padding:1rem;color:var(--g400);font-size:.82rem">Noch keine Antworten.</div>';
     } else {
       t.messages.forEach(m=>{
-        const isMe=m.author===loggedInUser;
+        const isMe=m.author===myName;
         const isCreator=m.author===t.author;
         const msgAcc=getAllAccounts().find(a=>a.username===m.author);
         const isHrMsg=msgAcc&&msgAcc.rang==='HR';
@@ -2766,12 +2776,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const tickets=getTickets();
     const t=tickets.find(x=>x.id===id);
     if(!t) return;
-    t.messages.push({author:loggedInUser,text,timestamp:Date.now()});
+    const myName=loggedInUser||localStorage.getItem('dvn_ticket_name')||'';
+    t.messages.push({author:myName,text,timestamp:Date.now()});
     saveTickets(tickets);
     // Notify the other party
-    const target=t.author===loggedInUser?(t.claimedBy||null):t.author;
+    const target=t.author===myName?(t.claimedBy||null):t.author;
     if(target){
-      try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+target)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'💬 Neue Antwort auf "'+t.title+'" von '+loggedInUser,type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+target,JSON.stringify(hist))}catch(e){}
+      try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+target)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'💬 Neue Antwort auf "'+t.title+'" von '+myName,type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+target,JSON.stringify(hist))}catch(e){}
       syncBroadcast('notifhistory');
     }
     ticketOpenDetail(id);
