@@ -1,3 +1,11 @@
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(clients.matchAll({type:'window'}).then(cl=>{
+    if(cl.length>0){ cl[0].focus(); return; }
+    clients.openWindow('/');
+  }));
+});
+
 const DB_URL = 'https://dvn-website-9ce7a-default-rtdb.firebaseio.com';
 const PATHS = ['dvn_shifts','dvn_strafen','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_applications','dvn_perm_overrides','dvn_tickets'];
 let cache = {};
