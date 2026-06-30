@@ -10,8 +10,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-  :root{--r50:#fff5f7;--r100:#ffebee;--r200:#ffcdd2;--r300:#e57373;--r400:#ef5350;--r500:#c62828;--r600:#b71c1c;--r700:#8e0000;--w:#fff;--g50:#f8f9fc;--g100:#f1f3f8;--g200:#e8ecf4;--g300:#d0d5dd;--g400:#98a2b3;--g500:#667085;--g600:#475467;--g700:#344054;--g800:#1d2939;--sg:#bbf7d0;--st:#166534;--sm:0 1px 3px rgba(0,0,0,.06);--md:0 4px 16px rgba(0,0,0,.08);--lg:0 12px 40px rgba(0,0,0,.10);--rs:8px;--rm:12px;--rl:16px;--mb:#dbeafe;--mbt:#1e40af}
-  .dark{--r50:#3a2222;--r100:#4a2424;--r200:#6b3030;--r300:#9e4040;--r400:#d45555;--r500:#e06060;--r600:#e87a7a;--r700:#f09494;--w:#111318;--g50:#16181f;--g100:#1e202a;--g200:#303349;--g300:#404458;--g400:#858aa5;--g500:#9ea2bb;--g600:#c5c8da;--g700:#e2e4ef;--g800:#f1f2f9;--sg:#1a3a2a;--st:#6ee7a0;--sm:0 1px 3px rgba(0,0,0,.3);--md:0 4px 16px rgba(0,0,0,.35);--lg:0 12px 40px rgba(0,0,0,.4);--mb:#1e3a5f;--mbt:#93c5fd}
+  :root{--r50:#fff5f7;--r100:#ffebee;--r200:#ffcdd2;--r300:#e57373;--r400:#ef5350;--r500:#c62828;--r600:#b71c1c;--r700:#8e0000;--w:#fff;--g50:#f8f9fc;--g100:#f1f3f8;--g200:#e8ecf4;--g300:#d0d5dd;--g400:#98a2b3;--g500:#667085;--g600:#475467;--g700:#344054;--g800:#1d2939;--sg:#bbf7d0;--st:#166534;--sm:0 1px 3px rgba(0,0,0,.06);--md:0 4px 16px rgba(0,0,0,.08);--lg:0 12px 40px rgba(0,0,0,.10);--rs:8px;--rm:12px;--rl:16px;--mb:#dbeafe;--mbt:#1e40af;--ylw:#fef3c7;--yld:#d97706}
+  .dark{--r50:#3a2222;--r100:#4a2424;--r200:#6b3030;--r300:#9e4040;--r400:#d45555;--r500:#e06060;--r600:#e87a7a;--r700:#f09494;--w:#111318;--g50:#16181f;--g100:#1e202a;--g200:#303349;--g300:#404458;--g400:#858aa5;--g500:#9ea2bb;--g600:#c5c8da;--g700:#e2e4ef;--g800:#f1f2f9;--sg:#1a3a2a;--st:#6ee7a0;--sm:0 1px 3px rgba(0,0,0,.3);--md:0 4px 16px rgba(0,0,0,.35);--lg:0 12px 40px rgba(0,0,0,.4);--mb:#1e3a5f;--mbt:#93c5fd;--ylw:#5c3d00}
   html{scroll-behavior:smooth}
   body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--g50);color:var(--g800);min-height:100vh;display:flex;flex-direction:column}
   .page-wrap{flex:1}
@@ -350,9 +350,7 @@
       <input type="password" id="loginPass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:2.5rem;margin-bottom:0">
       <button type="button" id="toggleLoginPass" onclick="togglePwVisibility('loginPass','toggleLoginPass')" style="position:absolute;right:6px;top:8px;background:none;border:none;cursor:pointer;font-size:1rem;padding:4px;color:var(--g400);line-height:1;font-family:inherit">👁</button>
     </div>
-    <label style="display:flex;align-items:center;gap:.5rem;margin:.5rem 0;font-size:.85rem;cursor:pointer">
-      <input type="checkbox" id="loginRemember" style="width:17px;height:17px;accent-color:var(--r500)" checked> Angemeldet bleiben
-    </label>
+    <div style="margin:.5rem 0;font-size:.78rem;color:var(--g500)">Session läuft nur im aktuellen Tab</div>
     <div class="btn-row">
       <button class="btn-secondary" onclick="closeLogin()">Abbrechen</button>
       <button class="btn-primary" onclick="doLogin()">Anmelden</button>
@@ -608,6 +606,7 @@
       <button data-intern="staffnews">📰 Staff News</button>
       <button data-intern="shiftplanview">📋 Schichten</button>
       <button data-intern="strafen">⚠️ Strafen</button>
+      <button data-intern="abkuerzungen">📖 Abkürzungen</button>
     </div>
 
     <!-- Intern: Dokumente -->
@@ -636,6 +635,61 @@
     <div class="admin-panel" id="ipanel-strafen">
       <div class="sub-title">⚠️ Meine Strafen</div>
       <div id="strafenListIntern"></div>
+    </div>
+
+    <!-- Intern: Abkürzungen -->
+    <div class="admin-panel" id="ipanel-abkuerzungen">
+      <div class="sub-title">📖 Abkürzungsverzeichnis</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.6rem">
+        <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">MK</span>
+          <span style="font-size:.82rem;color:var(--g700)">Dienstantritt mit Meldung in der Dispo</span>
+        </div>
+        <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">AUT</span>
+          <span style="font-size:.82rem;color:var(--g700)">Arbeitsunterlagen</span>
+        </div>
+        <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">W</span>
+          <span style="font-size:.82rem;color:var(--g700)">Wenden</span>
+        </div>
+        <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">V1</span>
+          <span style="font-size:.82rem;color:var(--g700)">Zugvorbereitungsdienst</span>
+        </div>
+        <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">RF</span>
+          <span style="font-size:.82rem;color:var(--g700)">Rangierfahrt</span>
+        </div>
+        <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">WW</span>
+          <span style="font-size:.82rem;color:var(--g700)">Wenden bei einer Rangierfahrt</span>
+        </div>
+        <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">Zugft.</span>
+          <span style="font-size:.82rem;color:var(--g700)">Zugfahrt</span>
+        </div>
+        <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">V4</span>
+          <span style="font-size:.82rem;color:var(--g700)">Personalwechsel ohne Übergabegespräch</span>
+        </div>
+        <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">ZA</span>
+          <span style="font-size:.82rem;color:var(--g700)">Zug Abrüsten</span>
+        </div>
+        <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">V3</span>
+          <span style="font-size:.82rem;color:var(--g700)">Personalwechsel mit Übergabegespräch</span>
+        </div>
+        <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">Lz</span>
+          <span style="font-size:.82rem;color:var(--g700)">Lokfahrt</span>
+        </div>
+        <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">M0</span>
+          <span style="font-size:.82rem;color:var(--g700)">Arbeitsantritt ohne Meldung</span>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -1253,7 +1307,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
             if(arrayTypes.has(type) && typeof val==='object' && !Array.isArray(val)){
               val = Object.keys(val).sort((a,b)=>Number(a)-Number(b)).map(k=>val[k]);
             }
-            try{ localStorage.setItem(path, JSON.stringify(val)); }catch(e){}
+            // Don't overwrite tickets directly — broadcastHandler merges them
+            if(type !== 'tickets'){ try{ localStorage.setItem(path, JSON.stringify(val)); }catch(e){} }
             broadcastHandler(type, val);
           }
         });
@@ -1263,7 +1318,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function fbSeedLocalData(){
     // Einmalig: Seedt lokale localStorage-Daten nach Firebase, falls Firebase noch leer ist
-    ['dvn_shifts','dvn_applications','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_stellen_open','dvn_logs','dvn_strafen','dvn_signins','dvn_attendance','dvn_perm_overrides','dvn_pw_overrides','dvn_custom_accounts','dvn_deleted_accounts','dvn_account_configs','dvn_discord_links','dvn_tickets'].forEach(path=>{
+    ['dvn_shifts','dvn_applications','dvn_news','dvn_staff_news','dvn_shiftplans','dvn_stellen_open','dvn_logs','dvn_strafen','dvn_signins','dvn_attendance','dvn_perm_overrides','dvn_pw_overrides','dvn_custom_accounts','dvn_deleted_accounts','dvn_account_configs','dvn_discord_links','dvn_tickets','dvn_session_tokens'].forEach(path=>{
       fbDatabase.ref(path).once('value', snapshot => {
         if(snapshot.val() !== null) return; // Firebase hat bereits Daten
         try{
@@ -1299,13 +1354,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         case 'strafen':      data = JSON.parse(localStorage.getItem('dvn_strafen')); break;
         case 'signins':      data = JSON.parse(localStorage.getItem('dvn_signins')); break;
         case 'attendance':    data = JSON.parse(localStorage.getItem('dvn_attendance')); break;
-        case 'perm_overrides': data = JSON.parse(localStorage.getItem('dvn_perm_overrides')); break;
-        case 'pw_overrides': data = JSON.parse(localStorage.getItem('dvn_pw_overrides')||'{}'); break;
-        case 'custom_accounts': data = JSON.parse(localStorage.getItem('dvn_custom_accounts')); break;
-        case 'deleted_accounts': data = JSON.parse(localStorage.getItem('dvn_deleted_accounts')); break;
+        case 'perm_overrides': data = permOverridesCache; break;
+        case 'pw_overrides': data = pwOverridesCache; break;
+        case 'custom_accounts': data = customAccountsCache; break;
+        case 'deleted_accounts': data = deletedAccountsCache; break;
         case 'account_configs': data = JSON.parse(localStorage.getItem('dvn_account_configs')); break;
         case 'discord_links': data = JSON.parse(localStorage.getItem('dvn_discord_links')); break;
-        case 'tickets':      data = JSON.parse(localStorage.getItem('dvn_tickets')); break;
+        case 'tickets':      data = ticketsData; break;
         case 'config':       data = true; break;
         case 'notifhistory': data = true; break;
       }
@@ -1388,6 +1443,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         if(loggedIn && document.querySelector('#stafflist.page.active')) staffListRender();
         break;
       case 'perm_overrides':
+        permOverridesCache = data;
         try{localStorage.setItem('dvn_perm_overrides',JSON.stringify(data))}catch(e){}
         if(loggedIn){
           updateUI();
@@ -1395,9 +1451,11 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         }
         break;
       case 'pw_overrides':
+        pwOverridesCache = data;
         try{localStorage.setItem('dvn_pw_overrides',JSON.stringify(data))}catch(e){}
         break;
       case 'custom_accounts':
+        customAccountsCache = data;
         try{localStorage.setItem('dvn_custom_accounts',JSON.stringify(data))}catch(e){}
         if(loggedIn){
           const oldRang=loggedInAccount?loggedInAccount.rang:'';
@@ -1413,6 +1471,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         }
         break;
       case 'deleted_accounts':
+        deletedAccountsCache = data;
         try{localStorage.setItem('dvn_deleted_accounts',JSON.stringify(data))}catch(e){}
         if(loggedIn){
           updateUI();
@@ -1428,14 +1487,28 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         try{localStorage.setItem('dvn_discord_links',JSON.stringify(data))}catch(e){}
         if(loggedIn && document.querySelector('#stafflist.page.active')) staffListRender();
         break;
-      case 'tickets':
-        try{localStorage.setItem('dvn_tickets',JSON.stringify(data))}catch(e){}
+      case 'tickets': {
+        // Merge: keep local tickets not yet in Firebase (prevents data loss on reload races)
+        const _existing = getTickets();
+        const _incomingIds = new Set(data.map(t => t.id));
+        const _merged = [...data];
+        for (const et of _existing) {
+          const idx = _merged.findIndex(m => m.id === et.id);
+          if (idx === -1) {
+            _merged.push(et);
+          } else if ((et.messages||[]).length > (_merged[idx].messages||[]).length) {
+            _merged[idx] = et;
+          }
+        }
+        ticketsData = _merged;
+        try{localStorage.setItem('dvn_tickets',JSON.stringify(_merged))}catch(e){}
         if(loggedIn){
           if(document.querySelector('#support.page.active')) ticketMyRender();
           if(document.querySelector('#apanel-tickets.active')) ticketAdminRender();
           ticketRefreshDetail();
         }
         break;
+      }
     }
   }
 
@@ -1529,6 +1602,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     setTimeout(()=>document.getElementById('loginUser').focus(),100);
   }
   function closeLogin() { document.getElementById('loginModal').classList.remove('open'); }
+  function genToken(){ return Date.now().toString(36)+'.'+Math.random().toString(36).slice(2,10)+'.'+Math.random().toString(36).slice(2,10); }
   function doLogin() {
     const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('loginPass').value.trim();
     const allAccounts=getAllAccounts();
@@ -1539,9 +1613,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(pwOverride===hp || (!pwOverride && account.password===hp)){
       loggedIn=true; loggedInUser=u; loggedInAccount=account;
       loadNotifHistory();
-      if(document.getElementById('loginRemember').checked){
-        try{localStorage.setItem('dvn_session_user',u);localStorage.setItem('dvn_session_pass',hp)}catch(e){}
-      }
+      // Session token (stored in sessionStorage, validated against Firebase)
+      const token=genToken();
+      try{sessionStorage.setItem('dvn_session_token',token);sessionStorage.setItem('dvn_session_user',u)}catch(e){}
+      if(fbConnected && fbDatabase) try{fbDatabase.ref('dvn_session_tokens/'+token).set({username:u,created:Date.now()})}catch(e){}
       addLogEntry('Login', 'Benutzer '+u+' ('+account.rang+') hat sich angemeldet'); closeLogin(); updateUI(); applyDarkMode();
       setTimeout(swSendConfig,100);
       return;
@@ -1558,6 +1633,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   function logout(){
     addLogEntry('Logout', 'Benutzer '+loggedInUser+' hat sich abgemeldet');
+    // Remove session token from Firebase + sessionStorage
+    try{const t=sessionStorage.getItem('dvn_session_token');if(t && fbConnected && fbDatabase) fbDatabase.ref('dvn_session_tokens/'+t).remove()}catch(e){}
+    try{sessionStorage.removeItem('dvn_session_token');sessionStorage.removeItem('dvn_session_user')}catch(e){}
     try{localStorage.removeItem('dvn_session_user');localStorage.removeItem('dvn_session_pass')}catch(e){}
     loggedIn=false; loggedInUser=null; loggedInAccount=null;
     document.getElementById('userDropdown').classList.remove('open');
@@ -2529,10 +2607,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
 
   // ─── Ticket System ───
-  function getTickets(){
-    try{const d=localStorage.getItem('dvn_tickets');const t=d?JSON.parse(d):[];t.forEach(x=>{if(!x.messages)x.messages=[]});return t}catch(e){return []}
-  }
+  let ticketsData = (()=>{try{const d=localStorage.getItem('dvn_tickets');const t=d?JSON.parse(d):[];t.forEach(x=>{if(!x.messages)x.messages=[]});return t}catch(e){return []}})();
+  function getTickets(){ return ticketsData; }
   function saveTickets(tickets){
+    ticketsData = tickets;
     try{localStorage.setItem('dvn_tickets',JSON.stringify(tickets))}catch(e){}
     syncBroadcast('tickets');
   }
@@ -2602,7 +2680,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.35rem;width:100%">
           <div><strong style="font-size:.85rem">${t.title}</strong> <span style="font-size:.72rem;color:var(--g400)">(${catLabels[t.cat]||t.cat})</span></div>
           <div style="display:flex;gap:.4rem;align-items:center">
-            <span style="font-size:.72rem;padding:.15rem .45rem;background:${t.status==='open'?'var(--sg)':t.status==='claimed'?'#fef3c7':'var(--g50)'};border-radius:4px;font-weight:600">${statusLabels[t.status]||t.status}</span>
+            <span style="font-size:.72rem;padding:.15rem .45rem;background:${t.status==='open'?'var(--sg)':t.status==='claimed'?'var(--ylw)':'var(--g50)'};border-radius:4px;font-weight:600">${statusLabels[t.status]||t.status}</span>
             <span style="font-size:.7rem;color:var(--g400)">${msgCount} Antwort${msgCount!==1?'en':''}</span>
             <span style="font-size:.7rem;color:var(--g400)">${new Date(t.created).toLocaleDateString('de-DE')}</span>
           </div>
@@ -2633,7 +2711,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           <div style="font-size:.75rem;color:var(--g500)">${t.author}</div>
         </div>
         <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;width:100%">
-          <span style="font-size:.72rem;padding:.15rem .45rem;background:${t.status==='open'?'var(--sg)':t.status==='claimed'?'#fef3c7':'var(--g50)'};border-radius:4px;font-weight:600">${statusLabels[t.status]||t.status}</span>
+          <span style="font-size:.72rem;padding:.15rem .45rem;background:${t.status==='open'?'var(--sg)':t.status==='claimed'?'var(--ylw)':'var(--g50)'};border-radius:4px;font-weight:600">${statusLabels[t.status]||t.status}</span>
           ${t.claimedBy?`<span style="font-size:.72rem;color:var(--g400)">👤 ${t.claimedBy}</span>`:''}
           <span style="font-size:.7rem;color:var(--g400)">${msgCount} Antwort${msgCount!==1?'en':''}</span>
           <span style="font-size:.7rem;color:var(--g400)">${new Date(t.created).toLocaleDateString('de-DE')}</span>
@@ -2759,9 +2837,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     t.claimedBy=loggedInUser;
     t.messages.push({author:loggedInUser,text:'🔧 Ticket wurde von '+loggedInUser+' übernommen.',timestamp:Date.now()});
     saveTickets(tickets);
-    // Notify author
+    // Notify author (in-app + desktop)
     try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+t.author)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'🔧 Dein Ticket "'+t.title+'" wurde von '+loggedInUser+' übernommen.',type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+t.author,JSON.stringify(hist))}catch(e){}
     syncBroadcast('notifhistory');
+    sendDesktopNotification('🔧 Ticket übernommen',t.title+' wurde von '+loggedInUser+' übernommen.');
     showNotification('✅ Ticket übernommen.','success');
     ticketOpenDetail(id);
     ticketAdminRender();
@@ -2784,6 +2863,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(target){
       try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+target)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'💬 Neue Antwort auf "'+t.title+'" von '+myName,type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+target,JSON.stringify(hist))}catch(e){}
       syncBroadcast('notifhistory');
+      sendDesktopNotification('💬 Neue Antwort auf "'+t.title+'"',text);
     }
     ticketOpenDetail(id);
     replyField.value='';
@@ -3105,18 +3185,18 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
 
   // ─── Account Management ───
-  function getCustomAccounts(){
-    try{const d=localStorage.getItem('dvn_custom_accounts');return d?JSON.parse(d):[]}catch(e){return []}
-  }
+  let customAccountsCache = (()=>{try{const d=localStorage.getItem('dvn_custom_accounts');return d?JSON.parse(d):[]}catch(e){return []}})();
+  function getCustomAccounts(){ return customAccountsCache; }
   function saveCustomAccounts(list){
+    customAccountsCache = list;
     try{localStorage.setItem('dvn_custom_accounts',JSON.stringify(list))}catch(e){}
     syncBroadcast('config');
     syncBroadcast('custom_accounts');
   }
-  function getDeletedAccounts(){
-    try{const d=localStorage.getItem('dvn_deleted_accounts');return d?JSON.parse(d):[]}catch(e){return []}
-  }
+  let deletedAccountsCache = (()=>{try{const d=localStorage.getItem('dvn_deleted_accounts');return d?JSON.parse(d):[]}catch(e){return []}})();
+  function getDeletedAccounts(){ return deletedAccountsCache; }
   function saveDeletedAccounts(list){
+    deletedAccountsCache = list;
     try{localStorage.setItem('dvn_deleted_accounts',JSON.stringify(list))}catch(e){}
     syncBroadcast('config');
     syncBroadcast('deleted_accounts');
@@ -3124,16 +3204,16 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function getAllAccounts(){
     return [...ACCOUNTS,...getCustomAccounts()].filter(a=>!getDeletedAccounts().includes(a.username));
   }
+  let permOverridesCache = (()=>{try{return JSON.parse(localStorage.getItem('dvn_perm_overrides'))||{}}catch(e){return {}}})();
+  let pwOverridesCache = (()=>{try{return JSON.parse(localStorage.getItem('dvn_pw_overrides'))||{}}catch(e){return {}}})();
   function getAccountOverride(username,key){
     try{
-      const overrides=JSON.parse(localStorage.getItem('dvn_perm_overrides'));
-      if(overrides && overrides[username] && overrides[username][key]!==undefined) return overrides[username][key];
+      if(permOverridesCache[username] && permOverridesCache[username][key]!==undefined) return permOverridesCache[username][key];
     }catch(e){}
     return false;
   }
   function setAccountOverride(username,key,val){
-    let overrides={};
-    try{overrides=JSON.parse(localStorage.getItem('dvn_perm_overrides'))||{}}catch(e){}
+    let overrides=permOverridesCache;
     if(!overrides[username]) overrides[username]={};
     overrides[username][key]=val;
     try{localStorage.setItem('dvn_perm_overrides',JSON.stringify(overrides))}catch(e){}
@@ -3305,18 +3385,13 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
   // ─── OTP helpers — removed ───
   function getPasswordOverride(username){
-    // Check synced object format first
-    try{const o=JSON.parse(localStorage.getItem('dvn_pw_overrides')||'{}'); if(o[username]!==undefined) return o[username]}catch(e){}
-    // Fallback: old separate key format
+    if(pwOverridesCache[username]!==undefined) return pwOverridesCache[username];
     try{return localStorage.getItem('dvn_pw_'+username)}catch(e){return null}
   }
   function setPasswordOverride(username,hp){
     try{localStorage.setItem('dvn_pw_'+username,hp)}catch(e){} // backward compat
-    try{
-      const o=JSON.parse(localStorage.getItem('dvn_pw_overrides')||'{}');
-      o[username]=hp;
-      localStorage.setItem('dvn_pw_overrides',JSON.stringify(o));
-    }catch(e){}
+    pwOverridesCache[username]=hp;
+    try{localStorage.setItem('dvn_pw_overrides',JSON.stringify(pwOverridesCache))}catch(e){}
     syncBroadcast('config');
     syncBroadcast('pw_overrides');
     fbUpdate('dvn_pw_overrides/'+username, hp);
@@ -4471,8 +4546,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const ca=custom.find(a=>a.username===loggedInUser);
     if(ca){ ca.password=newHp; saveCustomAccounts(custom); }
     setPasswordSetAt(loggedInUser,Date.now());
-    // Update session
-    try{localStorage.setItem('dvn_session_pass',newHp)}catch(e){}
+    // Regenerate session token (old password stored in localStorage no longer used)
     loggedInAccount.password=newHp;
     updatePwdStatus();
     showNotification('✅ Passwort erfolgreich geändert.','success');
@@ -4523,21 +4597,15 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }
 
   // ─── Init ───
-  // Auto-Login from session
-  try{
-    const u=localStorage.getItem('dvn_session_user'), p=localStorage.getItem('dvn_session_pass');
-    if(u&&p){
-    const allAccounts=getAllAccounts();
-      const account=allAccounts.find(a=>a.username===u);
-      if(account){
-        // Check password override, then account password, then migration
-        const pwOverride=getPasswordOverride(u);
-        if(pwOverride===p || account.password===p || (!p.startsWith('dvn1:') && account.password===hashPassword(p))){
-          loggedIn=true; loggedInUser=u; loggedInAccount=account;
-        }
-      }
-    }
-  }catch(e){}
+  // Session restore via Firebase-validated token (sessionStorage)
+  const _sTok=(()=>{try{return sessionStorage.getItem('dvn_session_token')}catch(e){return null}})();
+  const _sUsr=(()=>{try{return sessionStorage.getItem('dvn_session_user')}catch(e){return null}})();
+  if(_sTok && _sUsr){
+    // Optimistically show logged-in UI, will be validated after Firebase init
+    const _allAcc=getAllAccounts();
+    const _acc=_allAcc.find(a=>a.username===_sUsr);
+    if(_acc){ loggedIn=true; loggedInUser=_sUsr; loggedInAccount=_acc; }
+  }
   updateUI();
   applyDarkMode();
   // Restore intern tab after page reload
@@ -4578,6 +4646,22 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   }catch(e){}
   checkPendingTFSuggestions();
   fbInit(); // Firebase-Init starten (schlägt still fehl, wenn keine Config)
+  // Validate session token against Firebase (async — write token if missing)
+  if(_sTok && _sUsr && fbDatabase){
+    fbDatabase.ref('dvn_session_tokens/'+_sTok).once('value', snap => {
+      const d=snap.val();
+      if(!d || d.username!==_sUsr){
+        // Token doesn't exist or was tampered → try to re-create (handles offline-login edge case)
+        if(loggedIn && _sUsr===loggedInUser){
+          fbDatabase.ref('dvn_session_tokens/'+_sTok).set({username:_sUsr,created:Date.now()});
+        } else {
+          // Token invalid/tampered → force logout
+          try{sessionStorage.removeItem('dvn_session_token');sessionStorage.removeItem('dvn_session_user')}catch(e){}
+          if(loggedIn){ loggedIn=false; loggedInUser=null; loggedInAccount=null; updateUI(); }
+        }
+      }
+    });
+  }
   loadNotifyPrefs();
   swRegister();
   document.getElementById('fyear').textContent = new Date().getFullYear();

@@ -77,7 +77,7 @@ async function listenSSE(path) {
               const parsed = JSON.parse(currentData);
               const newData = parsed.data;
               const oldData = cache[path] || null;
-              if (oldData !== null && JSON.stringify(oldData) !== JSON.stringify(newData)) {
+              if (oldData != null && JSON.stringify(oldData) !== JSON.stringify(newData)) {
                 checkAndNotify(path, oldData, newData);
               }
               cache[path] = newData;
