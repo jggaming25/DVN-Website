@@ -312,8 +312,7 @@
     <button data-page="stellen"><span class="ni">📋</span> Stellen</button>
     <button data-page="shifts"><span class="ni">⏰</span> Shifts</button>
     <button data-page="news"><span class="ni">📰</span> News</button>
-    <button data-page="support" id="supportNavBtn" style="display:none"><span class="ni">🎫</span> Support</button>
-    <button data-page="abkuerzungen" id="abkNavBtn" style="display:none"><span class="ni">📖</span> Abkürzungen</button>
+    <button data-page="support" id="supportNavBtn"><span class="ni">🎫</span> Support</button>
     <button data-page="intern" id="internNavBtn" style="display:none"><span class="ni">📁</span> Intern</button>
     <button data-page="admin" id="adminNavBtn" style="display:none"><span class="ni">⚙️</span> Admin</button>
     <button id="loginNavBtn" onclick="openLogin()"><span class="ni">🔐</span> Login</button>
@@ -596,63 +595,6 @@
     <p style="font-size:.88rem;color:var(--g500);margin-bottom:1rem">Hier kannst du Tickets erstellen und den Status deiner Anfragen verfolgen.</p>
     <button onclick="ticketOpenCreateModal()" style="padding:.5rem 1.2rem;background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit;margin-bottom:1rem">➕ Neues Ticket</button>
     <div id="ticketMyList"></div>
-  </div>
-</section>
-
-<!-- ═══════════ ABKÜRZUNGEN ═══════════ -->
-<section id="abkuerzungen" class="page">
-  <div class="card">
-    <div class="ch"><div class="ci">📖</div><h2>Abkürzungen</h2></div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.6rem">
-      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
-        <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">MK</span>
-        <span style="font-size:.82rem;color:var(--g700)">Dienstantritt mit Meldung in der Dispo</span>
-      </div>
-      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
-        <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">AUT</span>
-        <span style="font-size:.82rem;color:var(--g700)">Arbeitsunterlagen</span>
-      </div>
-      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
-        <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">W</span>
-        <span style="font-size:.82rem;color:var(--g700)">Wenden</span>
-      </div>
-      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
-        <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">V1</span>
-        <span style="font-size:.82rem;color:var(--g700)">Zugvorbereitungsdienst</span>
-      </div>
-      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
-        <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">RF</span>
-        <span style="font-size:.82rem;color:var(--g700)">Rangierfahrt</span>
-      </div>
-      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
-        <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">WW</span>
-        <span style="font-size:.82rem;color:var(--g700)">Wenden bei einer Rangierfahrt</span>
-      </div>
-      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
-        <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">Zugft.</span>
-        <span style="font-size:.82rem;color:var(--g700)">Zugfahrt</span>
-      </div>
-      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
-        <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">V4</span>
-        <span style="font-size:.82rem;color:var(--g700)">Personalwechsel ohne Übergabegespräch</span>
-      </div>
-      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
-        <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">ZA</span>
-        <span style="font-size:.82rem;color:var(--g700)">Zug Abrüsten</span>
-      </div>
-      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
-        <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">V3</span>
-        <span style="font-size:.82rem;color:var(--g700)">Personalwechsel mit Übergabegespräch</span>
-      </div>
-      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
-        <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">Lz</span>
-        <span style="font-size:.82rem;color:var(--g700)">Lokfahrt</span>
-      </div>
-      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--rs);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem">
-        <span style="font-weight:700;font-size:.9rem;color:var(--r600);min-width:50px">M0</span>
-        <span style="font-size:.82rem;color:var(--g700)">Arbeitsantritt ohne Meldung</span>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -1505,7 +1447,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   // ─── Navigation ───
   document.querySelectorAll('nav button[data-page]').forEach(btn => {
     btn.addEventListener('click', () => {
-      if ((btn.dataset.page === 'admin' || btn.dataset.page === 'intern' || btn.dataset.page === 'support' || btn.dataset.page === 'abkuerzungen') && !loggedIn) return;
+      if ((btn.dataset.page === 'admin' || btn.dataset.page === 'intern') && !loggedIn) return;
       if (btn.dataset.page === 'admin' && loggedInAccount && loggedInAccount.rang !== 'HR') return;
       document.querySelectorAll('nav button[data-page], .page').forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
@@ -1645,8 +1587,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       if(logTabBtn) logTabBtn.style.display=isHR&&getAccountOverride(loggedInUser,'logs')?'':'none';
       const supportBtn=document.getElementById('supportNavBtn');
       if(supportBtn) supportBtn.style.display='flex';
-      const abkBtn=document.getElementById('abkNavBtn');
-      if(abkBtn) abkBtn.style.display='flex';
       if(internBtn) internBtn.style.display='flex';
       const spAdminTab=document.getElementById('spAdminTabBtn');
       if(spAdminTab) spAdminTab.style.display=isHR&&getAccountOverride(loggedInUser,'shiftplan')?'':'none';
@@ -1666,19 +1606,12 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       if(adminBtn) adminBtn.style.display='none';
       userMenu.style.display='none';
       loginBtn.style.display='flex';
-      const supportBtn=document.getElementById('supportNavBtn');
-      if(supportBtn) supportBtn.style.display='none';
-      const abkBtn=document.getElementById('abkNavBtn');
-      if(abkBtn) abkBtn.style.display='none';
       if(internBtn) internBtn.style.display='none';
       const bell=document.getElementById('notifBell'); if(bell) bell.style.display='none';
       if(document.getElementById('admin').classList.contains('active')){
         document.querySelector('nav button[data-page="willkommen"]').click();
       }
       if(document.getElementById('intern').classList.contains('active')){
-        document.querySelector('nav button[data-page="willkommen"]').click();
-      }
-      if(document.getElementById('abkuerzungen').classList.contains('active')){
         document.querySelector('nav button[data-page="willkommen"]').click();
       }
     }
@@ -2608,6 +2541,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     document.getElementById('ticketCreateDesc').value='';
     document.getElementById('ticketCreateCat').value='support';
     document.getElementById('ticketCreateModal').classList.add('open');
+    if(!loggedInUser){ showNotification('Bitte melde dich zuerst an.','error'); openLogin(); return; }
   }
   function ticketCreate(){
     const cat=document.getElementById('ticketCreateCat').value;
@@ -2642,6 +2576,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function ticketMyRender(){
     const el=document.getElementById('ticketMyList');
     if(!el) return;
+    if(!loggedInUser){
+      el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)"><p style="font-size:1rem;margin-bottom:.75rem">🔐 Bitte melde dich an, um Tickets zu erstellen und zu verwalten.</p><button class="btn-primary" onclick="openLogin()" style="padding:.5rem 1.2rem;border:none;border-radius:var(--rs);font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit">🔐 Anmelden</button></div>';
+      return;
+    }
     const tickets=getTickets().filter(t=>t.author===loggedInUser).filter(t=>t.status!=='closed'||(t.closedAt&&Date.now()-t.closedAt<86400000));
     if(tickets.length===0){
       el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--g400)">Du hast noch keine Tickets erstellt.</div>';
