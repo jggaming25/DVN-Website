@@ -1263,7 +1263,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   } catch(e) {}
 
   let loggedIn = false, loggedInUser = null, loggedInAccount = null;
-  let ticketOpenId = null;
+  let ticketOpenId = null, ticketOpenState = '';
   let shifts = []; try{const s=localStorage.getItem('dvn_shifts');if(s)shifts=JSON.parse(s).map(s=>({...s,completed:s.completed||false,stats:s.stats||{reliability:'',avgDelay:'',emergencyBrakes:''}}))}catch(e){}
   let applications = []; try{const a=localStorage.getItem('dvn_applications');if(a)applications=JSON.parse(a)}catch(e){}
   let newsItems = []; try{const n=localStorage.getItem('dvn_news');if(n)newsItems=JSON.parse(n)}catch(e){}
@@ -1505,7 +1505,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         if(loggedIn){
           if(document.querySelector('#support.page.active')) ticketMyRender();
           if(document.querySelector('#apanel-tickets.active')) ticketAdminRender();
-          ticketRefreshDetail();
+          ticketRefreshDetail(data);
         }
         break;
       }
@@ -1971,16 +1971,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const frist=document.getElementById('sFrist').value;
     const fileInput=document.getElementById('sImage');
     if(!title||!time){ alert('Bitte Titel und Zeitraum angeben!'); return; }
-    // Check 2-day min rule: shift must be at least 2 days in the future
-    if(date){
-      const startTime=time.split(/[–\-]/)[0].trim()||'00:00';
-      const shiftDT=new Date(date+'T'+startTime+':00');
-      const minTime=new Date(Date.now()+2*24*60*60*1000);
-      if(shiftDT<minTime){
-        alert('⏳ Die Schicht muss mindestens 2 Tage im Voraus angekündigt werden (frühestens '+minTime.toLocaleString('de-DE')+').');
-        return;
-      }
-    }
     const addShiftWithImage=(imgDataUrl)=>{
       shifts.push({title,date,time,desc,frist,image:imgDataUrl||'',completed:false,stats:{reliability:'',avgDelay:'',emergencyBrakes:''}});
       addLogEntry('Schicht erstellt', title+' ('+time+(date?' am '+date:'')+')');
@@ -2614,7 +2604,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     try{localStorage.setItem('dvn_tickets',JSON.stringify(tickets))}catch(e){}
     syncBroadcast('tickets');
   }
-  function closeModal(id){ document.getElementById(id).classList.remove('open'); if(id==='ticketDetailModal') ticketOpenId=null; }
+  function closeModal(id){ document.getElementById(id).classList.remove('open'); if(id==='ticketDetailModal'){ ticketOpenId=null; ticketOpenState=''; } }
 
   function ticketOpenCreateModal(){
     document.getElementById('ticketCreateTitle').value='';
@@ -2720,14 +2710,22 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }).join('');
   }
 
-  function ticketRefreshDetail(){
+  function ticketRefreshDetail(data){
     if(!ticketOpenId) return;
-    if(!document.getElementById('ticketDetailModal').classList.contains('open')){ ticketOpenId=null; return; }
+    if(!document.getElementById('ticketDetailModal').classList.contains('open')){ ticketOpenId=null; ticketOpenState=''; return; }
+    if(data && ticketOpenId){
+      const t=data.find(x=>x.id===ticketOpenId);
+      if(t){
+        const c=t.status+'|'+(t.claimedBy||'')+'|'+(t.messages||[]).length;
+        if(c===ticketOpenState) return;
+        ticketOpenState=c;
+      }
+    }
     ticketOpenDetail(ticketOpenId);
   }
 
   function ticketOpenDetail(id){
-    ticketOpenId=id;
+    ticketOpenId=id; ticketOpenState='';
     const tickets=getTickets();
     const t=tickets.find(x=>x.id===id);
     if(!t) return;
@@ -2832,7 +2830,10 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function ticketClaim(id){
     const tickets=getTickets();
     const t=tickets.find(x=>x.id===id);
-    if(!t||t.status!=='open') return;
+    if(!t||t.status!=='open'){
+      if(t&&t.status==='claimed') showNotification('⚠️ Ticket wurde bereits von jemand anderem übernommen.','error');
+      return;
+    }
     t.status='claimed';
     t.claimedBy=loggedInUser;
     t.messages.push({author:loggedInUser,text:'🔧 Ticket wurde von '+loggedInUser+' übernommen.',timestamp:Date.now()});
@@ -2950,8 +2951,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     document.getElementById('hrSelectModal').classList.add('open');
   }
   function ticketDelete(id){
-    let tickets=getTickets();
-    tickets=tickets.filter(x=>x.id!==id);
+    let tickets=getTickets().filter(x=>x.id!==id);
+    ticketsData = tickets;
     try{localStorage.setItem('dvn_tickets',JSON.stringify(tickets))}catch(e){}
     syncBroadcast('tickets');
     closeModal('ticketDetailModal');
