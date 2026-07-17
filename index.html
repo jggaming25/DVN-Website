@@ -1490,7 +1490,6 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       case 'tickets': {
         // Merge: keep local tickets not yet in Firebase (prevents data loss on reload races)
         const _existing = getTickets();
-        const _incomingIds = new Set(data.map(t => t.id));
         const _merged = [...data];
         for (const et of _existing) {
           const idx = _merged.findIndex(m => m.id === et.id);
@@ -1501,7 +1500,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
           }
         }
         ticketsData = _merged;
-        try{localStorage.setItem('dvn_tickets',JSON.stringify(_merged))}catch(e){}
+        // Normalize tickets (ensure required fields)
+        ticketsData.forEach(x => { if(!x.messages) x.messages = []; if(!x.status) x.status = 'open'; if(!x.created) x.created = Date.now(); });
+        try{localStorage.setItem('dvn_tickets',JSON.stringify(ticketsData))}catch(e){}
         if(loggedIn){
           if(document.querySelector('#support.page.active')) ticketMyRender();
           if(document.querySelector('#apanel-tickets.active')) ticketAdminRender();
@@ -1602,7 +1603,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     setTimeout(()=>document.getElementById('loginUser').focus(),100);
   }
   function closeLogin() { document.getElementById('loginModal').classList.remove('open'); }
-  function genToken(){ return Date.now().toString(36)+'.'+Math.random().toString(36).slice(2,10)+'.'+Math.random().toString(36).slice(2,10); }
+  function genToken(){ return Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10)+'_'+Math.random().toString(36).slice(2,10); }
   function doLogin() {
     const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('loginPass').value.trim();
     const allAccounts=getAllAccounts();
@@ -1616,7 +1617,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       // Session token (stored in sessionStorage, validated against Firebase)
       const token=genToken();
       try{sessionStorage.setItem('dvn_session_token',token);sessionStorage.setItem('dvn_session_user',u)}catch(e){}
-      if(fbConnected && fbDatabase) try{fbDatabase.ref('dvn_session_tokens/'+token).set({username:u,created:Date.now()})}catch(e){}
+      try{if(fbConnected && fbDatabase) fbDatabase.ref('dvn_session_tokens/'+token).set({username:u,created:Date.now()})}catch(e){}
       addLogEntry('Login', 'Benutzer '+u+' ('+account.rang+') hat sich angemeldet'); closeLogin(); updateUI(); applyDarkMode();
       setTimeout(swSendConfig,100);
       return;
@@ -1634,7 +1635,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   function logout(){
     addLogEntry('Logout', 'Benutzer '+loggedInUser+' hat sich abgemeldet');
     // Remove session token from Firebase + sessionStorage
-    try{const t=sessionStorage.getItem('dvn_session_token');if(t && fbConnected && fbDatabase) fbDatabase.ref('dvn_session_tokens/'+t).remove()}catch(e){}
+    try{const t=sessionStorage.getItem('dvn_session_token');if(t && fbConnected && fbDatabase) try{fbDatabase.ref('dvn_session_tokens/'+t).remove()}catch(e){} }catch(e){}
     try{sessionStorage.removeItem('dvn_session_token');sessionStorage.removeItem('dvn_session_user')}catch(e){}
     try{localStorage.removeItem('dvn_session_user');localStorage.removeItem('dvn_session_pass')}catch(e){}
     loggedIn=false; loggedInUser=null; loggedInAccount=null;
@@ -2836,6 +2837,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }
     t.status='claimed';
     t.claimedBy=loggedInUser;
+    if(!t.messages) t.messages = [];
     t.messages.push({author:loggedInUser,text:'🔧 Ticket wurde von '+loggedInUser+' übernommen.',timestamp:Date.now()});
     saveTickets(tickets);
     // Notify author (in-app + desktop)
@@ -2857,6 +2859,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const t=tickets.find(x=>x.id===id);
     if(!t) return;
     const myName=loggedInUser||localStorage.getItem('dvn_ticket_name')||'';
+    if(!t.messages) t.messages = [];
     t.messages.push({author:myName,text,timestamp:Date.now()});
     saveTickets(tickets);
     // Notify the other party
@@ -2877,6 +2880,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     const t=tickets.find(x=>x.id===id);
     if(!t) return;
     t.status='closed';
+    if(!t.messages) t.messages = [];
     t.messages.push({author:loggedInUser,text:'✅ Ticket wurde geschlossen.',timestamp:Date.now()});
     saveTickets(tickets);
     closeModal('ticketDetailModal');
@@ -2892,6 +2896,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!t) return;
     t.status='open';
     t.claimedBy=null;
+    if(!t.messages) t.messages = [];
     t.messages.push({author:loggedInUser,text:'🔓 Ticket wurde wieder geöffnet.',timestamp:Date.now()});
     saveTickets(tickets);
     // Notify author
@@ -2920,6 +2925,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       const tickets=getTickets();
       const t=tickets.find(x=>x.id===id);
       if(!t) return;
+      if(!t.messages) t.messages = [];
       t.messages.push({author:loggedInUser,text:'',timestamp:Date.now(),type:'file',fileData:e.target.result,fileName:file.name});
       saveTickets(tickets);
       ticketOpenDetail(id);
@@ -2936,6 +2942,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!t.assignedHR) t.assignedHR=[];
     if(t.assignedHR.includes(hrName)){showNotification('Dieser HR ist bereits zugewiesen.','error');return;}
     t.assignedHR.push(hrName);
+    if(!t.messages) t.messages = [];
     t.messages.push({author:loggedInUser,text:'👥 '+hrName+' wurde zum Ticket hinzugefügt.',timestamp:Date.now()});
     saveTickets(tickets);
     closeModal('hrSelectModal');
@@ -2974,6 +2981,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     t.status='closed';
     t.closedAt=Date.now();
     t.email=email;
+    if(!t.messages) t.messages = [];
     t.messages.push({author:loggedInUser,text:'✅ Ticket wurde geschlossen (Transkript an '+email+').',timestamp:Date.now()});
     saveTickets(tickets);
     document.getElementById('ticketEmailArea').style.display='none';
@@ -3034,6 +3042,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(!t) return;
     t.status='closed';
     t.closedAt=Date.now();
+    if(!t.messages) t.messages = [];
     t.messages.push({author:loggedInUser,text:'✅ Ticket wurde geschlossen.',timestamp:Date.now()});
     saveTickets(tickets);
     document.getElementById('ticketEmailArea').style.display='none';
@@ -4649,19 +4658,25 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   fbInit(); // Firebase-Init starten (schlägt still fehl, wenn keine Config)
   // Validate session token against Firebase (async — write token if missing)
   if(_sTok && _sUsr && fbDatabase){
-    fbDatabase.ref('dvn_session_tokens/'+_sTok).once('value', snap => {
-      const d=snap.val();
-      if(!d || d.username!==_sUsr){
-        // Token doesn't exist or was tampered → try to re-create (handles offline-login edge case)
-        if(loggedIn && _sUsr===loggedInUser){
-          fbDatabase.ref('dvn_session_tokens/'+_sTok).set({username:_sUsr,created:Date.now()});
-        } else {
-          // Token invalid/tampered → force logout
-          try{sessionStorage.removeItem('dvn_session_token');sessionStorage.removeItem('dvn_session_user')}catch(e){}
-          if(loggedIn){ loggedIn=false; loggedInUser=null; loggedInAccount=null; updateUI(); }
+    try {
+      fbDatabase.ref('dvn_session_tokens/'+_sTok).once('value', snap => {
+        const d=snap.val();
+        if(!d || d.username!==_sUsr){
+          // Token doesn't exist or was tampered → try to re-create (handles offline-login edge case)
+          if(loggedIn && _sUsr===loggedInUser){
+            fbDatabase.ref('dvn_session_tokens/'+_sTok).set({username:_sUsr,created:Date.now()});
+          } else {
+            // Token invalid/tampered → force logout
+            try{sessionStorage.removeItem('dvn_session_token');sessionStorage.removeItem('dvn_session_user')}catch(e){}
+            if(loggedIn){ loggedIn=false; loggedInUser=null; loggedInAccount=null; updateUI(); }
+          }
         }
-      }
-    });
+      });
+    } catch(e){
+      // Token path invalid (e.g. old dot-separated token in sessionStorage) → clear it
+      try{sessionStorage.removeItem('dvn_session_token');sessionStorage.removeItem('dvn_session_user')}catch(e2){}
+      if(loggedIn){ loggedIn=false; loggedInUser=null; loggedInAccount=null; updateUI(); }
+    }
   }
   loadNotifyPrefs();
   swRegister();
