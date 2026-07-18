@@ -1065,7 +1065,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
   const INTERN_DOKUMENTE = [
     { text: 'FDL Signalling Guide', url: 'https://docs.google.com/document/d/10caAH-iSulutWpY4eK5f0TIkgfDngV19f30LtIjVRf0/edit?tab=t.0' },
     { text: 'Befehlsoberfläche', url: 'https://digibefehl.deutschesverkehrsnetz.de/index.php?' },
-     { text: 'DVN RIS', url: 'https://ris.deutschesverkehrsnetz.de/' },
+    { text: 'DVN RIS', url: 'https://ris.deutschesverkehrsnetz.de/' },
+    { text: 'Betriebsregelwerk', url: 'https://docs.google.com/document/d/1fs3Yf_fBk90p1Pn4IhfChHFF-5Q7VRGBdR8kMtPLRbo/edit?tab=t.0' },
+    { text: 'TF Handbuch', url: 'https://docs.google.com/document/d/12bvjU-4hDV6hI15Eua8Kz95rG6a3Phe9YaR3WcYjOI0/edit?tab=t.0' },
   ];
 
   // ─── Benachrichtigungseinstellungen (Standardeinstellungen) ───
@@ -1073,7 +1075,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     staff_news: true,
     public_news: true,
     app_changes: true,
-    desktop_notify: false,
+    ticket: true,
+    desktop_notify: true,
   };
 
   // ─── Dutys (aus DVN Organisationsplan, Stand 25.06.2026) ───
@@ -2037,6 +2040,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         }
       });
       syncBroadcast('notifhistory');
+      loadNotifHistory();
       // Remove sign-ins for this plan
       signins=signins.filter(si=>si.shiftPlanId!==plan.id);
     });
@@ -2232,6 +2236,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       }catch(e){}
     });
     syncBroadcast('notifhistory');
+    loadNotifHistory();
     showNotification('✅ Benachrichtigung an '+count+' eingetragene Person(en) gesendet.','success');
   }
 
@@ -2650,6 +2655,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+h.username)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'🎫 Neues Ticket von '+author+': '+title,type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+h.username,JSON.stringify(hist))}catch(e){}
     });
     syncBroadcast('notifhistory');
+    loadNotifHistory();
     showNotification('✅ Ticket wurde erstellt.','success');
     ticketMyRender();
   }
@@ -2843,7 +2849,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Notify author (in-app + desktop)
     try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+t.author)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'🔧 Dein Ticket "'+t.title+'" wurde von '+loggedInUser+' übernommen.',type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+t.author,JSON.stringify(hist))}catch(e){}
     syncBroadcast('notifhistory');
-    sendDesktopNotification('🔧 Ticket übernommen',t.title+' wurde von '+loggedInUser+' übernommen.');
+    loadNotifHistory();
+    sendDesktopNotification('🔧 Ticket übernommen',t.title+' wurde von '+loggedInUser+' übernommen.','ticket');
     showNotification('✅ Ticket übernommen.','success');
     ticketOpenDetail(id);
     ticketAdminRender();
@@ -2867,7 +2874,8 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     if(target){
       try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+target)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'💬 Neue Antwort auf "'+t.title+'" von '+myName,type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+target,JSON.stringify(hist))}catch(e){}
       syncBroadcast('notifhistory');
-      sendDesktopNotification('💬 Neue Antwort auf "'+t.title+'"',text);
+      loadNotifHistory(); // Refresh notification badge in current tab
+      sendDesktopNotification('💬 Neue Antwort auf "'+t.title+'"',text,'ticket');
     }
     ticketOpenDetail(id);
     replyField.value='';
@@ -2902,6 +2910,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Notify author
     try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+t.author)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'🔓 Dein Ticket "'+t.title+'" wurde wieder geöffnet.',type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+t.author,JSON.stringify(hist))}catch(e){}
     syncBroadcast('notifhistory');
+    loadNotifHistory();
     closeModal('ticketDetailModal');
     ticketAdminRender();
     ticketMyRender();
@@ -3010,6 +3019,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Notify author
     try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+t.author)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'✅ Dein Ticket "'+t.title+'" wurde geschlossen. Das Transkript wurde per E-Mail gesendet.',type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+t.author,JSON.stringify(hist))}catch(e){}
     syncBroadcast('notifhistory');
+    loadNotifHistory();
     closeModal('ticketDetailModal');
     ticketAdminRender();
     ticketMyRender();
@@ -3049,6 +3059,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     // Notify author
     try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+t.author)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'✅ Dein Ticket "'+t.title+'" wurde geschlossen.',type:'ticket',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+t.author,JSON.stringify(hist))}catch(e){}
     syncBroadcast('notifhistory');
+    loadNotifHistory();
     closeModal('ticketDetailModal');
     ticketAdminRender();
     ticketMyRender();
@@ -3762,6 +3773,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+h.username)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'📅 '+loggedInAccount.username+' hat sich für "'+planTitle+'" als '+signinModalRole+(duty?' ('+duty+')':'')+' ('+timeFrom+'–'+timeTo+') angemeldet.',type:'shiftplan',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+h.username,JSON.stringify(hist))}catch(e){}
     });
     syncBroadcast('notifhistory');
+    loadNotifHistory();
     addLogEntry('Anmeldung', loggedInAccount.username+' als '+signinModalRole+(duty?' ['+duty+']':''));
     showNotification('✅ Angemeldet als '+signinModalRole,'success');
     closeSigninModal();
@@ -3782,6 +3794,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       try{const hist=JSON.parse(localStorage.getItem('dvn_notifhist_'+h.username)||'[]');hist.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:'🚫 '+loggedInAccount.username+' hat seine Anmeldung für "'+planTitle+'" zurückgezogen.',type:'shiftplan',time:new Date().toLocaleString('de-DE'),read:false});localStorage.setItem('dvn_notifhist_'+h.username,JSON.stringify(hist))}catch(e){}
     });
     syncBroadcast('notifhistory');
+    loadNotifHistory();
     addLogEntry('Anmeldung zurückgezogen', loggedInAccount.username);
     // Remove user from shift plan entries
     const plan=shiftPlans.find(p=>p.id===planId);
@@ -4061,8 +4074,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
 
   let notifQueue = [];
   let notifTimer = null;
-  function sendDesktopNotification(title, body){
+  function sendDesktopNotification(title, body, type){
     if(!notificationPrefs.desktop_notify) return;
+    if(type && !notificationPrefs[type]) return;
     if(!('Notification' in window)) return;
     notifQueue.push({title, body});
     if(notifTimer) clearTimeout(notifTimer);
@@ -4121,6 +4135,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     notifHistory.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text,type,time:new Date().toLocaleString('de-DE'),read:false});
     saveNotifHistory();
     syncBroadcast('notifhistory');
+    loadNotifHistory();
   }
 
   function markNotifRead(id){
@@ -4132,6 +4147,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     notifHistory.forEach(n=>n.read=true);
     saveNotifHistory();
     syncBroadcast('notifhistory');
+    loadNotifHistory();
   }
 
   function clearReadNotifs(){
@@ -4297,7 +4313,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     (async()=>{
       try{
         const reg=await navigator.serviceWorker.ready;
-        if(reg.active) reg.active.postMessage({type:'config',user:loggedInUser||'',enabled:!!(loggedInUser && notificationPrefs.desktop_notify)});
+        if(reg.active) reg.active.postMessage({type:'config',user:loggedInUser||'',enabled:!!(loggedInUser && notificationPrefs.desktop_notify),ticket:!!notificationPrefs.ticket});
       }catch(e){}
     })();
   }
@@ -4340,6 +4356,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
       hist.unshift({id:nid,text:msg,type:'error',time:new Date().toLocaleString('de-DE'),read:false});
       try{localStorage.setItem('dvn_notifhist_'+name,JSON.stringify(hist))}catch(e){}
       syncBroadcast('notifhistory');
+      loadNotifHistory();
     }
     syncBroadcast('strafen');
     if(isSelf) showNotification('⚠️ Dir wurde eine Strafe eingetragen: '+totalHours+'h – '+reason,'error');
@@ -4377,6 +4394,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
         hist.unshift({id:nid,text:msg,type:'success',time:new Date().toLocaleString('de-DE'),read:false});
         try{localStorage.setItem('dvn_notifhist_'+s.discordName,JSON.stringify(hist))}catch(e){}
         syncBroadcast('notifhistory');
+        loadNotifHistory();
       }
     }
   }
@@ -4497,6 +4515,7 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     notificationPrefs[key]=!notificationPrefs[key];
     saveNotifyPrefs();
     renderNotifications();
+    if(key==='ticket'||key==='desktop_notify') swSendConfig();
   }
 
   // ─── Account Settings ───
@@ -4679,6 +4698,9 @@ Discord: <a href="https://discord.gg/MT3JcUarXw" target="_blank">discord.gg/dvn<
     }
   }
   loadNotifyPrefs();
+  loadNotifHistory();
+  // Request Notification permission early if supported
+  if('Notification' in window && Notification.permission==='default') Notification.requestPermission();
   swRegister();
   document.getElementById('fyear').textContent = new Date().getFullYear();
 
