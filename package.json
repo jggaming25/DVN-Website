@@ -1,0 +1,20 @@
+{
+  "name": "dvn-website",
+  "version": "2.0.0",
+  "description": "DVN - Deutsches Verkehrsnetz Plattform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "bcryptjs": "^2.4.3",
+    "nodemailer": "^6.9.15",
+    "imap-simple": "^5.1.0",
+    "mailparser": "^3.7.1",
+    "express-session": "^1.18.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  }
+}

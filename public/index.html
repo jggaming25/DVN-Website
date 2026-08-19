@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DVN – Deutsches Verkehrsnetz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="bg-orb bg-orb-3"></div>
+
+  <header>
+    <div class="hl">
+      <div class="logo">DVN</div>
+      <div class="ht">Deutsches Verkehrsnetz<small>Externe Plattform</small></div>
+    </div>
+    <nav id="mainNav">
+      <button class="active" data-page="willkommen"><span class="ni">🏠</span> Willkommen</button>
+      <button data-page="netzplan"><span class="ni">🗺️</span> Netzplan</button>
+      <button data-page="stellen"><span class="ni">📋</span> Stellen</button>
+      <button data-page="shifts"><span class="ni">⏰</span> Shifts</button>
+      <button data-page="news"><span class="ni">📰</span> News</button>
+      <button data-page="tickets-page"><span class="ni">🎫</span> Tickets</button>
+      <button data-page="admin" id="adminNavBtn" style="display:none"><span class="ni">⚙️</span> Admin</button>
+      <button id="loginNavBtn" onclick="openModal('loginModal')"><span class="ni">🔐</span> Login</button>
+      <div class="user-menu" id="userMenu" style="display:none">
+        <button id="userMenuBtn" onclick="toggleDropdown(event)">👤 <span id="userNameDisplay"></span> ▾</button>
+        <div class="dropdown" id="userDropdown">
+          <div class="dd-head">Angemeldet als</div>
+          <div class="dd-user"><span id="userNameDisplay2"></span></div>
+          <button onclick="doLogout()" class="dd-logout">🚪 Abmelden</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ═══════ LOGIN MODAL ═══════ -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal glass">
+      <h2>🔐 Anmeldung</h2>
+      <p>Melden Sie sich mit Ihren Zugangsdaten an.</p>
+      <div class="error" id="loginError"></div>
+      <label>Benutzername</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="off">
+      <label>Passwort</label>
+      <input type="password" id="loginPass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="closeModal('loginModal')">Abbrechen</button>
+        <button class="btn-primary" onclick="doLogin()">Anmelden</button>
+      </div>
+      <div class="modal-footer">
+        <button class="link-btn" onclick="closeModal('loginModal');openModal('pwRequestModal')">🔑 Passwort vergessen?</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ PASSWORT-ÄNDERUNGSANFRAGE MODAL ═══════ -->
+  <div class="modal-overlay" id="pwRequestModal">
+    <div class="modal glass">
+      <h2>🔑 Passwort ändern</h2>
+      <p>Stellen Sie eine Anfrage zur Passwort-Änderung. Der Admin wird benachrichtigt.</p>
+      <div class="error" id="pwReqError"></div>
+      <div class="success" id="pwReqSuccess"></div>
+      <label>Benutzername</label>
+      <input type="text" id="pwReqUser" placeholder="Ihr Benutzername" autocomplete="off">
+      <label>Neues Passwort</label>
+      <input type="password" id="pwReqPass" placeholder="Mindestens 6 Zeichen">
+      <label>Passwort wiederholen</label>
+      <input type="password" id="pwReqPass2" placeholder="Nochmal eingeben">
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="closeModal('pwRequestModal')">Abbrechen</button>
+        <button class="btn-primary" onclick="submitPwRequest()">📨 Anfrage senden</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ BEWERBUNGS-MODAL ═══════ -->
+  <div class="modal-overlay" id="bewerbModal">
+    <div class="modal glass" style="max-width:560px;max-height:85vh;overflow-y:auto">
+      <h2 id="bewerbModalTitle">Bewerbung</h2>
+      <p id="bewerbModalSub">Formular ausfüllen.</p>
+      <div id="bewerbFormFields"></div>
+      <div class="btn-row" style="margin-top:1.25rem">
+        <button class="btn-secondary" onclick="closeModal('bewerbModal')">Abbrechen</button>
+        <button class="btn-primary" onclick="submitBewerb()">📩 Bewerbung einreichen</button>
+      </div>
+      <div class="error" id="bewerbError" style="margin-top:.75rem">Bitte alle Pflichtfelder ausfüllen.</div>
+    </div>
+  </div>
+
+  <!-- ═══════ SHIFT EDIT MODAL ═══════ -->
+  <div class="modal-overlay" id="shiftEditModal">
+    <div class="modal glass">
+      <h2>✏️ Schicht bearbeiten</h2>
+      <label>Titel</label>
+      <input type="text" id="seTitle">
+      <label>Datum</label>
+      <input type="date" id="seDate">
+      <label>Zeitraum</label>
+      <input type="text" id="seTime" placeholder="z.B. 06:00–14:00">
+      <label>Beschreibung</label>
+      <input type="text" id="seDesc" placeholder="optional">
+      <label>Art</label>
+      <select id="sePlan"><option value="0">Einzelschicht</option><option value="1">Schichtplan</option></select>
+      <label>Bild (optional)</label>
+      <input type="file" id="seImage" accept="image/*">
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="closeModal('shiftEditModal')">Abbrechen</button>
+        <button class="btn-primary" onclick="saveShiftEdit()">💾 Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ TICKET ERSTELLEN MODAL ═══════ -->
+  <div class="modal-overlay" id="ticketCreateModal">
+    <div class="modal glass">
+      <h2>🎫 Neues Ticket</h2>
+      <p>Erstellen Sie ein neues Support-Ticket.</p>
+      <div class="error" id="ticketCreateError"></div>
+      <label>Betreff</label>
+      <input type="text" id="ticketSubject" placeholder="Kurze Beschreibung">
+      <label>Nachricht</label>
+      <textarea id="ticketMessage" rows="5" placeholder="Beschreiben Sie Ihr Anliegen..."></textarea>
+      <label>Ihr Name (optional)</label>
+      <input type="text" id="ticketAuthor" placeholder="Anonym">
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="closeModal('ticketCreateModal')">Abbrechen</button>
+        <button class="btn-primary" onclick="submitTicket()">🎫 Ticket erstellen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ LIGHTBOX ═══════ -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  </div>
+
+  <!-- ═══════════ WILLKOMMEN ═══════════ -->
+  <section id="willkommen" class="page active">
+    <div class="wh glass-hero">
+      <h2>🚄 Willkommen bei der DVN</h2>
+      <p>Plattform für Netzpläne, Stellenanzeigen, News & Schichtplanung</p>
+    </div>
+    <div class="card glass-card">
+      <div class="ch"><div class="ci">✏️</div><h2>Willkommenstext</h2><span class="badge">DVN</span></div>
+      <div class="wt" id="welcomeText"></div>
+    </div>
+    <div class="card glass-card">
+      <div class="ch"><div class="ci">📸</div><h2>Impressionen</h2><span class="badge">6 Bilder</span></div>
+      <div class="gg" id="imageGallery">
+        <div class="gi" onclick="openLightbox('images/434145.png')"><img src="images/434145.png" alt="" loading="lazy"><div class="ov"><span>DVN Impression 1</span></div></div>
+        <div class="gi" onclick="openLightbox('images/1242.png')"><img src="images/1242.png" alt="" loading="lazy"><div class="ov"><span>DVN Impression 2</span></div></div>
+        <div class="gi" onclick="openLightbox('images/12432.png')"><img src="images/12432.png" alt="" loading="lazy"><div class="ov"><span>DVN Impression 3</span></div></div>
+        <div class="gi" onclick="openLightbox('images/123412.png')"><img src="images/123412.png" alt="" loading="lazy"><div class="ov"><span>DVN Impression 4</span></div></div>
+        <div class="gi" onclick="openLightbox('images/2134.png')"><img src="images/2134.png" alt="" loading="lazy"><div class="ov"><span>DVN Impression 5</span></div></div>
+        <div class="gi" onclick="openLightbox('images/123.png')"><img src="images/123.png" alt="" loading="lazy"><div class="ov"><span>DVN Impression 6</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ NETZPLAN ═══════════ -->
+  <section id="netzplan" class="page">
+    <div class="nw glass-card">
+      <div class="nh"><h2>🗺️ DVN-Netzplan</h2><p>Gesamtnetz – Stand Juni 2026</p></div>
+      <div class="niw">
+        <div class="dvn-stamp">DVN</div>
+        <div class="nwm">DVN NETZ</div>
+        <img src="images/3454325345.png" alt="DVN-Netzplan" loading="lazy" onclick="openLightbox('images/3454325345.png')" style="cursor:pointer">
+      </div>
+      <div class="nl">
+        <div class="nl-item"><span class="sw r"></span> DVN-Stationen</div>
+        <div class="nl-item"><span class="sw g"></span> Anschlussbahnhöfe</div>
+        <div class="nl-item" style="margin-left:auto;font-size:.7rem;color:var(--g400)">ⓘ DVN – Änderungen vorbehalten</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ STELLENANZEIGEN ═══════════ -->
+  <section id="stellen" class="page">
+    <div class="card glass-card">
+      <div class="ch"><div class="ci">📋</div><h2>Stellen<span>anzeigen</span></h2><span class="badge" id="stellenBadge"></span></div>
+      <div class="sa-grid" id="saGrid"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ SHIFTS ═══════════ -->
+  <section id="shifts" class="page">
+    <div class="card glass-card">
+      <div class="ch"><div class="ci">⏰</div><h2>Schicht<span>plan</span></h2><span class="badge" id="shiftCountBadge">0</span></div>
+      <div class="sl" id="shiftsListPublic"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ NEWS ═══════════ -->
+  <section id="news" class="page">
+    <div class="card glass-card">
+      <div class="ch"><div class="ci">📰</div><h2>Aktuelle <span>News</span></h2><span class="badge" id="newsBadge">0</span></div>
+      <div class="news-grid" id="newsGrid"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ TICKETS (PUBLIC) ═══════════ -->
+  <section id="tickets-page" class="page">
+    <div class="card glass-card">
+      <div class="ch"><div class="ci">🎫</div><h2>Support-<span>Tickets</span></h2><span class="badge" id="ticketsPageBadge">0 offen</span></div>
+      <p class="sub-title">Erstellen Sie ein Ticket oder antworten Sie auf bestehende Tickets.</p>
+      <button class="btn-primary" onclick="openModal('ticketCreateModal')" style="margin-bottom:1.25rem">🎫 Neues Ticket erstellen</button>
+      <div id="ticketsPageList"></div>
+      <div id="ticketDetailView" style="display:none"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ ADMIN ═══════════ -->
+  <section id="admin" class="page">
+    <div class="card glass-card">
+      <div class="ch"><div class="ci">⚙️</div><h2>Admin-<span>Bereich</span></h2><span class="badge" id="adminBadge"></span></div>
+      <div class="admin-nav">
+        <button class="active" data-apanel="bewerbungen">📋 Bewerbungen</button>
+        <button data-apanel="schichten">⏰ Schichten</button>
+        <button data-apanel="newsadmin">📰 News</button>
+        <button data-apanel="tickets">🎫 Tickets</button>
+        <button data-apanel="pwrequests">🔑 PW-Anfragen</button>
+      </div>
+
+      <!-- Admin: Bewerbungen -->
+      <div class="admin-panel active" id="apanel-bewerbungen">
+        <div class="sub-title">Stellen verwalten</div>
+        <div class="sa-grid" id="adminStellenGrid"></div>
+        <div class="sub-title" style="margin-top:1rem">Eingegangene Bewerbungen</div>
+        <div id="adminBewList"></div>
+      </div>
+
+      <!-- Admin: Schichten (vereint) -->
+      <div class="admin-panel" id="apanel-schichten">
+        <div class="schichten-tabs">
+          <button class="active" data-stab="schichtplan">📅 Schichtplan</button>
+          <button data-stab="einzelschichten">📋 Einzelschichten</button>
+        </div>
+        <div class="stab-panel active" id="stab-schichtplan">
+          <div class="sub-title">Neuen Schichtplan-Eintrag anlegen</div>
+          <div class="shift-add glass-input">
+            <input type="text" id="spTitle" placeholder="Titel">
+            <input type="date" id="spDate">
+            <input type="text" id="spTime" placeholder="Zeitraum (06:00–14:00)">
+            <input type="text" id="spDesc" placeholder="Beschreibung">
+            <input type="file" id="spImage" accept="image/*">
+            <button onclick="addShift(true)">➕ Anlegen</button>
+          </div>
+          <div class="sub-title">Alle Schichtpläne</div>
+          <div class="sl" id="adminShiftPlanList"></div>
+        </div>
+        <div class="stab-panel" id="stab-einzelschichten">
+          <div class="sub-title">Neue Einzelschicht anlegen</div>
+          <div class="shift-add glass-input">
+            <input type="text" id="sTitle" placeholder="Titel">
+            <input type="date" id="sDate">
+            <input type="text" id="sTime" placeholder="Zeitraum (06:00–14:00)">
+            <input type="text" id="sDesc" placeholder="Beschreibung">
+            <input type="file" id="sImage" accept="image/*">
+            <button onclick="addShift(false)">➕ Anlegen</button>
+          </div>
+          <div class="sub-title">Alle Einzelschichten</div>
+          <div class="sl" id="adminShiftsList"></div>
+        </div>
+      </div>
+
+      <!-- Admin: News -->
+      <div class="admin-panel" id="apanel-newsadmin">
+        <div class="sub-title">Neuen News-Beitrag erstellen</div>
+        <div class="news-admin-form glass-input" id="newsAdminForm">
+          <label>Titel</label>
+          <input type="text" id="newsTitle" placeholder="News-Titel">
+          <label>Text</label>
+          <textarea id="newsText" placeholder="News-Inhalt..."></textarea>
+          <label>Bild (optional)</label>
+          <input type="file" id="newsImage" accept="image/*">
+          <div class="btn-row">
+            <button class="btn-secondary" onclick="clearNewsForm()">Zurücksetzen</button>
+            <button class="btn-primary" onclick="addNews()">📰 Veröffentlichen</button>
+          </div>
+        </div>
+        <div class="sub-title" style="margin-top:1.5rem">Veröffentlichte News</div>
+        <div class="news-list-admin" id="adminNewsList"></div>
+      </div>
+
+      <!-- Admin: Tickets -->
+      <div class="admin-panel" id="apanel-tickets">
+        <div class="sub-title">Alle Tickets</div>
+        <div id="adminTicketsList"></div>
+      </div>
+
+      <!-- Admin: Passwort-Anfragen -->
+      <div class="admin-panel" id="apanel-pwrequests">
+        <div class="sub-title">Ausstehende Passwort-Anfragen</div>
+        <div id="adminPwReqList"></div>
+      </div>
+    </div>
+  </section>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
