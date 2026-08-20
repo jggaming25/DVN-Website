@@ -40,6 +40,7 @@ router.post('/set-email', (req, res) => {
   const { email } = req.body;
   if (!email || !email.includes('@')) return res.status(400).json({ error: 'Gültige E-Mail-Adresse erforderlich' });
   users.setEmail(req.session.user.username, email);
+  req.session.user.email = email;
   res.json({ ok: true });
 });
 

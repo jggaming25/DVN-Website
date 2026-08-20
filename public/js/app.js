@@ -311,6 +311,7 @@ async function submitEmail() {
   const data = await api('/api/auth/set-email', { method: 'POST', body: { email } });
   if (data.ok) {
     currentUser.email = email;
+    currentUser.needsEmail = false;
     closeModal('emailRequiredModal');
     sendNotification('DVN', 'E-Mail-Adresse erfolgreich hinterlegt.');
   } else {
