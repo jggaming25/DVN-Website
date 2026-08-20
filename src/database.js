@@ -51,7 +51,9 @@ const users = {
   setBackupPw(username, hash) {
     const u = db.users.find(x => x.username === username);
     if (u) { u.backupPasswordHash = hash; markDirty(); }
-  }
+  },
+  getAll() { return db.users.map(u => ({ username: u.username, role: u.role, createdAt: u.createdAt })); },
+  remove(username) { db.users = db.users.filter(u => u.username !== username); markDirty(); }
 };
 
 const pwRequests = {

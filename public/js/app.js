@@ -76,10 +76,24 @@ function initAdminNav() {
         panel.classList.add('active');
         if (btn.dataset.apanel === 'schichten') renderAdminShifts();
         if (btn.dataset.apanel === 'newsadmin') renderAdminNewsList();
-        if (btn.dataset.apanel === 'tickets') renderAdminTickets();
-        if (btn.dataset.apanel === 'pwrequests') renderPwRequests();
+        if (btn.dataset.apanel === 'verwaltung') { renderPwRequests(); renderAdminTickets(); renderAdminUsers(); }
         if (btn.dataset.apanel === 'bewerbungen') renderAdminPanels();
       }
+    });
+  });
+  initVerwaltungTabs();
+}
+
+function initVerwaltungTabs() {
+  document.querySelectorAll('[data-vtab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-vtab]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.vtab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('vtab-' + btn.dataset.vtab).classList.add('active');
+      if (btn.dataset.vtab === 'accounts') renderAdminUsers();
+      if (btn.dataset.vtab === 'pwrequests') renderPwRequests();
+      if (btn.dataset.vtab === 'admintickets') renderAdminTickets();
     });
   });
 }
@@ -680,6 +694,49 @@ async function approvePwReq(id) {
 async function rejectPwReq(id) {
   await api(`/api/password-requests/${id}/reject`, { method: 'POST' });
   renderPwRequests();
+}
+
+// ─── USER MANAGEMENT ───
+async function createUser() {
+  const username = document.getElementById('newUser').value.trim();
+  const password = document.getElementById('newUserPw').value;
+  const role = document.getElementById('newUserRole').value;
+  if (!username || !password) { alert('Benutzername und Passwort eingeben!'); return; }
+  if (password.length < 6) { alert('Passwort mindestens 6 Zeichen!'); return; }
+  const data = await api('/api/users', { method: 'POST', body: { username, password, role } });
+  if (data.ok) {
+    document.getElementById('newUser').value = '';
+    document.getElementById('newUserPw').value = '';
+    renderAdminUsers();
+    sendNotification('DVN', `Account "${username}" erstellt.`);
+  } else {
+    alert(data.error || 'Fehler beim Erstellen.');
+  }
+}
+
+async function renderAdminUsers() {
+  const usersList = await api('/api/users');
+  const list = document.getElementById('adminUserList');
+  if (!list) return;
+  if (usersList.length === 0) { list.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine Accounts vorhanden.</div>'; return; }
+  const roleLabels = { admin: '🛡️ Admin', tf: '🚄 TF', fdl: '📡 FDL', user: '👤 User' };
+  list.innerHTML = '<div class="ab-list">' + usersList.map(u => `<div class="ab-item">
+    <div class="ab-head">
+      <span class="ab-name">${u.username}</span>
+      <span class="ab-status ${u.role === 'admin' ? 'accepted' : 'pending'}">${roleLabels[u.role] || u.role}</span>
+      <span class="ab-date">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('de-DE') : ''}</span>
+    </div>
+    ${u.username !== 'jggaming2518' ? `<div class="ab-actions">
+      <button class="reject" onclick="deleteUser('${u.username}')">🗑️ Löschen</button>
+    </div>` : '<div style="font-size:.75rem;color:var(--g400);margin-top:.3rem">Schutz-Konto - kann nicht gelöscht werden</div>'}
+  </div>`).join('') + '</div>';
+}
+
+async function deleteUser(username) {
+  if (!confirm(`Account "${username}" wirklich löschen?`)) return;
+  const data = await api(`/api/users/${username}`, { method: 'DELETE' });
+  if (data.ok) renderAdminUsers();
+  else alert(data.error || 'Fehler.');
 }
 
 // ─── HELPERS ───

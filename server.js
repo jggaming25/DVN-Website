@@ -24,6 +24,7 @@ app.use('/api/tickets', require('./src/routes/tickets'));
 app.use('/api/news', require('./src/routes/news'));
 app.use('/api/shifts', require('./src/routes/shifts'));
 app.use('/api/applications', require('./src/routes/applications'));
+app.use('/api/users', require('./src/routes/users'));
 
 app.get('/api/config', (req, res) => {
   res.json({ stellenOpen: dbConfig.get() });

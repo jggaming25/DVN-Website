@@ -223,8 +223,7 @@
         <button class="active" data-apanel="bewerbungen">📋 Bewerbungen</button>
         <button data-apanel="schichten">⏰ Schichten</button>
         <button data-apanel="newsadmin">📰 News</button>
-        <button data-apanel="tickets">🎫 Tickets</button>
-        <button data-apanel="pwrequests">🔑 PW-Anfragen</button>
+        <button data-apanel="verwaltung">🛡️ Verwaltung</button>
       </div>
 
       <!-- Admin: Bewerbungen -->
@@ -288,16 +287,45 @@
         <div class="news-list-admin" id="adminNewsList"></div>
       </div>
 
-      <!-- Admin: Tickets -->
-      <div class="admin-panel" id="apanel-tickets">
-        <div class="sub-title">Alle Tickets</div>
-        <div id="adminTicketsList"></div>
-      </div>
+      <!-- Admin: Verwaltung (Tickets + PW-Anfragen + Accounts) -->
+      <div class="admin-panel" id="apanel-verwaltung">
+        <div class="verwaltung-tabs">
+          <button class="active" data-vtab="accounts">👤 Accounts</button>
+          <button data-vtab="pwrequests">🔑 Passwort-Anfragen</button>
+          <button data-vtab="admintickets">🎫 Tickets</button>
+        </div>
 
-      <!-- Admin: Passwort-Anfragen -->
-      <div class="admin-panel" id="apanel-pwrequests">
-        <div class="sub-title">Ausstehende Passwort-Anfragen</div>
-        <div id="adminPwReqList"></div>
+        <!-- Verwaltung: Accounts -->
+        <div class="vtab-panel active" id="vtab-accounts">
+          <div class="sub-title">Neuen Account erstellen</div>
+          <div class="shift-add glass-input" style="flex-direction:column;gap:.75rem">
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+              <input type="text" id="newUser" placeholder="Benutzername" style="flex:1;min-width:150px">
+              <input type="password" id="newUserPw" placeholder="Passwort" style="flex:1;min-width:150px">
+              <select id="newUserRole" style="flex:0;min-width:120px;padding:.6rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit">
+                <option value="user">User</option>
+                <option value="tf">TF (Triebfahrzeugführer)</option>
+                <option value="fdl">FDL (Fahrdienstleiter)</option>
+                <option value="admin">Admin</option>
+              </select>
+              <button onclick="createUser()">➕ Erstellen</button>
+            </div>
+          </div>
+          <div class="sub-title" style="margin-top:1rem">Bestehende Accounts</div>
+          <div id="adminUserList"></div>
+        </div>
+
+        <!-- Verwaltung: Passwort-Anfragen -->
+        <div class="vtab-panel" id="vtab-pwrequests">
+          <div class="sub-title">Ausstehende Passwort-Anfragen</div>
+          <div id="adminPwReqList"></div>
+        </div>
+
+        <!-- Verwaltung: Tickets -->
+        <div class="vtab-panel" id="vtab-admintickets">
+          <div class="sub-title">Alle Tickets</div>
+          <div id="adminTicketsList"></div>
+        </div>
       </div>
     </div>
   </section>
