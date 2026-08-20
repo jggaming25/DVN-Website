@@ -57,7 +57,7 @@ function initNavigation() {
       document.querySelectorAll('nav button[data-page], .page').forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(btn.dataset.page).classList.add('active');
-      if (btn.dataset.page === 'admin') { renderAdminPanels(); renderAdminNewsList(); }
+      if (btn.dataset.page === 'admin') { renderAdminShifts(); }
       if (btn.dataset.page === 'news') renderNews();
       if (btn.dataset.page === 'shifts') renderPublicShifts();
       if (btn.dataset.page === 'tickets-page') renderPublicTickets();
@@ -76,13 +76,13 @@ function initAdminNav() {
       if (panel) {
         panel.classList.add('active');
         if (btn.dataset.apanel === 'schichten') renderAdminShifts();
-        if (btn.dataset.apanel === 'newsadmin') renderAdminNewsList();
-        if (btn.dataset.apanel === 'verwaltung') { renderPwRequests(); renderAdminTickets(); renderAdminUsers(); }
+        if (btn.dataset.apanel === 'verwaltung') { renderPwRequests(); renderAdminTickets(); renderAdminUsers(); renderAdminNewsList(); }
         if (btn.dataset.apanel === 'bewerbungen') renderAdminPanels();
       }
     });
   });
   initVerwaltungTabs();
+  initCreateTabs();
 }
 
 function initVerwaltungTabs() {
@@ -95,6 +95,18 @@ function initVerwaltungTabs() {
       if (btn.dataset.vtab === 'accounts') renderAdminUsers();
       if (btn.dataset.vtab === 'pwrequests') renderPwRequests();
       if (btn.dataset.vtab === 'admintickets') renderAdminTickets();
+      if (btn.dataset.vtab === 'newsmanage') renderAdminNewsList();
+    });
+  });
+}
+
+function initCreateTabs() {
+  document.querySelectorAll('[data-ctab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-ctab]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('#vtab-shiftcreate .stab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('ctab-' + btn.dataset.ctab).classList.add('active');
     });
   });
 }
@@ -466,10 +478,10 @@ async function renderAdminShifts() {
   const renderList = (shifts, container) => {
     if (!container) return;
     if (shifts.length === 0) { container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine Einträge.</div>'; return; }
-    container.innerHTML = shifts.map(s => `<div class="sc">
+    container.innerHTML = shifts.map(s => `<div class="sc shift-clickable" onclick="editShift(${s.id})" title="Klicken zum Bearbeiten">
       <div class="stb"><div class="l1">${s.time}</div><div class="l2">${s.date || ''}</div></div>
-      <div class="si"><h3>${s.title}</h3>${s.desc ? '<p>' + s.desc + '</p>' : ''}${s.image ? '<img src="' + s.image + '" class="shift-img" onclick="openLightbox(\'' + s.image + '\')" alt="">' : ''}</div>
-      <div class="sa-btn"><button onclick="editShift(${s.id})" title="Bearbeiten">✏️</button><button onclick="delShift(${s.id})" title="Löschen">🗑️</button></div>
+      <div class="si"><h3>${s.title}</h3>${s.desc ? '<p>' + s.desc + '</p>' : ''}${s.image ? '<img src="' + s.image + '" class="shift-img" onclick="event.stopPropagation();openLightbox(\'' + s.image + '\')" alt="">' : ''}</div>
+      <div class="sa-btn"><button onclick="event.stopPropagation();editShift(${s.id})" title="Bearbeiten">✏️</button><button onclick="event.stopPropagation();delShift(${s.id})" title="Löschen">🗑️</button></div>
     </div>`).join('');
   };
   renderList(data.plan, planList);

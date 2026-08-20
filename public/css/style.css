@@ -224,6 +224,7 @@ nav .nav-sep{width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 .25r
 .shift-add button:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(198,40,40,.3)}
 .sl{display:flex;flex-direction:column;gap:.6rem}
 .sc{background:rgba(255,255,255,.6);backdrop-filter:blur(8px);border-radius:var(--rm);box-shadow:var(--sm);padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;border:1px solid var(--glass-border);transition:all .25s}
+.shift-clickable{cursor:pointer}.shift-clickable:hover{border-color:var(--r300);box-shadow:0 0 0 2px rgba(198,40,40,.12),var(--md)}
 .sc:hover{border-color:var(--r200);box-shadow:var(--md)}
 .sc .stb{background:linear-gradient(135deg,var(--r500),var(--r700));color:var(--w);border-radius:var(--rs);padding:.5rem .9rem;min-width:100px;text-align:center;flex-shrink:0}
 .sc .stb .l1{font-weight:700;font-size:.82rem}
