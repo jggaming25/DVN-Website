@@ -223,14 +223,17 @@
     <div class="card glass-card">
       <div class="ch"><div class="ci">⚙️</div><h2>Admin-<span>Bereich</span></h2><span class="badge" id="adminBadge"></span></div>
       <div class="admin-nav">
-        <button class="active" data-apanel="bewerbungen">📋 Bewerbungen</button>
+        <span class="admin-nav-label">Intern</span>
+        <button class="active" data-apanel="newsadmin">📰 News</button>
         <button data-apanel="schichten">⏰ Schichten</button>
-        <button data-apanel="newsadmin">📰 News</button>
+        <span class="admin-nav-sep"></span>
+        <span class="admin-nav-label">Admin</span>
+        <button data-apanel="bewerbungen">📋 Bewerbungen</button>
         <button data-apanel="verwaltung">🛡️ Verwaltung</button>
       </div>
 
       <!-- Admin: Bewerbungen -->
-      <div class="admin-panel active" id="apanel-bewerbungen">
+      <div class="admin-panel" id="apanel-bewerbungen">
         <div class="sub-title">Stellen verwalten</div>
         <div class="sa-grid" id="adminStellenGrid"></div>
         <div class="sub-title" style="margin-top:1rem">Eingegangene Bewerbungen</div>
@@ -272,7 +275,7 @@
       </div>
 
       <!-- Admin: News -->
-      <div class="admin-panel" id="apanel-newsadmin">
+      <div class="admin-panel active" id="apanel-newsadmin">
         <div class="sub-title">Neuen News-Beitrag erstellen</div>
         <div class="news-admin-form glass-input" id="newsAdminForm">
           <label>Titel</label>

@@ -155,7 +155,9 @@ nav .nav-sep{width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 .25r
 .btn-apply:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
 
 /* ─── ADMIN TABS ─── */
-.admin-nav{display:flex;gap:4px;margin-bottom:1.25rem;border-bottom:2px solid var(--g200);padding-bottom:0;flex-wrap:wrap}
+.admin-nav{display:flex;gap:4px;margin-bottom:1.25rem;border-bottom:2px solid var(--g200);padding-bottom:0;flex-wrap:wrap;align-items:center}
+.admin-nav .admin-nav-label{font-size:.6rem;text-transform:uppercase;letter-spacing:1px;color:var(--g400);font-weight:700;padding:0 .5rem;white-space:nowrap}
+.admin-nav .admin-nav-sep{width:1px;height:22px;background:var(--g300);margin:0 .25rem}
 .admin-nav button{padding:.6rem 1.4rem;border:none;background:transparent;font-size:.85rem;font-weight:600;color:var(--g500);cursor:pointer;font-family:inherit;transition:all .2s;border-radius:var(--rs) var(--rs) 0 0;position:relative;margin-bottom:-2px}
 .admin-nav button:hover{color:var(--r500);background:rgba(198,40,40,.05)}
 .admin-nav button.active{color:var(--r600);background:rgba(198,40,40,.08)}

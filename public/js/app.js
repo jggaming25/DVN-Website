@@ -56,7 +56,7 @@ function initNavigation() {
       document.querySelectorAll('nav button[data-page], .page').forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(btn.dataset.page).classList.add('active');
-      if (btn.dataset.page === 'admin') { renderAdminPanels(); }
+      if (btn.dataset.page === 'admin') { renderAdminPanels(); renderAdminNewsList(); }
       if (btn.dataset.page === 'news') renderNews();
       if (btn.dataset.page === 'shifts') renderPublicShifts();
       if (btn.dataset.page === 'tickets-page') renderPublicTickets();
