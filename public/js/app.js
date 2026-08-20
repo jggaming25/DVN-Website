@@ -408,7 +408,7 @@ async function renderAdminBewList() {
   if (!bl) return;
   if (apps.length === 0) { bl.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--g400)">Noch keine Bewerbungen.</div>'; return; }
   bl.innerHTML = '<div class="ab-list">' + apps.map(a => {
-    const st = STELLEN_DATA.find(s => s.id === a.stelle_id);
+    const st = STELLEN_DATA.find(s => s.id === a.stelleId);
     const dataHtml = Object.entries(a.data).filter(([k]) => !['lebenslauf'].includes(k)).map(([k, v]) => `<span class="k">${k}:</span><span class="v">${v}</span>`).join('');
     return `<div class="ab-item">
       <div class="ab-head">
@@ -631,7 +631,7 @@ async function delNews(id) {
 
 // ─── TICKETS (PUBLIC) ───
 async function renderPublicTickets() {
-  const data = await api('/api/tickets');
+  const data = await api('/api/tickets/public');
   const list = document.getElementById('ticketsPageList');
   const badge = document.getElementById('ticketsPageBadge');
   const detail = document.getElementById('ticketDetailView');
