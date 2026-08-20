@@ -20,6 +20,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/password-requests', require('./src/routes/passwordRequests'));
+app.use('/api/password-reset', require('./src/routes/passwordReset'));
 app.use('/api/tickets', require('./src/routes/tickets'));
 app.use('/api/news', require('./src/routes/news'));
 app.use('/api/shifts', require('./src/routes/shifts'));

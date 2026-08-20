@@ -56,27 +56,64 @@
         <button class="btn-primary" onclick="doLogin()">Anmelden</button>
       </div>
       <div class="modal-footer">
-        <button class="link-btn" onclick="closeModal('loginModal');openModal('pwRequestModal')">🔑 Passwort vergessen?</button>
+        <button class="link-btn" onclick="closeModal('loginModal');openModal('pwResetRequestModal')">🔑 Passwort vergessen?</button>
       </div>
     </div>
   </div>
 
-  <!-- ═══════ PASSWORT-ÄNDERUNGSANFRAGE MODAL ═══════ -->
-  <div class="modal-overlay" id="pwRequestModal">
+  <!-- ═══════ PASSWORT ZURÜCKSETZEN (E-Mail-Link) MODAL ═══════ -->
+  <div class="modal-overlay" id="pwResetRequestModal">
     <div class="modal glass">
-      <h2>🔑 Passwort ändern</h2>
-      <p>Stellen Sie eine Anfrage zur Passwort-Änderung. Der Admin wird benachrichtigt.</p>
-      <div class="error" id="pwReqError"></div>
-      <div class="success" id="pwReqSuccess"></div>
+      <h2>🔑 Passwort vergessen?</h2>
+      <p>Geben Sie Ihren Benutzernamen und die mit Ihrem Account verknüpfte E-Mail-Adresse ein. Sie erhalten einen Link zum Zurücksetzen Ihres Passworts.</p>
+      <div class="error" id="pwResetReqError"></div>
+      <div class="success" id="pwResetReqSuccess"></div>
       <label>Benutzername</label>
-      <input type="text" id="pwReqUser" placeholder="Ihr Benutzername" autocomplete="off">
-      <label>Neues Passwort</label>
-      <input type="password" id="pwReqPass" placeholder="Mindestens 6 Zeichen">
-      <label>Passwort wiederholen</label>
-      <input type="password" id="pwReqPass2" placeholder="Nochmal eingeben">
+      <input type="text" id="pwResetReqUser" placeholder="Ihr Benutzername" autocomplete="off">
+      <label>E-Mail-Adresse</label>
+      <input type="email" id="pwResetReqEmail" placeholder="name@beispiel.de" autocomplete="off">
+      <div class="privacy-notice">
+        🔒 Ihre Daten werden vertraulich behandelt und verschlüsselt abgespeichert. Sie sind für jeden anderen nicht einsehbar.
+      </div>
       <div class="btn-row">
-        <button class="btn-secondary" onclick="closeModal('pwRequestModal')">Abbrechen</button>
-        <button class="btn-primary" onclick="submitPwRequest()">📨 Anfrage senden</button>
+        <button class="btn-secondary" onclick="closeModal('pwResetRequestModal')">Abbrechen</button>
+        <button class="btn-primary" onclick="submitPwResetRequest()">📨 Reset-Link anfordern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ PASSWORT ZURÜCKSETZEN (FORMULAR) MODAL ═══════ -->
+  <div class="modal-overlay" id="pwResetFormModal">
+    <div class="modal glass">
+      <h2>🔐 Neues Passwort festlegen</h2>
+      <p id="pwResetFormUser"></p>
+      <div class="error" id="pwResetFormError"></div>
+      <div class="success" id="pwResetFormSuccess"></div>
+      <label>Neues Passwort</label>
+      <input type="password" id="pwResetFormPass" placeholder="Mindestens 6 Zeichen">
+      <label>Passwort wiederholen</label>
+      <input type="password" id="pwResetFormPass2" placeholder="Nochmal eingeben" onkeydown="if(event.key==='Enter')submitPwResetForm()">
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="closeModal('pwResetFormModal')">Abbrechen</button>
+        <button class="btn-primary" onclick="submitPwResetForm()">✅ Passwort ändern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ EMAIL PFLICHT MODAL ═══════ -->
+  <div class="modal-overlay" id="emailRequiredModal">
+    <div class="modal glass">
+      <h2>📧 E-Mail-Adresse hinterlegen</h2>
+      <p>Um alle Funktionen nutzen zu können (z.B. Passwort zurücksetzen), hinterlegen Sie bitte Ihre E-Mail-Adresse.</p>
+      <div class="error" id="emailReqError"></div>
+      <label>E-Mail-Adresse</label>
+      <input type="email" id="emailReqInput" placeholder="name@beispiel.de" autocomplete="off">
+      <div class="privacy-notice">
+        🔒 Ihre Daten werden vertraulich behandelt und verschlüsselt abgespeichert. Sie sind für jeden anderen nicht einsehbar.
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="skipEmailSetup()">Später</button>
+        <button class="btn-primary" onclick="submitEmail()">💾 Speichern</button>
       </div>
     </div>
   </div>
@@ -308,6 +345,7 @@
             <div style="display:flex;gap:.75rem;flex-wrap:wrap">
               <input type="text" id="newUser" placeholder="Benutzername" style="flex:1;min-width:150px">
               <input type="password" id="newUserPw" placeholder="Passwort" style="flex:1;min-width:150px">
+              <input type="email" id="newUserEmail" placeholder="E-Mail (optional)" style="flex:1;min-width:150px">
               <select id="newUserRole" style="flex:0;min-width:120px;padding:.6rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit">
                 <option value="tf">TF (Triebfahrzeugführer)</option>
                 <option value="fdl">FDL (Fahrdienstleiter)</option>
@@ -315,6 +353,7 @@
               </select>
               <button onclick="createUser()">➕ Erstellen</button>
             </div>
+            <div class="privacy-notice" style="margin-top:.25rem">🔒 E-Mail-Adresse wird vertraulich behandelt und verschlüsselt abgespeichert. Nur für Passwort-Zurücksetzung benötigt.</div>
           </div>
           <div class="sub-title" style="margin-top:1rem">Bestehende Accounts</div>
           <div id="adminUserList"></div>
@@ -323,10 +362,10 @@
         <!-- Verwaltung: Passwort-Anfragen -->
         <div class="vtab-panel" id="vtab-pwrequests">
           <div class="info-box">
-            <strong>Was sind Passwort-Anfragen?</strong><br>
-            Nutzer können über den Button "Passwort vergessen?" auf der Login-Seite ein neues Passwort anfordern. Dabei geben sie ihren Benutzernamen und das gewünschte neue Passwort ein. Die Anfrage wird hier angezeigt. Wenn du sie genehmigst, wird das neue Passwort aktiviert und der Nutzer kann sich mit dem neuen Passwort einloggen. Ablehnen verwirft die Anfrage.
+            <strong>Passwort-Anfragen</strong><br>
+            Nutzer können über den Button "Passwort vergessen?" auf der Login-Seite einen Link zum Zurücksetzen ihres Passworts per E-Mail anfordern. Dabei geben sie ihren Benutzernamen und die mit ihrem Account verknüpfte E-Mail-Adresse ein. Stimmen beide überein, erhalten sie einen Link, mit dem sie ihr Passwort direkt selbst zurücksetzen können — ohne Admin-Eingriff.
           </div>
-          <div class="sub-title" style="margin-top:1rem">Ausstehende Passwort-Anfragen</div>
+          <div class="sub-title" style="margin-top:1rem">Ausstehende Passwort-Anfragen (alte Methode)</div>
           <div id="adminPwReqList"></div>
         </div>
 

@@ -41,10 +41,12 @@ process.on('SIGTERM', () => { saveDB(); process.exit(); });
 
 const users = {
   get(username) { return db.users.find(u => u.username === username); },
-  upsert(username, role, pwHash) {
+  getByEmail(email) { return db.users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase()); },
+  getByResetToken(token) { return db.users.find(u => u.resetToken === token && u.resetTokenExpiry && new Date(u.resetTokenExpiry) > new Date()); },
+  upsert(username, role, pwHash, email) {
     let u = db.users.find(x => x.username === username);
-    if (!u) { u = { username, role: role || 'user', backupPasswordHash: pwHash || null, createdAt: new Date().toISOString() }; db.users.push(u); }
-    else { if (role) u.role = role; if (pwHash) u.backupPasswordHash = pwHash; }
+    if (!u) { u = { username, role: role || 'user', backupPasswordHash: pwHash || null, email: email || null, resetToken: null, resetTokenExpiry: null, createdAt: new Date().toISOString() }; db.users.push(u); }
+    else { if (role) u.role = role; if (pwHash) u.backupPasswordHash = pwHash; if (email !== undefined) u.email = email; }
     markDirty();
     return u;
   },
@@ -52,7 +54,19 @@ const users = {
     const u = db.users.find(x => x.username === username);
     if (u) { u.backupPasswordHash = hash; markDirty(); }
   },
-  getAll() { return db.users.map(u => ({ username: u.username, role: u.role, createdAt: u.createdAt })); },
+  setEmail(username, email) {
+    const u = db.users.find(x => x.username === username);
+    if (u) { u.email = email; markDirty(); }
+  },
+  setResetToken(username, token, expiry) {
+    const u = db.users.find(x => x.username === username);
+    if (u) { u.resetToken = token; u.resetTokenExpiry = expiry; markDirty(); }
+  },
+  clearResetToken(username) {
+    const u = db.users.find(x => x.username === username);
+    if (u) { u.resetToken = null; u.resetTokenExpiry = null; markDirty(); }
+  },
+  getAll() { return db.users.map(u => ({ username: u.username, role: u.role, email: u.email || null, createdAt: u.createdAt })); },
   remove(username) { db.users = db.users.filter(u => u.username !== username); markDirty(); }
 };
 

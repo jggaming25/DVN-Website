@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initKeyboardShortcuts();
   requestNotificationPermission();
   renderAll();
+  checkResetToken();
 });
 
 async function api(path, opts = {}) {
@@ -35,7 +36,7 @@ async function api(path, opts = {}) {
 
 async function loadSession() {
   const data = await api('/api/auth/me');
-  if (data.loggedIn) { currentUser = data; updateUI(); }
+  if (data.loggedIn) { currentUser = data; updateUI(); if (data.needsEmail) setTimeout(() => openModal('emailRequiredModal'), 1000); }
 }
 
 async function loadConfig() {
@@ -148,12 +149,22 @@ function openModal(id) {
     document.getElementById('loginPass').value = '';
     setTimeout(() => document.getElementById('loginUser').focus(), 100);
   }
-  if (id === 'pwRequestModal') {
-    document.getElementById('pwReqError').classList.remove('show');
-    document.getElementById('pwReqSuccess').classList.remove('show');
-    document.getElementById('pwReqUser').value = '';
-    document.getElementById('pwReqPass').value = '';
-    document.getElementById('pwReqPass2').value = '';
+  if (id === 'pwResetRequestModal') {
+    document.getElementById('pwResetReqError').classList.remove('show');
+    document.getElementById('pwResetReqSuccess').classList.remove('show');
+    document.getElementById('pwResetReqUser').value = '';
+    document.getElementById('pwResetReqEmail').value = '';
+  }
+  if (id === 'pwResetFormModal') {
+    document.getElementById('pwResetFormError').classList.remove('show');
+    document.getElementById('pwResetFormSuccess').classList.remove('show');
+    document.getElementById('pwResetFormPass').value = '';
+    document.getElementById('pwResetFormPass2').value = '';
+  }
+  if (id === 'emailRequiredModal') {
+    document.getElementById('emailReqError').classList.remove('show');
+    document.getElementById('emailReqInput').value = '';
+    setTimeout(() => document.getElementById('emailReqInput').focus(), 100);
   }
 }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -207,11 +218,14 @@ async function doLogin() {
   if (!u || !p) { showErr('loginError', 'Bitte alle Felder ausfüllen.'); return; }
   const data = await api('/api/auth/login', { method: 'POST', body: { username: u, password: p } });
   if (data.ok) {
-    currentUser = { loggedIn: true, username: data.username, role: data.role };
+    currentUser = { loggedIn: true, username: data.username, role: data.role, email: data.email };
     closeModal('loginModal');
     updateUI();
     renderAll();
     sendNotification('DVN', `Willkommen zurück, ${data.username}!`);
+    if (data.needsEmail) {
+      setTimeout(() => openModal('emailRequiredModal'), 500);
+    }
   } else {
     showErr('loginError', data.error || 'Anmeldung fehlgeschlagen.');
   }
@@ -228,23 +242,72 @@ async function doLogout() {
   renderAll();
 }
 
-// ─── PASSWORT-ÄNDERUNGSANFRAGE ───
-async function submitPwRequest() {
-  const u = document.getElementById('pwReqUser').value.trim();
-  const p = document.getElementById('pwReqPass').value;
-  const p2 = document.getElementById('pwReqPass2').value;
-  hideMsgs('pwReqError', 'pwReqSuccess');
-  if (!u || !p) { showErr('pwReqError', 'Bitte alle Felder ausfüllen.'); return; }
-  if (p.length < 6) { showErr('pwReqError', 'Passwort mindestens 6 Zeichen.'); return; }
-  if (p !== p2) { showErr('pwReqError', 'Passwörter stimmen nicht überein.'); return; }
-  const data = await api('/api/password-requests/request', { method: 'POST', body: { username: u, newPassword: p } });
+// ─── PASSWORT ZURÜCKSETZEN (E-Mail-Link) ───
+async function submitPwResetRequest() {
+  const u = document.getElementById('pwResetReqUser').value.trim();
+  const e = document.getElementById('pwResetReqEmail').value.trim();
+  hideMsgs('pwResetReqError', 'pwResetReqSuccess');
+  if (!u || !e) { showErr('pwResetReqError', 'Bitte alle Felder ausfüllen.'); return; }
+  if (!e.includes('@')) { showErr('pwResetReqError', 'Bitte geben Sie eine gültige E-Mail-Adresse ein.'); return; }
+  const data = await api('/api/password-reset/request', { method: 'POST', body: { username: u, email: e } });
   if (data.ok) {
-    showSuccess('pwReqSuccess', 'Anfrage gesendet! Der Admin wird benachrichtigt.');
-    sendNotification('DVN Passwort-Anfrage', `Anfrage von ${u} eingereicht.`);
-    setTimeout(() => closeModal('pwRequestModal'), 2000);
+    showSuccess('pwResetReqSuccess', data.message || 'Wenn Benutzername und E-Mail übereinstimmen, erhalten Sie eine E-Mail mit einem Link zum Zurücksetzen.');
+    sendNotification('DVN Passwort', `Reset-Link-Anfrage von ${u}.`);
+    setTimeout(() => closeModal('pwResetRequestModal'), 3000);
   } else {
-    showErr('pwReqError', data.error || 'Fehler.');
+    showErr('pwResetReqError', data.error || 'Fehler.');
   }
+}
+
+async function submitPwResetForm() {
+  const token = new URLSearchParams(window.location.search).get('token');
+  const p = document.getElementById('pwResetFormPass').value;
+  const p2 = document.getElementById('pwResetFormPass2').value;
+  hideMsgs('pwResetFormError', 'pwResetFormSuccess');
+  if (!p) { showErr('pwResetFormError', 'Bitte geben Sie ein neues Passwort ein.'); return; }
+  if (p.length < 6) { showErr('pwResetFormError', 'Passwort muss mindestens 6 Zeichen lang sein.'); return; }
+  if (p !== p2) { showErr('pwResetFormError', 'Passwörter stimmen nicht überein.'); return; }
+  const data = await api('/api/password-reset/reset', { method: 'POST', body: { token, newPassword: p } });
+  if (data.ok) {
+    showSuccess('pwResetFormSuccess', data.message || 'Passwort erfolgreich zurückgesetzt!');
+    document.getElementById('pwResetFormPass').value = '';
+    document.getElementById('pwResetFormPass2').value = '';
+    setTimeout(() => { window.history.replaceState({}, '', '/'); closeModal('pwResetFormModal'); }, 2500);
+  } else {
+    showErr('pwResetFormError', data.error || 'Fehler.');
+  }
+}
+
+async function checkResetToken() {
+  const token = new URLSearchParams(window.location.search).get('token');
+  if (!token) return;
+  const data = await api('/api/password-reset/verify-token', { method: 'POST', body: { token } });
+  if (data.ok) {
+    document.getElementById('pwResetFormUser').textContent = 'Setzen Sie ein neues Passwort für den Account „' + data.username + '" fest.';
+    openModal('pwResetFormModal');
+  } else {
+    alert('Der Link zum Zurücksetzen des Passworts ist abgelaufen oder ungültig.');
+    window.history.replaceState({}, '', '/');
+  }
+}
+
+// ─── EMAIL HINTERLEGEN ───
+async function submitEmail() {
+  const email = document.getElementById('emailReqInput').value.trim();
+  hideMsgs('emailReqError');
+  if (!email || !email.includes('@')) { showErr('emailReqError', 'Bitte geben Sie eine gültige E-Mail-Adresse ein.'); return; }
+  const data = await api('/api/auth/set-email', { method: 'POST', body: { email } });
+  if (data.ok) {
+    currentUser.email = email;
+    closeModal('emailRequiredModal');
+    sendNotification('DVN', 'E-Mail-Adresse erfolgreich hinterlegt.');
+  } else {
+    showErr('emailReqError', data.error || 'Fehler beim Speichern.');
+  }
+}
+
+function skipEmailSetup() {
+  closeModal('emailRequiredModal');
 }
 
 // ─── STELLEN ───
@@ -701,12 +764,14 @@ async function createUser() {
   const username = document.getElementById('newUser').value.trim();
   const password = document.getElementById('newUserPw').value;
   const role = document.getElementById('newUserRole').value;
+  const email = document.getElementById('newUserEmail').value.trim() || null;
   if (!username || !password) { alert('Benutzername und Passwort eingeben!'); return; }
   if (password.length < 6) { alert('Passwort mindestens 6 Zeichen!'); return; }
-  const data = await api('/api/users', { method: 'POST', body: { username, password, role } });
+  const data = await api('/api/users', { method: 'POST', body: { username, password, role, email } });
   if (data.ok) {
     document.getElementById('newUser').value = '';
     document.getElementById('newUserPw').value = '';
+    document.getElementById('newUserEmail').value = '';
     renderAdminUsers();
     sendNotification('DVN', `Account "${username}" erstellt.`);
   } else {
@@ -723,6 +788,7 @@ async function renderAdminUsers() {
   list.innerHTML = '<div class="ab-list">' + usersList.map(u => `<div class="ab-item">
     <div class="ab-head">
       <span class="ab-name">${u.username}</span>
+      ${u.email ? '<span style="font-size:.75rem;color:var(--g500);margin-left:.5rem">📧 ' + u.email + '</span>' : ''}
       <span class="ab-status ${u.role === 'admin' ? 'accepted' : 'pending'}">${roleLabels[u.role] || u.role}</span>
       <span class="ab-date">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('de-DE') : ''}</span>
     </div>

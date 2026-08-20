@@ -22,7 +22,7 @@ router.post('/login', (req, res) => {
   }
 
   req.session.user = { username, role: user.role || 'admin' };
-  res.json({ ok: true, username, role: user.role || 'admin' });
+  res.json({ ok: true, username, role: user.role || 'admin', email: user.email || null, needsEmail: !user.email });
 });
 
 router.post('/logout', (req, res) => {
@@ -31,7 +31,16 @@ router.post('/logout', (req, res) => {
 
 router.get('/me', (req, res) => {
   if (!req.session?.user) return res.json({ loggedIn: false });
-  res.json({ loggedIn: true, ...req.session.user });
+  const user = users.get(req.session.user.username);
+  res.json({ loggedIn: true, ...req.session.user, email: user?.email || null, needsEmail: !user?.email });
+});
+
+router.post('/set-email', (req, res) => {
+  if (!req.session?.user) return res.status(401).json({ error: 'Nicht angemeldet' });
+  const { email } = req.body;
+  if (!email || !email.includes('@')) return res.status(400).json({ error: 'Gültige E-Mail-Adresse erforderlich' });
+  users.setEmail(req.session.user.username, email);
+  res.json({ ok: true });
 });
 
 module.exports = router;

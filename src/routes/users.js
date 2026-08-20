@@ -9,13 +9,13 @@ router.get('/', requireAdmin, (req, res) => {
 });
 
 router.post('/', requireAdmin, (req, res) => {
-  const { username, password, role } = req.body;
+  const { username, password, role, email } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Benutzername und Passwort erforderlich' });
   if (password.length < 6) return res.status(400).json({ error: 'Passwort mindestens 6 Zeichen' });
   if (users.get(username)) return res.status(400).json({ error: 'Benutzername existiert bereits' });
 
   const hash = crypto.hashPassword(password);
-  users.upsert(username, role || 'user', hash);
+  users.upsert(username, role || 'user', hash, email || null);
   res.json({ ok: true });
 });
 
