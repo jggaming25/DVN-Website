@@ -19,12 +19,15 @@
       <div class="ht">Deutsches Verkehrsnetz<small>Externe Plattform</small></div>
     </div>
     <nav id="mainNav">
+      <span class="nav-label">Öffentlich</span>
       <button class="active" data-page="willkommen"><span class="ni">🏠</span> Willkommen</button>
       <button data-page="netzplan"><span class="ni">🗺️</span> Netzplan</button>
       <button data-page="stellen"><span class="ni">📋</span> Stellen</button>
       <button data-page="shifts"><span class="ni">⏰</span> Shifts</button>
       <button data-page="news"><span class="ni">📰</span> News</button>
       <button data-page="tickets-page"><span class="ni">🎫</span> Tickets</button>
+      <span class="nav-sep"></span>
+      <span class="nav-label">Intern</span>
       <button data-page="admin" id="adminNavBtn" style="display:none"><span class="ni">⚙️</span> Admin</button>
       <button id="loginNavBtn" onclick="openModal('loginModal')"><span class="ni">🔐</span> Login</button>
       <div class="user-menu" id="userMenu" style="display:none">
@@ -303,7 +306,6 @@
               <input type="text" id="newUser" placeholder="Benutzername" style="flex:1;min-width:150px">
               <input type="password" id="newUserPw" placeholder="Passwort" style="flex:1;min-width:150px">
               <select id="newUserRole" style="flex:0;min-width:120px;padding:.6rem;border:2px solid var(--g200);border-radius:var(--rs);font-size:.85rem;font-family:inherit">
-                <option value="user">User</option>
                 <option value="tf">TF (Triebfahrzeugführer)</option>
                 <option value="fdl">FDL (Fahrdienstleiter)</option>
                 <option value="admin">Admin</option>
@@ -317,7 +319,11 @@
 
         <!-- Verwaltung: Passwort-Anfragen -->
         <div class="vtab-panel" id="vtab-pwrequests">
-          <div class="sub-title">Ausstehende Passwort-Anfragen</div>
+          <div class="info-box">
+            <strong>Was sind Passwort-Anfragen?</strong><br>
+            Nutzer können über den Button "Passwort vergessen?" auf der Login-Seite ein neues Passwort anfordern. Dabei geben sie ihren Benutzernamen und das gewünschte neue Passwort ein. Die Anfrage wird hier angezeigt. Wenn du sie genehmigst, wird das neue Passwort aktiviert und der Nutzer kann sich mit dem neuen Passwort einloggen. Ablehnen verwirft die Anfrage.
+          </div>
+          <div class="sub-title" style="margin-top:1rem">Ausstehende Passwort-Anfragen</div>
           <div id="adminPwReqList"></div>
         </div>
 

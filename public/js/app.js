@@ -719,7 +719,7 @@ async function renderAdminUsers() {
   const list = document.getElementById('adminUserList');
   if (!list) return;
   if (usersList.length === 0) { list.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--g400)">Keine Accounts vorhanden.</div>'; return; }
-  const roleLabels = { admin: '🛡️ Admin', tf: '🚄 TF', fdl: '📡 FDL', user: '👤 User' };
+  const roleLabels = { admin: '🛡️ Admin', tf: '🚄 TF', fdl: '📡 FDL' };
   list.innerHTML = '<div class="ab-list">' + usersList.map(u => `<div class="ab-item">
     <div class="ab-head">
       <span class="ab-name">${u.username}</span>
